@@ -2,4 +2,4 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/ticketmaestrix/public_html/
-    - /bin/cp index.php $DEPLOYPATH
+    - cp index.php $DEPLOYPATH
