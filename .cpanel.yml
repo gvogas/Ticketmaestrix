@@ -1,5 +1,5 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/ticketmaestrix/public_html
-    - /bin/cp homeView.php $DEPLOYPATH
+    - export DEPLOYPATH=/home/ticketmaestrix/public_html/
+    - /bin/cp index.php $DEPLOYPATH
