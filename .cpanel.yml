@@ -1,5 +1,0 @@
----
-deployment:
-  tasks:
-    - export DEPLOYPATH=/home/ticketmaestrix/public_html
-    - /bin/rsync -av --delete ./public/ $DEPLOYPATH
