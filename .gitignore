@@ -7,6 +7,8 @@ config/env.php
 vendor/
 build/
 node_modules/
+composer.phar
+
 
 # VisualStudioCode
 # Local History for Visual Studio Code
@@ -29,42 +31,22 @@ var/tmp/*
 cache/tmp/*
 !cache/tmp/.htaccess
 
-# IDEs
-.idea/
-nbproject/
-.DS_STORE
-cache.properties
-.php_cs.cache
+# Dependencies
+/vendor/
 
-.phpunit.result.cache
-.phpunit.cache/
-phpunit.xml.bak
-package-lock.json
+# Runtime data
+/var/todos.db
+/var/app.log
+/var/maintenance.flag
+/var/cache/
 
-# keys
-*.pem
-*.key
-*.ppk
-*.p12
-*.pfx
-*.crt
-*.cer
-*.der
+# IDE
+/.idea/
+/.vscode/
+*.swp
+*.swo
 
-# Windows thumbnail cache files
+# OS
+.DS_Store
 Thumbs.db
-Thumbs.db:encryptable
-ehthumbs.db
-ehthumbs_vista.db
-# Dump file
-*.stackdump
-# Recycle Bin used on file shares
-$RECYCLE.BIN/
-# Windows shortcuts
-*.lnk
-
-app/Controllers/TestController.php
-app/Domain/Models/TestModel.php
-app/Views/testView.php
-docs/FileUploadHelper.php
 
