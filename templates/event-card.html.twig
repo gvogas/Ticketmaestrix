@@ -22,7 +22,8 @@
     'Sports':   'bg-blue-100 text-blue-700',
     'Theater':  'bg-pink-100 text-pink-700',
     'Raffle':   'bg-amber-100 text-amber-700',
-    'Festival': 'bg-green-100 text-green-700'
+    'Festival': 'bg-green-100 text-green-700',
+    'Comedy':   'bg-yellow-100 text-yellow-700'
 } %}
 
 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition group">
@@ -51,7 +52,7 @@
 
     {# Details #}
     <div class="p-4">
-        <span class="inline-block text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded {{ cat_colors[event.category] ?? 'bg-gray-100 text-gray-700' }}">
+        <span class="inline-block text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded {{ cat_colors[event.category] is defined ? cat_colors[event.category] : 'bg-gray-100 text-gray-700' }}">
             {{ event.category }}
         </span>
 

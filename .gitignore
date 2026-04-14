@@ -1,4 +1,7 @@
-# Composer and dependencies
+# Dependencies
 vendor/
+
+# Composer
 composer.phar
 
+# Runtime data
