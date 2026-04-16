@@ -121,6 +121,15 @@ $app->get('/', function ($request, $response) use ($twig, $basePath) {
     return $response;
 });
 
+// Route for signup page
+$app->get('/signup', function ($request, $response) use ($twig, $basePath) {
+    $html = $twig->render('signup.html.twig', [
+        'base_path' => $basePath,
+    ]);
+    $response->getBody()->write($html);
+    return $response;
+});
+
 
 
 $app->run();
