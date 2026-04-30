@@ -49,7 +49,8 @@ $twig   = new Environment($loader, [
 //   Each controller receives Twig\Environment, its model(s), and the base path
 //   through its constructor instead of pulling them from global scope.
 
-$basePath = '/Ticketmaestrix';
+$basePath = $_ENV['APP_BASE_PATH'] ?? '';
+
 
 $container = new \DI\Container();
 $container->set(Environment::class, $twig);
@@ -79,7 +80,10 @@ $app->setBasePath($basePath);
 $app->addRoutingMiddleware();
 
 // Add error middleware so you get useful error pages instead of blank screens
-$app->addErrorMiddleware(true, true, true);
+// $app->addErrorMiddleware(true, true, true);
+
+$debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
+$app->addErrorMiddleware($debug, true, true);
 
 // ============== YOUR MIDDLEWARE ==============
 
