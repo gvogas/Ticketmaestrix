@@ -11,7 +11,7 @@ class UserModel
 {
     public function findAll(): array
     {
-        return R::findAll('users');
+        return BeanHelper::castBeanArray(R::findAll('users'));
     }
 
     public function load(int $id): mixed
@@ -24,7 +24,7 @@ class UserModel
         return R::findOne('users', 'email = ?', [$email]);
     }
 
-    public function create(array $data): void
+    public function create(array $data): \RedBeanPHP\OODBBean
     {
         $bean = R::dispense('users');
         $bean->first_name   = $data['first_name'];
@@ -34,6 +34,7 @@ class UserModel
         $bean->phone_number = $data['phone_number'];
         $bean->role         = $data['role'] ?? 'user';
         R::store($bean);
+        return BeanHelper::castBeanProperties($bean);
     }
 
     public function save(mixed $bean): void
