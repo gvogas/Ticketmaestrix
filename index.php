@@ -200,6 +200,7 @@ $app->group('', function ($group) {
     $group->post('/signup',          [AuthController::class, 'signup']);
     $group->get('/login',            [AuthController::class, 'showLogin']);
     $group->post('/login',           [AuthController::class, 'login']);
+    $group->post('/logout',          [AuthController::class, 'logout']);
     $group->get('/forgotpassword',   [AuthController::class, 'showForgotPassword']);
     $group->get('/verificationcode', [AuthController::class, 'showVerificationCode']);
     $group->get('/newpassword',      [AuthController::class, 'showNewPassword']);

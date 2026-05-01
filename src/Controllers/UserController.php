@@ -28,8 +28,9 @@ class UserController {
             ->withStatus(302);
      }
 
-     public function roleToggle(Request $request, Response $response): Response {
-        $user = $this->userModel-> load((int)$request->getAttribute('id') ?? 0);
+     // Toggle a user's role between 'admin' and 'user'. Admin-only (guard added later).
+     public function roleToggle(Request $request, Response $response, array $args): Response {
+        $user = $this->userModel->load((int) ($args['id'] ?? 0));
 
         if ($user->id) {
             $user->role = $user->role === 'admin' ? 'user' : 'admin';
@@ -53,8 +54,9 @@ class UserController {
 
      }
 
-     public function delete(Request $request, Response $response): Response {
-        $user = $this->userModel->load((int)$request->getAttribute('id') ?? 0);
+     // Hard-delete a user by id. Admin-only (guard added later).
+     public function delete(Request $request, Response $response, array $args): Response {
+        $user = $this->userModel->load((int) ($args['id'] ?? 0));
 
         if ($user->id) {
             $this->userModel->delete($user);
@@ -65,8 +67,9 @@ class UserController {
             ->withStatus(302);
      }
 
-     public function viewDetails(Request $request, Response $response): Response {
-        $user = $this->userModel->load((int)$request->getAttribute('id') ?? 0);
+     // Render a single user's profile page (admin view of any user).
+     public function viewDetails(Request $request, Response $response, array $args): Response {
+        $user = $this->userModel->load((int) ($args['id'] ?? 0));
 
         if (!$user->id) {
             return $response

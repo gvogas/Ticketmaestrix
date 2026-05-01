@@ -47,6 +47,13 @@ class UserModel
         R::trash($bean);
     }
 
+    /**
+     * Apply a partial update to a user row. Only known editable fields are
+     * copied — silently ignores any other keys in $data so the form can
+     * include extras (birthday, bio, etc.) without breaking.
+     *
+     * Returns the cast bean on success, or null if the id was not found.
+     */
     public function update(int $id, array $data): ?\RedBeanPHP\OODBBean
     {
         $user = R::load('users', $id);
@@ -54,8 +61,20 @@ class UserModel
             return null;
         }
 
-        
+        if (array_key_exists('first_name', $data)) {
+            $user->first_name = (string) $data['first_name'];
+        }
+        if (array_key_exists('last_name', $data)) {
+            $user->last_name = (string) $data['last_name'];
+        }
+        if (array_key_exists('email', $data)) {
+            $user->email = (string) $data['email'];
+        }
+        if (array_key_exists('phone_number', $data)) {
+            $user->phone_number = (string) $data['phone_number'];
+        }
 
+        R::store($user);
         return BeanHelper::castBeanProperties($user);
     }
 }

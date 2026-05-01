@@ -51,8 +51,9 @@ class OrderController {
 
      }
 
-     public function delete(Request $request, Response $response): Response {
-        $order = $this->orderModel->load((int)$request->getAttribute('id') ?? 0);
+     // Hard-delete an order by id.
+     public function delete(Request $request, Response $response, array $args): Response {
+        $order = $this->orderModel->load((int) ($args['id'] ?? 0));
 
         if ($order->id) {
             $this->orderModel->delete($order);
@@ -63,8 +64,9 @@ class OrderController {
             ->withStatus(302);
      }
 
-     public function viewDetails(Request $request, Response $response): Response {
-        $order = $this->orderModel->load((int)$request->getAttribute('id') ?? 0);
+     // Show one order's detail page; bounce to /orders if id is unknown.
+     public function viewDetails(Request $request, Response $response, array $args): Response {
+        $order = $this->orderModel->load((int) ($args['id'] ?? 0));
 
         if (!$order->id) {
             return $response
@@ -81,8 +83,9 @@ class OrderController {
         return $response;
      }
 
-     public function byUser(Request $request, Response $response): Response {
-        $userId = (int) ($request->getQueryParams()['user'] ?? $request->getAttribute('id') ?? 0);
+     // List all orders belonging to a given user id.
+     public function byUser(Request $request, Response $response, array $args): Response {
+        $userId = (int) ($args['id'] ?? 0);
         $orders = $this->orderModel->findByUser($userId);
 
         $html = $this->twig->render('order/orders_by_user.html.twig', [

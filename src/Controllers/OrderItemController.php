@@ -51,8 +51,9 @@ class OrderItemController {
 
      }
 
-     public function delete(Request $request, Response $response): Response {
-        $orderItem = $this->orderItemModel->load((int)$request->getAttribute('id') ?? 0);
+     // Hard-delete one order_item by id.
+     public function delete(Request $request, Response $response, array $args): Response {
+        $orderItem = $this->orderItemModel->load((int) ($args['id'] ?? 0));
 
         if ($orderItem->id) {
             $this->orderItemModel->delete($orderItem);
@@ -63,8 +64,9 @@ class OrderItemController {
             ->withStatus(302);
      }
 
-     public function viewDetails(Request $request, Response $response): Response {
-        $orderItem = $this->orderItemModel->load((int)$request->getAttribute('id') ?? 0);
+     // Show one order_item's detail page.
+     public function viewDetails(Request $request, Response $response, array $args): Response {
+        $orderItem = $this->orderItemModel->load((int) ($args['id'] ?? 0));
 
         if (!$orderItem->id) {
             return $response
@@ -81,8 +83,9 @@ class OrderItemController {
         return $response;
      }
 
-     public function byOrder(Request $request, Response $response): Response {
-        $orderId = (int) ($request->getQueryParams()['order'] ?? $request->getAttribute('id') ?? 0);
+     // List all line items belonging to a given order id.
+     public function byOrder(Request $request, Response $response, array $args): Response {
+        $orderId    = (int) ($args['id'] ?? 0);
         $orderItems = $this->orderItemModel->findByOrder($orderId);
 
         $html = $this->twig->render('order-item/order_items_by_order.html.twig', [
