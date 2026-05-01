@@ -81,6 +81,9 @@
                 <div>
                     <h1 class="mb-1 fw-bold">{{ user.first_name }} {{ user.last_name }}</h1>
                     <p class="mb-0 opacity-75">{{ user.email }}</p>
+                    <a href="{{ base_path }}/editprofile" class="btn btn-sm btn-outline-light mt-2">
+                        <i class="bi bi-pencil"></i> Edit Profile
+                    </a>
                 </div>
             </div>
             <div class="text-center text-md-end">

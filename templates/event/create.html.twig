@@ -1,0 +1,57 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Create Event - TicketMaestrix{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Create New Event</h2>
+    <a href="{{ base_path }}/events" class="btn btn-secondary">Back to Events</a>
+</div>
+
+<form action="{{ base_path }}/events" method="post" class="form">
+    <div class="form-group">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required>
+    </div>
+
+    <div class="form-group">
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" rows="3"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="date">Date:</label>
+        <input type="datetime-local" id="date" name="date" required>
+    </div>
+
+    <div class="form-group">
+        <label for="category_id">Category:</label>
+        <select id="category_id" name="category_id" required>
+            <option value="">— Select a category —</option>
+            {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="venue_id">Venue:</label>
+        <select id="venue_id" name="venue_id" required>
+            <option value="">— Select a venue —</option>
+            {% for venue in venues %}
+            <option value="{{ venue.id }}">{{ venue.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="event_image">Image URL:</label>
+        <input type="url" id="event_image" name="event_image">
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Create Event</button>
+        <a href="{{ base_path }}/events" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}

@@ -55,15 +55,25 @@
                 <button class="btn-location"><i class="bi bi-send-fill me-2"></i> Use My Location</button>
 
                 {% for event in events %}
-                <div class="event-card-mini">
-                    <div class="event-img"></div>
-                    <div>
-                        <h6 class="fw-bold mb-0" style="font-size: 0.95rem;">{{ event.title }}</h6>
-                        <small class="text-muted d-block">{{ event.venue }}</small>
-                        <small class="fw-bold text-primary">${{ event.price }}</small>
-                        <small class="text-muted"> • {{ event.date }}</small>
+                <a href="{{ base_path }}/events/{{ event.id }}" class="text-decoration-none text-reset">
+                    <div class="event-card-mini">
+                        {% if event.event_image %}
+                            <img src="{{ event.event_image }}" alt="{{ event.title }}" class="event-img">
+                        {% else %}
+                            <div class="event-img"></div>
+                        {% endif %}
+                        <div>
+                            <h6 class="fw-bold mb-0" style="font-size: 0.95rem;">{{ event.title }}</h6>
+                            <small class="text-muted d-block">{{ event.venue_name }}</small>
+                            <small class="fw-bold text-primary">
+                                {% if event.min_price is not null %}${{ event.min_price|number_format(2) }}{% else %}TBA{% endif %}
+                            </small>
+                            <small class="text-muted"> • {{ event.date }}</small>
+                        </div>
                     </div>
-                </div>
+                </a>
+                {% else %}
+                    <div class="text-muted text-center py-4">No upcoming events nearby.</div>
                 {% endfor %}
             </div>
 

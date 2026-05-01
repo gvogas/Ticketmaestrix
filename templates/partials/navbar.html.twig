@@ -26,18 +26,52 @@
                         <i class="bi bi-geo-alt"></i> Map
                     </a>
                 </li>
+
+                {# Cart icon with live count badge from the cart_count Twig global #}
                 <li class="nav-item px-2">
-                    <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'profile' %}active{% endif %}" href="{{ base_path }}/profile">
-                        <i class="bi bi-person-circle"></i> Profile
-                    </a>
-                </li>
-                
-                <li class="nav-item px-2">
-                    <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'cart' %}active{% endif %}" href="{{ base_path }}/cart">
+                    <a class="nav-link d-flex align-items-center gap-2 position-relative {% if current_route == 'cart' %}active{% endif %}" href="{{ base_path }}/cart">
                         <i class="bi bi-cart3"></i>
                         <span class="d-md-none">Cart</span>
+                        {% if cart_count and cart_count > 0 %}
+                            <span class="badge bg-danger rounded-pill" style="font-size: 0.6rem;">{{ cart_count }}</span>
+                        {% endif %}
                     </a>
                 </li>
+
+                {# Auth-aware section: profile + admin + logout when logged in, login + signup when not #}
+                {% if current_user %}
+                    <li class="nav-item px-2">
+                        <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'profile' %}active{% endif %}" href="{{ base_path }}/profile">
+                            <i class="bi bi-person-circle"></i> {{ current_user.first_name }}
+                        </a>
+                    </li>
+                    {% if is_admin %}
+                        <li class="nav-item px-2">
+                            <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'admin' %}active{% endif %}" href="{{ base_path }}/admin">
+                                <i class="bi bi-shield-lock"></i> Admin
+                            </a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item px-2">
+                        {# Logout is a POST so it can't be triggered by a stray GET / link prefetch. #}
+                        <form method="POST" action="{{ base_path }}/logout" class="d-inline m-0">
+                            <button type="submit" class="nav-link btn btn-link p-0 d-flex align-items-center gap-2">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </button>
+                        </form>
+                    </li>
+                {% else %}
+                    <li class="nav-item px-2">
+                        <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'login' %}active{% endif %}" href="{{ base_path }}/login">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
+                    </li>
+                    <li class="nav-item px-2">
+                        <a class="nav-link d-flex align-items-center gap-2" href="{{ base_path }}/signup">
+                            <i class="bi bi-person-plus"></i> Sign up
+                        </a>
+                    </li>
+                {% endif %}
 
                 <li class="nav-item dropdown ms-md-3">
                     <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 border rounded-pill px-3 mt-2 mt-md-0" 

@@ -82,17 +82,24 @@
                     {% for item in cart %}
                     <div class="cart-item-card d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center gap-3">
-                            <img src="{{ item.image }}" class="event-img" alt="Event Image">
+                            {% if item.image %}
+                                <img src="{{ item.image }}" class="event-img" alt="{{ item.name }}">
+                            {% else %}
+                                <div class="event-img bg-light"></div>
+                            {% endif %}
                             <div>
                                 <h5 class="mb-1 fw-bold">{{ item.name }}</h5>
                                 <div class="text-muted small">{{ item.date }}</div>
                                 <div class="mt-1">
-                                    <span class="text-primary fw-bold">${{ item.price }} × {{ item.quantity }}</span>
-                                    <span class="ms-2 fw-bold">${{ item.total }}</span>
+                                    <span class="text-primary fw-bold">${{ item.price|number_format(2) }} × {{ item.quantity }}</span>
+                                    <span class="ms-2 fw-bold">${{ item.total|number_format(2) }}</span>
                                 </div>
                             </div>
                         </div>
-                        <button class="btn text-danger fs-5"><i class="bi bi-trash"></i></button>
+                        {# Each remove icon is its own POST form so it can mutate session state. #}
+                        <form method="POST" action="{{ base_path }}/cart/remove/{{ item.ticket_id }}" class="m-0">
+                            <button type="submit" class="btn text-danger fs-5"><i class="bi bi-trash"></i></button>
+                        </form>
                     </div>
                     {% endfor %}
                 </div>
@@ -102,7 +109,7 @@
                         <h5 class="fw-bold mb-4">Order Summary</h5>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Subtotal</span>
-                            <span class="fw-bold">$494.97</span>
+                            <span class="fw-bold">${{ subtotal|number_format(2) }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-3 border-bottom pb-3">
                             <span class="text-muted">Service Fee</span>
@@ -110,22 +117,27 @@
                         </div>
                         <div class="d-flex justify-content-between mb-4">
                             <span class="h5 fw-bold">Total</span>
-                            <span class="h5 fw-bold">$494.97</span>
+                            <span class="h5 fw-bold">${{ total|number_format(2) }}</span>
                         </div>
 
                         <div class="points-badge p-3 mb-4 d-flex align-items-center gap-2">
                             <i class="bi bi-award"></i>
                             <div class="small">
-                                <strong>You'll earn 49 points</strong><br>
+                                <strong>You'll earn {{ points_earned }} points</strong><br>
                                 10% back on this purchase
                             </div>
                         </div>
 
-                        <button class="btn btn-purple w-100 py-3 fw-bold rounded-3 mb-2">
-                            <i class="bi bi-credit-card me-2"></i> Complete Purchase
-                        </button>
-                        <button class="btn btn-light w-100 py-2 fw-bold text-muted border-0">Clear Cart</button>
-                        
+                        {# Checkout posts to /cart/checkout, which requires login. #}
+                        <form method="POST" action="{{ base_path }}/cart/checkout" class="m-0">
+                            <button type="submit" class="btn btn-purple w-100 py-3 fw-bold rounded-3 mb-2">
+                                <i class="bi bi-credit-card me-2"></i> Complete Purchase
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ base_path }}/cart/clear" class="m-0">
+                            <button type="submit" class="btn btn-light w-100 py-2 fw-bold text-muted border-0">Clear Cart</button>
+                        </form>
+
                         <div class="text-center mt-3 text-muted" style="font-size: 0.75rem;">
                             <i class="bi bi-lock-fill"></i> Secure checkout<br>
                             Your payment information is encrypted
