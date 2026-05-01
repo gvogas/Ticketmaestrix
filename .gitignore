@@ -10,3 +10,8 @@ composer.phar
 node_modules/
 
 .env
+var/app.log
+.claude/
+CLAUDE.md
+assets/
+docs/

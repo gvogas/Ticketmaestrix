@@ -72,7 +72,8 @@ class OrderItemController {
                 ->withStatus(302);
         }
 
-        $html = $this->twig->render('REPLACELATER', [
+        $html = $this->twig->render('order-item/order_item_detail.html.twig', [
+            'base_path' => $this->basePath,
             'orderItem' => $orderItem,
         ]);
 
@@ -84,9 +85,10 @@ class OrderItemController {
         $orderId = (int) ($request->getQueryParams()['order'] ?? $request->getAttribute('id') ?? 0);
         $orderItems = $this->orderItemModel->findByOrder($orderId);
 
-        $html = $this->twig->render('REPLACELATER', [
+        $html = $this->twig->render('order-item/order_items_by_order.html.twig', [
+            'base_path'   => $this->basePath,
             'order_items' => $orderItems,
-            'order_id' => $orderId,
+            'order_id'    => $orderId,
         ]);
 
         $response->getBody()->write($html);

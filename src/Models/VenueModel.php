@@ -14,9 +14,20 @@ class VenueModel
         return BeanHelper::castBeanArray(R::findAll('venue', 'ORDER BY name ASC'));
     }
 
+    public function getAll(): array
+    {
+        return $this->findAll();
+    }
+
     public function load(int $id): mixed
     {
         return BeanHelper::castBeanProperties(R::load('venue', $id));
+    }
+
+    public function getById(int $id): mixed
+    {
+        $bean = R::load('venue', $id);
+        return BeanHelper::isValidBean($bean) ? BeanHelper::castBeanProperties($bean) : null;
     }
 
     public function create(string $name, string $description, string $imageUrl,

@@ -17,7 +17,7 @@ class HomeController
 
     public function index(Request $request, Response $response): Response
     {
-        $html = $this->twig->render('home.html.twig', [
+        $html = $this->twig->render('home/home.html.twig', [
             'base_path' => $this->basePath,
         ]);
 
@@ -28,7 +28,7 @@ class HomeController
 
     public function showCart(Request $request, Response $response): Response
     {
-        $html = $this->twig->render('cart.html.twig', [
+        $html = $this->twig->render('home/cart.html.twig', [
             'base_path' => $this->basePath,
         ]);
 
@@ -39,7 +39,7 @@ class HomeController
 
     public function showMap(Request $request, Response $response): Response
     {
-        $html = $this->twig->render('map.html.twig', [
+        $html = $this->twig->render('home/map.html.twig', [
             'base_path' => $this->basePath,
             'events' => $this->eventModel->getEventsNearYou(),
         ]);

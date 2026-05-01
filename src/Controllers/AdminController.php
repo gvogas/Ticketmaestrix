@@ -15,7 +15,7 @@ class AdminController {
     ) {}
 
     public function showAdminDashboard(Request $request, Response $response): Response {
-        $html = $this->twig->render('admin_dashboard.html.twig', [
+        $html = $this->twig->render('admin/admin_dashboard.html.twig', [
             'base_path' => $this->basePath,
         ]);
 

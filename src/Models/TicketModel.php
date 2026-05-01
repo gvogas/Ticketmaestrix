@@ -9,6 +9,17 @@ use RedBeanPHP\R;
 
 class TicketModel
 {
+    public function getAll(): array
+    {
+        return BeanHelper::castBeanArray(R::findAll('ticket', 'ORDER BY event_id, `row`, seat'));
+    }
+
+    public function getById(int $id): mixed
+    {
+        $bean = R::load('ticket', $id);
+        return BeanHelper::isValidBean($bean) ? BeanHelper::castBeanProperties($bean) : null;
+    }
+
     public function findByEvent(int $eventId): array
     {
         return BeanHelper::castBeanArray(R::find('ticket', 'event_id = ? ORDER BY `row`, seat', [$eventId]));

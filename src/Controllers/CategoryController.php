@@ -1,37 +1,68 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controllers;
 
-use App\Models\CategoryModel as CategoryModel;
+use App\Models\CategoryModel;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Twig\Environment;
 
-class CategoryController {
+class CategoryController
+{
     public function __construct(
         private Environment $twig,
         private CategoryModel $categoryModel,
         private string $basePath,
-    ) {
-        $this->twig = $twig;
-        $this->categoryModel = $categoryModel;
-        $this->basePath = $basePath;
+    ) {}
+
+    public function index(Request $request, Response $response): Response
+    {
+        $html = $this->twig->render('category/index.html.twig', [
+            'base_path'  => $this->basePath,
+            'categories' => $this->categoryModel->getAll(),
+        ]);
+        $response->getBody()->write($html);
+        return $response;
     }
 
-     public function store(Request $request, Response $response): Response {
-       $data = $request->getParsedBody();
+    public function create(Request $request, Response $response): Response
+    {
+        $html = $this->twig->render('category/create.html.twig', [
+            'base_path' => $this->basePath,
+        ]);
+        $response->getBody()->write($html);
+        return $response;
+    }
 
-       $this->categoryModel->create((string) ($data['name'] ?? ''));
-
-        return $response
-            ->withHeader('Location', $this->basePath . '/categories')
-            ->withStatus(302);
-     }
-
-     public function update(Request $request, Response $response, array $args): Response {
-        $id = (int) $args['id'];
+    public function store(Request $request, Response $response): Response
+    {
         $data = $request->getParsedBody();
+        $this->categoryModel->create((string) ($data['name'] ?? ''));
+        return $response->withHeader('Location', $this->basePath . '/categories')->withStatus(302);
+    }
 
+    public function edit(Request $request, Response $response, array $args): Response
+    {
+        $category = $this->categoryModel->getById((int) $args['id']);
+
+        if (!$category) {
+            return $response->withHeader('Location', $this->basePath . '/categories')->withStatus(302);
+        }
+
+        $html = $this->twig->render('category/edit.html.twig', [
+            'base_path' => $this->basePath,
+            'category'  => $category,
+        ]);
+        $response->getBody()->write($html);
+        return $response;
+    }
+
+    public function update(Request $request, Response $response, array $args): Response
+    {
+        $id       = (int) $args['id'];
+        $data     = $request->getParsedBody();
         $category = $this->categoryModel->load($id);
 
         if ($category->id) {
@@ -39,38 +70,31 @@ class CategoryController {
             $this->categoryModel->save($category);
         }
 
-        return $response
-            ->withHeader('Location', $this->basePath . '/categories')
-            ->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/categories')->withStatus(302);
+    }
 
-     }
-
-     public function delete(Request $request, Response $response): Response {
-        $category = $this->categoryModel->load((int)$request->getAttribute('id') ?? 0);
-
+    public function destroy(Request $request, Response $response, array $args): Response
+    {
+        $category = $this->categoryModel->load((int) $args['id']);
         if ($category->id) {
             $this->categoryModel->delete($category);
         }
+        return $response->withHeader('Location', $this->basePath . '/categories')->withStatus(302);
+    }
 
-        return $response
-            ->withHeader('Location', $this->basePath . '/categories')
-            ->withStatus(302);
-     }
+    public function viewDetails(Request $request, Response $response, array $args): Response
+    {
+        $category = $this->categoryModel->getById((int) $args['id']);
 
-     public function viewDetails(Request $request, Response $response): Response {
-        $category = $this->categoryModel->load((int)$request->getAttribute('id') ?? 0);
-
-        if (!$category->id) {
-            return $response
-                ->withHeader('Location', $this->basePath . '/categories')
-                ->withStatus(302);
+        if (!$category) {
+            return $response->withHeader('Location', $this->basePath . '/categories')->withStatus(302);
         }
 
-        $html = $this->twig->render('REPLACELATER', [
-            'category' => $category,
+        $html = $this->twig->render('category/category_detail.html.twig', [
+            'base_path' => $this->basePath,
+            'category'  => $category,
         ]);
-
         $response->getBody()->write($html);
         return $response;
-     }
+    }
 }

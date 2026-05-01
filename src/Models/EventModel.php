@@ -14,9 +14,20 @@ class EventModel
         return BeanHelper::castBeanArray(R::findAll('events', 'ORDER BY date ASC'));
     }
 
+    public function getAll(): array
+    {
+        return $this->findAll();
+    }
+
     public function load(int $id): mixed
     {
         return BeanHelper::castBeanProperties(R::load('events', $id));
+    }
+
+    public function getById(int $id): mixed
+    {
+        $bean = R::load('events', $id);
+        return BeanHelper::isValidBean($bean) ? BeanHelper::castBeanProperties($bean) : null;
     }
 
     public function findByCategory(int $categoryId): array

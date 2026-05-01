@@ -72,8 +72,9 @@ class OrderController {
                 ->withStatus(302);
         }
 
-        $html = $this->twig->render('REPLACELATER', [
-            'order' => $order,
+        $html = $this->twig->render('order/order_detail.html.twig', [
+            'base_path' => $this->basePath,
+            'order'     => $order,
         ]);
 
         $response->getBody()->write($html);
@@ -84,9 +85,10 @@ class OrderController {
         $userId = (int) ($request->getQueryParams()['user'] ?? $request->getAttribute('id') ?? 0);
         $orders = $this->orderModel->findByUser($userId);
 
-        $html = $this->twig->render('REPLACELATER', [
-            'orders' => $orders,
-            'user_id' => $userId,
+        $html = $this->twig->render('order/orders_by_user.html.twig', [
+            'base_path' => $this->basePath,
+            'orders'    => $orders,
+            'user_id'   => $userId,
         ]);
 
         $response->getBody()->write($html);
