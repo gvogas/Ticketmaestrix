@@ -107,4 +107,13 @@ class EventModel
         }
         return $out;
     }
+
+
+public function getPaginated($limit, $offset) {
+    return R::findAll('events', ' LIMIT ? OFFSET ? ', [$limit, $offset]);
+}
+
+public function countAll() {
+    return R::count('events');
+}
 }

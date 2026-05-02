@@ -19,6 +19,13 @@ class UserModel
         return R::load('users', $id);
     }
 
+    // --- ADDED FOR ADMIN CRUD ---
+    public function getAllAdmins(): array
+    {
+        // Finds all users where the role is 'admin'
+        return BeanHelper::castBeanArray(R::findAll('users', 'role = ?', ['admin']));
+    }
+
     public function findByEmail(string $email): mixed
     {
         return R::findOne('users', 'email = ?', [$email]);
@@ -30,8 +37,10 @@ class UserModel
         $bean->first_name   = $data['first_name'];
         $bean->last_name    = $data['last_name'];
         $bean->email        = $data['email'];
+        // Passwords should be hashed before hitting the model ideally, 
+        // but keeping your structure consistent here:
         $bean->password     = password_hash($data['password'], PASSWORD_DEFAULT);
-        $bean->phone_number = $data['phone_number'];
+        $bean->phone_number = $data['phone_number'] ?? null;
         $bean->role         = $data['role'] ?? 'user';
         R::store($bean);
         return BeanHelper::castBeanProperties($bean);
@@ -42,17 +51,17 @@ class UserModel
         R::store($bean);
     }
 
-    public function delete(mixed $bean): void
+    // --- UPDATED FOR CONVENIENCE ---
+    public function deleteById(int $id): void
     {
-        R::trash($bean);
+        $user = R::load('users', $id);
+        if ($user->id) {
+            R::trash($user);
+        }
     }
 
     /**
-     * Apply a partial update to a user row. Only known editable fields are
-     * copied — silently ignores any other keys in $data so the form can
-     * include extras (birthday, bio, etc.) without breaking.
-     *
-     * Returns the cast bean on success, or null if the id was not found.
+     * Updated to handle password changes and role management.
      */
     public function update(int $id, array $data): ?\RedBeanPHP\OODBBean
     {
@@ -73,15 +82,27 @@ class UserModel
         if (array_key_exists('phone_number', $data)) {
             $user->phone_number = (string) $data['phone_number'];
         }
+        
+        // ADDED: Handle password updates specifically for the Admin Edit form
+        if (!empty($data['password'])) {
+            $user->password = password_hash($data['password'], PASSWORD_DEFAULT);
+        }
 
         R::store($user);
         return BeanHelper::castBeanProperties($user);
     }
 
-    /**
-     * Number of non-admin users in the system. Drives the
-     * "Total Customers" admin stat card.
-     */
+    public function delete(int $id): void
+{
+    // R::load finds the 'user' bean by its primary key ID
+    $user = \RedBeanPHP\R::load('user', $id);
+    
+    // If the user exists (id > 0), delete it from the database
+    if ($user->id) {
+        \RedBeanPHP\R::trash($user);
+    }
+}
+
     public function customerCount(): int
     {
         return (int) R::getCell(

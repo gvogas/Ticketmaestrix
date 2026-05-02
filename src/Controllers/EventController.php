@@ -23,14 +23,28 @@ class EventController
     ) {}
 
     public function index(Request $request, Response $response): Response
-    {
-        $html = $this->twig->render('event/index.html.twig', [
-            'base_path' => $this->basePath,
-            'events'    => $this->eventModel->getAll(),
-        ]);
-        $response->getBody()->write($html);
-        return $response;
-    }
+{
+    $queryParams = $request->getQueryParams();
+    $page = isset($queryParams['page']) ? (int)$queryParams['page'] : 1;
+    
+    $perPage = 9;
+    $offset = ($page - 1) * $perPage;
+
+    $events = $this->eventModel->getPaginated($perPage, $offset); 
+
+    $totalEvents = $this->eventModel->countAll();
+    $totalPages = ceil($totalEvents / $perPage);
+
+    $html = $this->twig->render('event/index.html.twig', [
+        'base_path'   => $this->basePath,
+        'events'      => $events,
+        'currentPage' => $page,
+        'totalPages'  => $totalPages,
+    ]);
+
+    $response->getBody()->write($html);
+    return $response;
+}
 
     public function create(Request $request, Response $response): Response
     {

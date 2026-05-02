@@ -232,6 +232,8 @@ $app->group('', function ($group) {
 
 // --- Admin ---
 $app->get('/admin', [AdminController::class, 'showAdminDashboard']);
+$app->post('/admin/users/create', [AdminController::class, 'createAdmin']);
+$app->post('/admin/users/{id}/delete', [AdminController::class, 'deleteAdmin']);
 
 // --- Users ---
 $app->group('/users', function ($group) {

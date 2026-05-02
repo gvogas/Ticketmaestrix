@@ -113,4 +113,16 @@ class CategoryController
         $response->getBody()->write($html);
         return $response;
     }
+
+   public function showByCategory(Request $request, Response $response, array $args): Response {
+    $categoryId = $args['id'];
+
+    $events = $this->db->table('events')->where('category_id', $categoryId)->get();
+    $category = $this->db->table('categories')->where('id', $categoryId)->first();
+
+    return $this->view->render($response, 'events_by_category.html.twig', [
+        'events' => $events,
+        'category' => $category
+    ]);
+}
 }
