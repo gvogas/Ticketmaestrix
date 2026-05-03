@@ -36,7 +36,7 @@ class EventModel
     }
 
     public function create(string $title, string $description, string $date,
-                           int $venueId, int $categoryId, string $eventImage): void
+                           int $venueId, int $categoryId, string $eventImage): mixed
     {
         $bean = R::dispense('events');
         $bean->title       = $title;
@@ -46,6 +46,7 @@ class EventModel
         $bean->category_id = $categoryId;
         $bean->event_image = $eventImage;
         R::store($bean);
+        return BeanHelper::castBeanProperties($bean);
     }
 
     public function save(mixed $bean): void

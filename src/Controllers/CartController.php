@@ -42,9 +42,8 @@ class CartController
 
         Cart::add($ticketId, max(1, $qty));
 
-        return $response
-            ->withHeader('Location', $this->basePath . '/cart')
-            ->withStatus(302);
+        $response->getBody()->write(json_encode(['success' => true, 'cart_count' => Cart::count(), 'message' => 'Ticket added to cart!']));
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
     /** POST /cart/remove/{ticket_id} — remove a single line. */

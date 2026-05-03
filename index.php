@@ -162,6 +162,7 @@ $container->set(TicketController::class, fn() => new TicketController(
     $twig,
     new TicketModel(),
     new EventModel(),
+    new VenueModel(),
     $basePath,
 ));
 

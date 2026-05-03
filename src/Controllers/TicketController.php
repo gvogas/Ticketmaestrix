@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Helpers\Auth;
 use App\Models\EventModel;
 use App\Models\TicketModel;
+use App\Models\VenueModel;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Twig\Environment;
@@ -17,6 +18,7 @@ class TicketController
         private Environment $twig,
         private TicketModel $ticketModel,
         private EventModel $eventModel,
+        private VenueModel $venueModel,
         private string $basePath,
     ) {}
 
@@ -49,13 +51,14 @@ class TicketController
             return $redirect;
         }
         $data = $request->getParsedBody();
-        $this->ticketModel->create(
+        $newTicket = $this->ticketModel->create(
             (float) ($data['price'] ?? 0),
             (string) ($data['seat'] ?? ''),
             (string) ($data['row'] ?? ''),
             (int) ($data['event_id'] ?? 0),
         );
-        return $response->withHeader('Location', $this->basePath . '/tickets')->withStatus(302);
+        $response->getBody()->write(json_encode(['success' => true, 'ticket' => $newTicket, 'message' => 'Ticket created']));
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
     public function edit(Request $request, Response $response, array $args): Response
@@ -95,7 +98,8 @@ class TicketController
             $this->ticketModel->save($ticket);
         }
 
-        return $response->withHeader('Location', $this->basePath . '/tickets')->withStatus(302);
+        $response->getBody()->write(json_encode(['success' => true, 'message' => 'Ticket updated']));
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
     public function destroy(Request $request, Response $response, array $args): Response
@@ -107,7 +111,8 @@ class TicketController
         if ($ticket->id) {
             $this->ticketModel->delete($ticket);
         }
-        return $response->withHeader('Location', $this->basePath . '/tickets')->withStatus(302);
+        $response->getBody()->write(json_encode(['success' => true, 'message' => 'Ticket deleted']));
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
     public function viewDetails(Request $request, Response $response, array $args): Response
@@ -118,9 +123,17 @@ class TicketController
             return $response->withHeader('Location', $this->basePath . '/tickets')->withStatus(302);
         }
 
+        // Ticket detail page is admin-only for inventory management
+        // Regular users should not access this page directly
+        if (!\App\Helpers\Auth::isAdmin()) {
+            // Redirect regular users to the event page instead
+            return $response->withHeader('Location', $this->basePath . '/events/' . $ticket->event_id)->withStatus(302);
+        }
+
         $html = $this->twig->render('ticket/ticket_detail.html.twig', [
             'base_path' => $this->basePath,
             'ticket'    => $ticket,
+            'is_admin'  => true,
         ]);
         $response->getBody()->write($html);
         return $response;
@@ -130,11 +143,17 @@ class TicketController
     {
         $eventId = (int) $args['id'];
         $tickets = $this->ticketModel->findByEvent($eventId);
+        $event   = $this->eventModel->getById($eventId);
+
+        if ($event) {
+            $event = $this->eventModel->hydrate([$event], $this->venueModel, $this->ticketModel)[0];
+        }
 
         $html = $this->twig->render('ticket/tickets_by_event.html.twig', [
             'base_path' => $this->basePath,
             'tickets'   => $tickets,
-            'event_id'  => $eventId,
+            'event'     => $event,
+            'event_id'  => $eventId, // Fallback
         ]);
         $response->getBody()->write($html);
         return $response;

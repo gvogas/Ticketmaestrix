@@ -101,7 +101,7 @@ class EventController
             return $redirect;
         }
         $data = $request->getParsedBody();
-        $this->eventModel->create(
+        $newEvent = $this->eventModel->create(
             (string) ($data['title'] ?? ''),
             (string) ($data['description'] ?? ''),
             (string) ($data['date'] ?? ''),
@@ -109,7 +109,8 @@ class EventController
             (int) ($data['category_id'] ?? 0),
             (string) ($data['event_image'] ?? ''),
         );
-        return $response->withHeader('Location', $this->basePath . '/events')->withStatus(302);
+        $response->getBody()->write(json_encode(['success' => true, 'event' => $newEvent, 'message' => 'Event created']));
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
     public function edit(Request $request, Response $response, array $args): Response
@@ -152,7 +153,8 @@ class EventController
             $this->eventModel->save($event);
         }
 
-        return $response->withHeader('Location', $this->basePath . '/events')->withStatus(302);
+        $response->getBody()->write(json_encode(['success' => true, 'message' => 'Event updated']));
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
     public function destroy(Request $request, Response $response, array $args): Response
@@ -164,7 +166,8 @@ class EventController
         if ($event->id) {
             $this->eventModel->delete($event);
         }
-        return $response->withHeader('Location', $this->basePath . '/events')->withStatus(302);
+        $response->getBody()->write(json_encode(['success' => true, 'message' => 'Event deleted']));
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
     public function viewDetails(Request $request, Response $response, array $args): Response
@@ -175,10 +178,20 @@ class EventController
             return $response->withHeader('Location', $this->basePath . '/events')->withStatus(302);
         }
 
+        // Check if user is admin to show different views
+        $isAdmin = \App\Helpers\Auth::isAdmin();
+
+        // For admin view, show basic event info (admin can manage from index page)
+        // For user view, hydrate with venue, category, and ticket information
+        if (!$isAdmin) {
+            $event = $this->eventModel->hydrate([$event], $this->venueModel, new \App\Models\TicketModel(), $this->categoryModel)[0];
+        }
+
         $html = $this->twig->render('event/event_detail.html.twig', [
             'base_path'     => $this->basePath,
             'current_route' => 'events',
             'event'         => $event,
+            'is_admin'      => $isAdmin,
         ]);
         $response->getBody()->write($html);
         return $response;
