@@ -91,19 +91,41 @@ class EventModel
     }
 
     /**
-     * Decorate event beans with venue_name, venue_address, and min_price
+     * Decorate event beans with venue_name, venue_address, category_name, and min_price
      * so listing templates have everything they need without per-row
-     * lookups in Twig. Returns a new array; does not mutate the input.
+     * lookups in Twig. Returns a new array of stdClass objects with extra properties.
+     * 
+     * Note: Returns stdClass objects instead of modifying frozen beans directly.
      */
-    public function hydrate(array $events, VenueModel $venues, TicketModel $tickets): array
+    public function hydrate(array $events, VenueModel $venues, TicketModel $tickets, ?CategoryModel $categories = null): array
     {
         $out = [];
         foreach ($events as $event) {
-            $venue = $venues->getById((int) ($event->venue_id ?? 0));
-            $event->venue_name    = $venue ? (string) $venue->name : '';
-            $event->venue_address = $venue ? (string) $venue->address : '';
-            $event->min_price     = $tickets->minPriceForEvent((int) $event->id);
-            $out[] = $event;
+            // Create a new stdClass to hold all properties (avoids frozen bean issues)
+            $hydrated = new \stdClass();
+            
+            // Copy all existing bean properties
+            foreach ($event as $key => $value) {
+                $hydrated->$key = $value;
+            }
+            
+            // Add venue information
+            $venue = $venues->getById((int) ($hydrated->venue_id ?? 0));
+            $hydrated->venue_name    = $venue ? (string) $venue->name : '';
+            $hydrated->venue_address = $venue ? (string) $venue->address : '';
+            
+            // Add ticket pricing
+            $hydrated->min_price = $tickets->minPriceForEvent((int) ($hydrated->id ?? 0));
+            
+            // Add category name if category model is provided
+            if ($categories !== null && isset($hydrated->category_id)) {
+                $category = $categories->getById((int) $hydrated->category_id);
+                $hydrated->category = $category ? (string) $category->name : 'Uncategorized';
+            } elseif (!isset($hydrated->category)) {
+                $hydrated->category = 'Uncategorized';
+            }
+            
+            $out[] = $hydrated;
         }
         return $out;
     }
@@ -115,5 +137,87 @@ public function getPaginated($limit, $offset) {
 
 public function countAll() {
     return R::count('events');
+}
+
+/**
+ * Search and filter events by query string, category, and venue.
+ * Returns paginated results.
+ */
+public function search(array $filters, int $limit, int $offset): array
+{
+    $where = [];
+    $bindings = [];
+    
+    // Search by query string (title, description, or venue name)
+    if (!empty($filters['q'])) {
+        $searchTerm = '%' . $filters['q'] . '%';
+        $where[] = '(e.title LIKE ? OR e.description LIKE ? OR v.name LIKE ?)';
+        $bindings[] = $searchTerm;
+        $bindings[] = $searchTerm;
+        $bindings[] = $searchTerm;
+    }
+    
+    // Filter by category
+    if (!empty($filters['category'])) {
+        $where[] = 'e.category_id = ?';
+        $bindings[] = (int) $filters['category'];
+    }
+    
+    // Filter by venue
+    if (!empty($filters['venue'])) {
+        $where[] = 'e.venue_id = ?';
+        $bindings[] = (int) $filters['venue'];
+    }
+    
+    $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+    
+    $query = "SELECT e.* FROM events e 
+              LEFT JOIN venues v ON e.venue_id = v.id 
+              $whereClause 
+              ORDER BY e.date ASC 
+              LIMIT ? OFFSET ?";
+    
+    $bindings[] = $limit;
+    $bindings[] = $offset;
+    
+    return R::getAll($query, $bindings);
+}
+
+/**
+ * Count events matching the search criteria.
+ */
+public function countSearch(array $filters): int
+{
+    $where = [];
+    $bindings = [];
+    
+    // Search by query string (title, description, or venue name)
+    if (!empty($filters['q'])) {
+        $searchTerm = '%' . $filters['q'] . '%';
+        $where[] = '(e.title LIKE ? OR e.description LIKE ? OR v.name LIKE ?)';
+        $bindings[] = $searchTerm;
+        $bindings[] = $searchTerm;
+        $bindings[] = $searchTerm;
+    }
+    
+    // Filter by category
+    if (!empty($filters['category'])) {
+        $where[] = 'e.category_id = ?';
+        $bindings[] = (int) $filters['category'];
+    }
+    
+    // Filter by venue
+    if (!empty($filters['venue'])) {
+        $where[] = 'e.venue_id = ?';
+        $bindings[] = (int) $filters['venue'];
+    }
+    
+    $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+    
+    $query = "SELECT COUNT(*) FROM events e 
+              LEFT JOIN venues v ON e.venue_id = v.id 
+              $whereClause";
+    
+    return (int) R::getCell($query, $bindings);
 }
 }

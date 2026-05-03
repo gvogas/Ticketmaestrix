@@ -23,28 +23,62 @@ class EventController
     ) {}
 
     public function index(Request $request, Response $response): Response
-{
-    $queryParams = $request->getQueryParams();
-    $page = isset($queryParams['page']) ? (int)$queryParams['page'] : 1;
-    
-    $perPage = 9;
-    $offset = ($page - 1) * $perPage;
+    {
+        $queryParams = $request->getQueryParams();
+        $page = isset($queryParams['page']) ? (int)$queryParams['page'] : 1;
+        
+        $perPage = 9;
+        $offset = ($page - 1) * $perPage;
 
-    $events = $this->eventModel->getPaginated($perPage, $offset); 
+        // Check if there are any search/filter parameters
+        $hasFilters = !empty($queryParams['q']) || !empty($queryParams['category']) || !empty($queryParams['venue']);
 
-    $totalEvents = $this->eventModel->countAll();
-    $totalPages = ceil($totalEvents / $perPage);
+        if ($hasFilters) {
+            // Use search functionality
+            $filters = [
+                'q' => $queryParams['q'] ?? '',
+                'category' => $queryParams['category'] ?? '',
+                'venue' => $queryParams['venue'] ?? '',
+            ];
+            
+            $events = $this->eventModel->search($filters, $perPage, $offset);
+            $totalEvents = $this->eventModel->countSearch($filters);
+        } else {
+            // No filters - use regular pagination
+            $events = $this->eventModel->getPaginated($perPage, $offset);
+            $totalEvents = $this->eventModel->countAll();
+        }
+        
+        $totalPages = ceil($totalEvents / $perPage);
 
-    $html = $this->twig->render('event/index.html.twig', [
-        'base_path'   => $this->basePath,
-        'events'      => $events,
-        'currentPage' => $page,
-        'totalPages'  => $totalPages,
-    ]);
+        // Check if user is admin - render admin dashboard or user-friendly page
+        if (\App\Helpers\Auth::isAdmin()) {
+            // Admin sees the management console with edit/delete capabilities
+            $html = $this->twig->render('event/index.html.twig', [
+                'base_path'   => $this->basePath,
+                'events'      => $events,
+                'currentPage' => $page,
+                'totalPages'  => $totalPages,
+            ]);
+        } else {
+            // Regular users see a clean events listing page
+            // Hydrate events with venue, category, and ticket information for the user view
+            $events = $this->eventModel->hydrate($events, $this->venueModel, new \App\Models\TicketModel(), $this->categoryModel);
+            
+            $html = $this->twig->render('event/user_index.html.twig', [
+                'base_path'    => $this->basePath,
+                'events'       => $events,
+                'currentPage'  => $page,
+                'totalPages'   => $totalPages,
+                'categories'   => $this->categoryModel->getAll(),
+                'venues'       => $this->venueModel->getAll(),
+                'query_params' => $queryParams,
+            ]);
+        }
 
-    $response->getBody()->write($html);
-    return $response;
-}
+        $response->getBody()->write($html);
+        return $response;
+    }
 
     public function create(Request $request, Response $response): Response
     {

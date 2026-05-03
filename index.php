@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 
+// Suppress deprecation warnings for libraries not yet fully compatible with PHP 8.4+
+error_reporting(E_ALL & ~E_DEPRECATED);
+
+// Prevent warnings from being prepended to JSON/HTML output
+ini_set('display_errors', '0');
+
 use App\Controllers\AdminController;
 use App\Controllers\AuthController;
 use App\Controllers\CartController;
@@ -233,6 +239,7 @@ $app->group('', function ($group) {
 // --- Admin ---
 $app->get('/admin', [AdminController::class, 'showAdminDashboard']);
 $app->post('/admin/users/create', [AdminController::class, 'createAdmin']);
+$app->post('/admin/users/{id}/edit', [AdminController::class, 'updateAdmin']);
 $app->post('/admin/users/{id}/delete', [AdminController::class, 'deleteAdmin']);
 
 // --- Users ---

@@ -29,7 +29,14 @@ class UserController
     public function store(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
-        $this->userModel->create($data);
+        $this->userModel->create([
+            'first_name'   => $data['first_name'] ?? '',
+            'last_name'    => $data['last_name'] ?? '',
+            'email'        => $data['email'] ?? '',
+            'password'     => $data['password'] ?? '',
+            'phone_number' => $data['phone_number'] ?? '',
+            'role'         => $data['role'] ?? 'user',
+        ]);
 
         return $response
             ->withHeader('Location', $this->basePath . '/users')
@@ -73,17 +80,15 @@ class UserController
     public function delete(Request $request, Response $response, array $args): Response
     {
         if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Unauthorized operation']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
         }
-        $user = $this->userModel->load((int) ($args['id'] ?? 0));
+        $userId = (int) ($args['id'] ?? 0);
 
-        if ($user->id) {
-            $this->userModel->delete($user);
-        }
+        $this->userModel->delete($userId);
 
-        return $response
-            ->withHeader('Location', $this->basePath . '/users')
-            ->withStatus(302);
+        $response->getBody()->write(json_encode(['success' => true, 'message' => 'User successfully deleted']));
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
     /** GET /users/{id} — admin views one user's detail page. */

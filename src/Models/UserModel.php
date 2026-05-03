@@ -31,7 +31,7 @@ class UserModel
         return R::findOne('users', 'email = ?', [$email]);
     }
 
-    public function create(array $data): \RedBeanPHP\OODBBean
+    public function create(array $data): mixed
     {
         $bean = R::dispense('users');
         $bean->first_name   = $data['first_name'];
@@ -63,7 +63,7 @@ class UserModel
     /**
      * Updated to handle password changes and role management.
      */
-    public function update(int $id, array $data): ?\RedBeanPHP\OODBBean
+    public function update(int $id, array $data): mixed
     {
         $user = R::load('users', $id);
         if (!BeanHelper::isValidBean($user)) {
@@ -95,7 +95,7 @@ class UserModel
     public function delete(int $id): void
 {
     // R::load finds the 'user' bean by its primary key ID
-    $user = \RedBeanPHP\R::load('user', $id);
+    $user = \RedBeanPHP\R::load('users', $id);
     
     // If the user exists (id > 0), delete it from the database
     if ($user->id) {
