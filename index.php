@@ -246,11 +246,6 @@ $loggerMiddleware = function (Request $request, RequestHandler $handler) use ($l
     return $response;
 };
 
-$app->add(new MaintenanceMiddleware(
-    flagFile:        __DIR__ . '/var/maintenance.flag',
-    responseFactory: $app->getResponseFactory()
-));
-
 $app->add(new SecurityHeadersMiddleware());
 $app->add($loggerMiddleware);
 
