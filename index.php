@@ -34,8 +34,11 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use RedBeanPHP\R;
 use Slim\Factory\AppFactory;
+use Symfony\Component\Translation\Loader\ArrayLoader;
+use Symfony\Component\Translation\Translator;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
+use Twig\TwigFunction;
 
 
 
@@ -77,6 +80,24 @@ $twig   = new Environment($loader, [
 $twig->addGlobal('current_user', Auth::user());
 $twig->addGlobal('is_admin',     Auth::isAdmin());
 $twig->addGlobal('cart_count',   Cart::count());
+
+
+
+// ============== I18N — symfony/translation ================
+// Reads locale from session; defaults to 'en'.
+// trans('key') is available in every Twig template.
+
+$translator = new Translator($_SESSION['lang'] ?? 'en');
+$translator->addLoader('array', new ArrayLoader());
+$translator->addResource('array', require __DIR__ . '/translations/messages.en.php', 'en');
+$translator->addResource('array', require __DIR__ . '/translations/messages.fr.php', 'fr');
+
+// Expose trans() to templates and inject the active locale on every render.
+$twig->addFunction(new TwigFunction('trans', function (string $key, array $params = []) use ($translator) {
+    $locale = $_SESSION['lang'] ?? 'en';
+    return $translator->trans($key, $params, null, $locale);
+}));
+$twig->addGlobal('current_locale', $_SESSION['lang'] ?? 'en');
 
 
 
@@ -326,6 +347,17 @@ $app->group('/cart', function ($group) {
     $group->post('/remove/{ticket_id}',   [CartController::class, 'remove']);
     $group->post('/clear',                [CartController::class, 'clear']);
     $group->post('/checkout',             [CartController::class, 'checkout']);
+});
+
+
+// --- Language switcher ---
+$app->get('/lang/{locale}', function (Request $request, Response $response, array $args) use ($basePath) {
+    $allowed = ['en', 'fr'];
+    // Store the chosen locale in session so it persists across requests.
+    if (in_array($args['locale'], $allowed, true)) {
+        $_SESSION['lang'] = $args['locale'];
+    }
+    return $response->withHeader('Location', $basePath . '/')->withStatus(302);
 });
 
 
