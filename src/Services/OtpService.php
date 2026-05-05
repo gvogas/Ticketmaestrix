@@ -24,7 +24,10 @@ class OtpService
 
     public function __construct(private UserModel $userModel)
     {
-        $this->tfa = new TwoFactorAuth(new BaconQrCodeProvider(4, '#ffffff', '#000000', 'svg'), 'Ticketmaestrix');
+        $this->tfa = new TwoFactorAuth(
+            issuer: 'Ticketmaestrix',
+            qrcodeprovider: new BaconQrCodeProvider(4, '#ffffff', '#000000', 'svg'),
+        );
     }
 
     /**
