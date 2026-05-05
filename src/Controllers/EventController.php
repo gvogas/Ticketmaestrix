@@ -26,7 +26,7 @@ class EventController
     {
         $queryParams = $request->getQueryParams();
         $page = isset($queryParams['page']) ? (int)$queryParams['page'] : 1;
-        
+
         $perPage = 9;
         $offset = ($page - 1) * $perPage;
 
@@ -40,7 +40,7 @@ class EventController
                 'category' => $queryParams['category'] ?? '',
                 'venue' => $queryParams['venue'] ?? '',
             ];
-            
+
             $events = $this->eventModel->search($filters, $perPage, $offset);
             $totalEvents = $this->eventModel->countSearch($filters);
         } else {
@@ -48,7 +48,7 @@ class EventController
             $events = $this->eventModel->getPaginated($perPage, $offset);
             $totalEvents = $this->eventModel->countAll();
         }
-        
+
         $totalPages = ceil($totalEvents / $perPage);
 
         // Check if user is admin - render admin dashboard or user-friendly page
@@ -64,7 +64,7 @@ class EventController
             // Regular users see a clean events listing page
             // Hydrate events with venue, category, and ticket information for the user view
             $events = $this->eventModel->hydrate($events, $this->venueModel, new \App\Models\TicketModel(), $this->categoryModel);
-            
+
             $html = $this->twig->render('event/user_index.html.twig', [
                 'base_path'    => $this->basePath,
                 'events'       => $events,
@@ -100,8 +100,29 @@ class EventController
         if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
             return $redirect;
         }
-        $data = $request->getParsedBody();
-        $newEvent = $this->eventModel->create(
+
+        $data = (array) ($request->getParsedBody() ?? []);
+
+        $errors = [];
+        if (empty($data['title']))       $errors['title']       = ['Title is required.'];
+        if (empty($data['description'])) $errors['description'] = ['Description is required.'];
+        if (empty($data['date']))        $errors['date']        = ['Date is required.'];
+        if (empty($data['venue_id']))    $errors['venue_id']    = ['Please select a venue.'];
+        if (empty($data['category_id'])) $errors['category_id'] = ['Please select a category.'];
+
+        if ($errors) {
+            $html = $this->twig->render('event/create.html.twig', [
+                'base_path'  => $this->basePath,
+                'categories' => $this->categoryModel->getAll(),
+                'venues'     => $this->venueModel->getAll(),
+                'errors'     => $errors,
+                'input'      => $data,
+            ]);
+            $response->getBody()->write($html);
+            return $response->withStatus(422);
+        }
+
+        $this->eventModel->create(
             (string) ($data['title'] ?? ''),
             (string) ($data['description'] ?? ''),
             (string) ($data['date'] ?? ''),
@@ -109,8 +130,8 @@ class EventController
             (int) ($data['category_id'] ?? 0),
             (string) ($data['event_image'] ?? ''),
         );
-        $response->getBody()->write(json_encode(['success' => true, 'event' => $newEvent, 'message' => 'Event created']));
-        return $response->withHeader('Content-Type', 'application/json');
+
+        return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
     }
 
     public function edit(Request $request, Response $response, array $args): Response
@@ -139,8 +160,31 @@ class EventController
         if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
             return $redirect;
         }
-        $id    = (int) $args['id'];
-        $data  = $request->getParsedBody();
+
+        $id   = (int) $args['id'];
+        $data = (array) ($request->getParsedBody() ?? []);
+
+        $errors = [];
+        if (empty($data['title']))       $errors['title']       = ['Title is required.'];
+        if (empty($data['description'])) $errors['description'] = ['Description is required.'];
+        if (empty($data['date']))        $errors['date']        = ['Date is required.'];
+        if (empty($data['venue_id']))    $errors['venue_id']    = ['Please select a venue.'];
+        if (empty($data['category_id'])) $errors['category_id'] = ['Please select a category.'];
+
+        if ($errors) {
+            $event = $this->eventModel->getById($id);
+            $html  = $this->twig->render('event/edit.html.twig', [
+                'base_path'  => $this->basePath,
+                'event'      => $event,
+                'categories' => $this->categoryModel->getAll(),
+                'venues'     => $this->venueModel->getAll(),
+                'errors'     => $errors,
+                'input'      => $data,
+            ]);
+            $response->getBody()->write($html);
+            return $response->withStatus(422);
+        }
+
         $event = $this->eventModel->load($id);
 
         if ($event->id) {
@@ -153,8 +197,7 @@ class EventController
             $this->eventModel->save($event);
         }
 
-        $response->getBody()->write(json_encode(['success' => true, 'message' => 'Event updated']));
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Location', $this->basePath . '/events/' . $id . '/edit')->withStatus(302);
     }
 
     public function destroy(Request $request, Response $response, array $args): Response
@@ -166,8 +209,7 @@ class EventController
         if ($event->id) {
             $this->eventModel->delete($event);
         }
-        $response->getBody()->write(json_encode(['success' => true, 'message' => 'Event deleted']));
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
     }
 
     public function viewDetails(Request $request, Response $response, array $args): Response
