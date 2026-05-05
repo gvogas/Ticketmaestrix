@@ -1,27 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ current_locale }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ venue.name }} - TicketMaestrix</title>
-    
+    <title>{{ venue.name }} - {{ trans('app.title') }}</title>
+
     <!-- Bootstrap 5 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-        :root { 
-            --brand-purple: #5E246E; 
-            --brand-hover: #4a1d56; 
+        :root {
+            --brand-purple: #5E246E;
+            --brand-hover: #4a1d56;
             --bg-light: #f8fafc;
             --border-color: #e2e8f0;
         }
 
-        body { 
-            background-color: #ffffff; 
-            font-family: 'Inter', sans-serif; 
+        body {
+            background-color: #ffffff;
+            font-family: 'Inter', sans-serif;
             color: #1a202c;
         }
 
@@ -117,26 +117,26 @@
     {% include 'partials/navbar.html.twig' %}
 
     <div class="container">
-        
+
         <!-- Header -->
         <header class="admin-header">
             <div class="row align-items-center">
                 <div class="col-lg-5">
                     <a href="{{ base_path }}/venues" class="text-decoration-none text-muted fw-600 mb-2 d-inline-block">
-                        <i class="bi bi-arrow-left"></i> Back to Venues
+                        <i class="bi bi-arrow-left"></i> {{ trans('vadmin.back_venues') }}
                     </a>
-                    <h1 class="fw-800 h2 mb-0">Venue Details</h1>
+                    <h1 class="fw-800 h2 mb-0">{{ trans('vadmin.details_header') }}</h1>
                 </div>
                 <div class="col-lg-7 text-lg-end mt-3 mt-lg-0">
                     <div class="d-flex gap-2 justify-content-lg-end flex-wrap">
                         <a href="{{ base_path }}/categories" class="btn-mgmt">
-                            <i class="bi bi-tags-fill me-2"></i> Categories
+                            <i class="bi bi-tags-fill me-2"></i> {{ trans('evadmin.cat') }}
                         </a>
                         <a href="{{ base_path }}/events" class="btn-mgmt">
-                            <i class="bi bi-calendar-event me-2"></i> Events
+                            <i class="bi bi-calendar-event me-2"></i> {{ trans('evadmin.events') }}
                         </a>
                         <a href="{{ base_path }}/tickets" class="btn-mgmt">
-                            <i class="bi bi-ticket-perforated me-2"></i> Tickets
+                            <i class="bi bi-ticket-perforated me-2"></i> {{ trans('evadmin.tickets') }}
                         </a>
                     </div>
                 </div>
@@ -159,32 +159,32 @@
                     <div class="col-12 text-center mb-4">
                         <h2 class="display-6 fw-800 mb-2">{{ venue.name }}</h2>
                         <span class="badge bg-purple-soft px-3 py-2 rounded-pill" style="background: #f3e8ff; color: var(--brand-purple);">
-                            <i class="bi bi-shield-check me-1"></i> Verified Venue
+                            <i class="bi bi-shield-check me-1"></i> {{ trans('vadmin.verified') }}
                         </span>
                     </div>
 
                     <div class="col-md-6">
                         <div class="info-pill">
-                            <span class="label-text">Physical Address</span>
+                            <span class="label-text">{{ trans('vadmin.phys_address') }}</span>
                             <div class="value-text">
-                                <i class="bi bi-geo-alt-fill me-2 text-muted"></i>{{ venue.address ?: 'No address listed' }}
+                                <i class="bi bi-geo-alt-fill me-2 text-muted"></i>{{ venue.address ?: trans('vadmin.no_address') }}
                             </div>
                         </div>
                     </div>
 
                     <div class="col-md-6">
                         <div class="info-pill">
-                            <span class="label-text">Maximum Capacity</span>
+                            <span class="label-text">{{ trans('vadmin.max_capacity') }}</span>
                             <div class="value-text">
-                                <i class="bi bi-people-fill me-2 text-muted"></i>{{ venue.capacity|number_format ?: '—' }} Seats
+                                <i class="bi bi-people-fill me-2 text-muted"></i>{{ venue.capacity|number_format ?: '—' }} {{ trans('vadmin.seats') }}
                             </div>
                         </div>
                     </div>
 
                     <div class="col-12 mt-5">
-                        <span class="label-text">About this Venue</span>
+                        <span class="label-text">{{ trans('vadmin.about') }}</span>
                         <p class="venue-description">
-                            {{ venue.description ?: 'No description has been provided for this venue yet.' }}
+                            {{ venue.description ?: trans('vadmin.no_desc') }}
                         </p>
                     </div>
 
@@ -193,13 +193,14 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex gap-2">
                                 <a href="{{ base_path }}/venues/{{ venue.id }}/edit" class="btn btn-dark px-4 py-2 fw-bold" style="border-radius: 12px;">
-                                    <i class="bi bi-pencil-square me-2"></i> Edit Venue
+                                    <i class="bi bi-pencil-square me-2"></i> {{ trans('vadmin.edit_btn') }}
                                 </a>
                             </div>
-                            
-                            <form action="{{ base_path }}/venues/{{ venue.id }}/delete" method="POST" onsubmit="return confirm('Permanently delete this venue?')">
+
+                            <form action="{{ base_path }}/venues/{{ venue.id }}/delete" method="POST"
+                                  onsubmit="return confirm('{{ trans('confirm.delete_venue')|e('js') }}')">
                                 <button type="submit" class="btn btn-outline-danger px-4 py-2 fw-bold" style="border-radius: 12px;">
-                                    <i class="bi bi-trash3 me-2"></i> Delete Venue
+                                    <i class="bi bi-trash3 me-2"></i> {{ trans('vadmin.delete_btn') }}
                                 </button>
                             </form>
                         </div>

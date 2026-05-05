@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ current_locale }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Ticket - TicketMaestrix</title>
-    
+    <title>{{ trans('tadmin.crud.updatename') }} - {{ trans('app.title') }}</title>
+
     <!-- Bootstrap 5 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -13,16 +13,16 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-        :root { 
-            --brand-purple: #5E246E; 
-            --brand-hover: #4a1d56; 
+        :root {
+            --brand-purple: #5E246E;
+            --brand-hover: #4a1d56;
             --bg-light: #f8fafc;
             --border-color: #e2e8f0;
         }
 
-        body { 
-            background-color: #ffffff; 
-            font-family: 'Inter', sans-serif; 
+        body {
+            background-color: #ffffff;
+            font-family: 'Inter', sans-serif;
             color: #1a202c;
         }
 
@@ -109,28 +109,27 @@
 </head>
 <body>
 
-    <!-- Existing Navbar Include -->
     {% include 'partials/navbar.html.twig' %}
 
     <div class="container">
-        
+
         <!-- Admin Dashboard Header -->
         <header class="admin-header">
             <div class="row align-items-center">
                 <div class="col-lg-6">
-                    <h1 class="fw-800 display-5 mb-1">Edit Ticket</h1>
-                    <p class="text-muted fs-5">Updating Ticket ID: #{{ ticket.id }}</p>
+                    <h1 class="fw-800 display-5 mb-1">{{ trans('tadmin.crud.updatename') }}</h1>
+                    <p class="text-muted fs-5">{{ trans('tadmin.crud.updateid') }} #{{ ticket.id }}</p>
                 </div>
                 <div class="col-lg-6 text-lg-end mt-4 mt-lg-0">
                     <div class="d-flex gap-2 justify-content-lg-end flex-wrap">
                         <a href="{{ base_path }}/categories" class="btn-mgmt">
-                            <i class="bi bi-tags-fill me-2"></i> Categories
+                            <i class="bi bi-tags-fill me-2"></i> {{ trans('evadmin.cat') }}
                         </a>
                         <a href="{{ base_path }}/venues" class="btn-mgmt">
-                            <i class="bi bi-geo-alt-fill me-2"></i> Venues
+                            <i class="bi bi-geo-alt-fill me-2"></i> {{ trans('evadmin.venue') }}
                         </a>
                         <a href="{{ base_path }}/tickets" class="btn-mgmt">
-                            <i class="bi bi-ticket-perforated-fill me-2"></i> Back to Tickets
+                            <i class="bi bi-ticket-perforated-fill me-2"></i> {{ trans('tadmin.crud.back') }}
                         </a>
                     </div>
                 </div>
@@ -141,10 +140,10 @@
         <div class="form-container">
             <form action="{{ base_path }}/tickets/{{ ticket.id }}/update" method="post">
                 <div class="row g-4">
-                    
+
                     <!-- Event Selection -->
                     <div class="col-12">
-                        <label for="event_id" class="form-label">Associated Event</label>
+                        <label for="event_id" class="form-label">{{ trans('tadmin.crud.updateevent') }}</label>
                         <select id="event_id" name="event_id" required
                                 class="form-select{{ errors.event_id is defined ? ' is-invalid' : '' }}">
                             <option value="">— Choose an event —</option>
@@ -161,7 +160,7 @@
 
                     <!-- Row -->
                     <div class="col-md-6">
-                        <label for="row" class="form-label">Row</label>
+                        <label for="row" class="form-label">{{ trans('tadmin.crud.updaterow') }}</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-grid-3x2"></i></span>
                             <input type="text" id="row" name="row" required
@@ -175,7 +174,7 @@
 
                     <!-- Seat -->
                     <div class="col-md-6">
-                        <label for="seat" class="form-label">Seat</label>
+                        <label for="seat" class="form-label">{{ trans('tadmin.crud.updateseat') }}</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
                             <input type="text" id="seat" name="seat" required
@@ -189,7 +188,7 @@
 
                     <!-- Price -->
                     <div class="col-12">
-                        <label for="price" class="form-label">Update Price</label>
+                        <label for="price" class="form-label">{{ trans('tadmin.crud.updateprice') }}</label>
                         <div class="input-group">
                             <span class="input-group-text">$</span>
                             <input type="number" id="price" name="price" required
@@ -205,10 +204,10 @@
                     <div class="col-12 mt-5">
                         <div class="d-flex gap-3 pt-4 border-top">
                             <button type="submit" class="btn-purple px-5">
-                                <i class="bi bi-cloud-arrow-up me-2"></i> Update Ticket
+                                <i class="bi bi-cloud-arrow-up me-2"></i> {{ trans('tadmin.crud.update') }}
                             </button>
                             <a href="{{ base_path }}/tickets" class="btn btn-outline-secondary px-5 py-2 fw-bold" style="border-radius: 10px; display: flex; align-items: center;">
-                                Cancel
+                                {{ trans('tadmin.crud.cancel') }}
                             </a>
                         </div>
                     </div>

@@ -1,27 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ current_locale }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Venues - TicketMaestrix</title>
-    
+    <title>{{ trans('vadmin.crud.header') }} - {{ trans('app.title') }}</title>
+
     <!-- Bootstrap 5 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-        :root { 
-            --brand-purple: #5E246E; 
-            --brand-hover: #4a1d56; 
+        :root {
+            --brand-purple: #5E246E;
+            --brand-hover: #4a1d56;
             --bg-light: #f8fafc;
             --border-color: #e2e8f0;
         }
 
-        body { 
-            background-color: #ffffff; 
-            font-family: 'Inter', sans-serif; 
+        body {
+            background-color: #ffffff;
+            font-family: 'Inter', sans-serif;
             color: #1a202c;
         }
 
@@ -71,7 +71,7 @@
             background: #fdfaff;
         }
 
-        /* Venue Card Design (Matching image_fb7002.png) */
+        /* Venue Card Design */
         .venue-card {
             border: 1px solid #f0f0f0;
             border-radius: 20px;
@@ -148,7 +148,7 @@
         .text-truncate-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;  
+            -webkit-box-orient: vertical;
             overflow: hidden;
         }
     </style>
@@ -158,28 +158,27 @@
     {% include 'partials/navbar.html.twig' %}
 
     <div class="container">
-        
+
         <!-- Admin Dashboard Header -->
         <header class="admin-header">
             <div class="row align-items-center">
                 <div class="col-lg-5">
-                    <h1 class="fw-800 display-5 mb-1">Venues</h1>
-                    <p class="text-muted fs-5">Manage stadium layouts and seating capacities.</p>
+                    <h1 class="fw-800 display-5 mb-1">{{ trans('vadmin.crud.header') }}</h1>
+                    <p class="text-muted fs-5">{{ trans('vadmin.subheader_venues') }}</p>
                 </div>
                 <div class="col-lg-7 text-lg-end mt-4 mt-lg-0">
                     <div class="d-flex gap-2 justify-content-lg-end flex-wrap">
-                        <!-- Restored Categories Link -->
                         <a href="{{ base_path }}/categories" class="btn-mgmt">
-                            <i class="bi bi-tags-fill me-2"></i> Categories
+                            <i class="bi bi-tags-fill me-2"></i> {{ trans('evadmin.cat') }}
                         </a>
                         <a href="{{ base_path }}/events" class="btn-mgmt">
-                            <i class="bi bi-calendar-event me-2"></i> Events
+                            <i class="bi bi-calendar-event me-2"></i> {{ trans('evadmin.events') }}
                         </a>
                         <a href="{{ base_path }}/tickets" class="btn-mgmt">
-                            <i class="bi bi-ticket-perforated me-2"></i> Tickets
+                            <i class="bi bi-ticket-perforated me-2"></i> {{ trans('evadmin.tickets') }}
                         </a>
                         <a href="{{ base_path }}/venues/create" class="btn-purple ms-lg-2">
-                            <i class="bi bi-plus-lg me-2"></i> Add New Venue
+                            <i class="bi bi-plus-lg me-2"></i> {{ trans('vadmin.crud.add') }}
                         </a>
                     </div>
                 </div>
@@ -191,7 +190,7 @@
             {% for venue in venues %}
             <div class="col-md-6 col-lg-4">
                 <article class="venue-card" data-name="{{ venue.name|e('html_attr') }}">
-                    
+
                     <!-- Header Visual -->
                     <div class="venue-visual">
                         <span class="capacity-badge">
@@ -199,7 +198,7 @@
                         </span>
                         <i class="bi bi-building-check venue-icon"></i>
                     </div>
-                    
+
                     <!-- Info Content -->
                     <div class="card-content">
                         <h3>{{ venue.name|e('html') }}</h3>
@@ -212,12 +211,13 @@
                     <!-- Actions -->
                     <div class="admin-footer">
                         <a href="{{ base_path }}/venues/{{ venue.id }}/edit" class="btn btn-sm btn-outline-secondary px-4 rounded-pill fw-bold">
-                            <i class="bi bi-pencil-square me-1"></i> Edit
+                            <i class="bi bi-pencil-square me-1"></i> {{ trans('vadmin.crud.edit') }}
                         </a>
-                        
-                        <form action="{{ base_path }}/venues/{{ venue.id }}/delete" method="post" class="m-0" onsubmit="return confirm('Permanently delete this venue?')">
+
+                        <form action="{{ base_path }}/venues/{{ venue.id }}/delete" method="post" class="m-0"
+                              onsubmit="return confirm('{{ trans('confirm.delete_venue')|e('js') }}')">
                             <button type="submit" class="btn btn-sm btn-outline-danger px-4 rounded-pill fw-bold">
-                                <i class="bi bi-trash3 me-1"></i> Delete
+                                <i class="bi bi-trash3 me-1"></i> {{ trans('vadmin.crud.delete') }}
                             </button>
                         </form>
                     </div>
@@ -227,8 +227,8 @@
             <div class="col-12 text-center py-5">
                 <div class="py-5">
                     <i class="bi bi-building display-1 text-light mb-4"></i>
-                    <p class="text-muted fs-4">No venues found in the system.</p>
-                    <a href="{{ base_path }}/venues/create" class="btn-purple mt-2">Add Your First Venue</a>
+                    <p class="text-muted fs-4">{{ trans('vadmin.no_items') }}</p>
+                    <a href="{{ base_path }}/venues/create" class="btn-purple mt-2">{{ trans('vadmin.crud.add') }}</a>
                 </div>
             </div>
             {% endfor %}

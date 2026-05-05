@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ current_locale }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ticketmaestrix{% endblock %}</title>
+    <title>{% block title %}{{ trans('app.title') }}{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -16,12 +16,11 @@
     </main>
 
     <footer class="bg-gray-900 text-gray-400 text-center text-xs py-6">
-        &copy; 2026 ticketmaestrix. All rights reserved.
+        &copy; 2026 {{ trans('app.title') }}. {{ trans('footer.rights') }}
     </footer>
 
     <script>
         lucide.createIcons();
-     
     </script>
 </body>
 </html>

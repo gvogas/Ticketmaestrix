@@ -1,8 +1,8 @@
 <nav class="navbar navbar-expand-md navbar-dark sticky-top shadow-sm" style="background-color: #5E246E;">
     <div class="container-fluid px-4">
-        
+
         <a class="navbar-brand fw-bold fs-4 tracking-tight m-0">
-            ticketmaestrix
+            {{ trans('app.title') }}
         </a>
 
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -13,17 +13,17 @@
             <ul class="navbar-nav ms-auto mb-2 mb-md-0 align-items-center">
                 <li class="nav-item px-2">
                     <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'home' %}active{% endif %}" href="{{ base_path }}/">
-                        <i class="bi bi-house-door"></i> Home
+                        <i class="bi bi-house-door"></i> {{ trans('app.home') }}
                     </a>
                 </li>
                 <li class="nav-item px-2">
                     <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'events' %}active{% endif %}" href="{{ base_path }}/events">
-                        <i class="bi bi-ticket-perforated"></i> Events
+                        <i class="bi bi-ticket-perforated"></i> {{ trans('app.events') }}
                     </a>
                 </li>
                 <li class="nav-item px-2">
                     <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'map' %}active{% endif %}" href="{{ base_path }}/map">
-                        <i class="bi bi-geo-alt"></i> Map
+                        <i class="bi bi-geo-alt"></i> {{ trans('app.map') }}
                     </a>
                 </li>
 
@@ -31,7 +31,7 @@
                 <li class="nav-item px-2">
                     <a class="nav-link d-flex align-items-center gap-2 position-relative {% if current_route == 'cart' %}active{% endif %}" href="{{ base_path }}/cart">
                         <i class="bi bi-cart3"></i>
-                        <span class="d-md-none">Cart</span>
+                        <span class="d-md-none">{{ trans('app.cart') }}</span>
                         {% if cart_count and cart_count > 0 %}
                             <span id="cart-badge" class="badge bg-danger rounded-pill" style="font-size: 0.6rem; transition: opacity 0.4s ease;">{{ cart_count }}</span>
                         {% endif %}
@@ -48,7 +48,7 @@
                     {% if is_admin %}
                         <li class="nav-item px-2">
                             <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'admin' %}active{% endif %}" href="{{ base_path }}/admin">
-                                <i class="bi bi-shield-lock"></i> Admin
+                                <i class="bi bi-shield-lock"></i> {{ trans('app.admin') }}
                             </a>
                         </li>
                     {% endif %}
@@ -56,19 +56,19 @@
                         {# Logout is a POST so it can't be triggered by a stray GET / link prefetch. #}
                         <form method="POST" action="{{ base_path }}/logout" class="d-inline m-0">
                             <button type="submit" class="nav-link btn btn-link p-0 d-flex align-items-center gap-2">
-                                <i class="bi bi-box-arrow-right"></i> Logout
+                                <i class="bi bi-box-arrow-right"></i> {{ trans('app.logout') }}
                             </button>
                         </form>
                     </li>
                 {% else %}
                     <li class="nav-item px-2">
                         <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'login' %}active{% endif %}" href="{{ base_path }}/login">
-                            <i class="bi bi-box-arrow-in-right"></i> Login
+                            <i class="bi bi-box-arrow-in-right"></i> {{ trans('app.login') }}
                         </a>
                     </li>
                     <li class="nav-item px-2">
                         <a class="nav-link d-flex align-items-center gap-2" href="{{ base_path }}/signup">
-                            <i class="bi bi-person-plus"></i> Sign up
+                            <i class="bi bi-person-plus"></i> {{ trans('app.signup') }}
                         </a>
                     </li>
                 {% endif %}
@@ -106,14 +106,14 @@
 
     .nav-link {
         color: rgba(255, 255, 255, 0.7) !important;
-        font-weight: 400; 
+        font-weight: 400;
         transition: all 0.2s ease-in-out;
     }
 
     /* Homepage Bold Logic */
     .nav-link.active {
         color: #fff !important;
-        font-weight: 700 !important; 
+        font-weight: 700 !important;
     }
 
     .nav-link:hover {

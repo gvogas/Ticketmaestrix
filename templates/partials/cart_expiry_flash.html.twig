@@ -21,22 +21,22 @@
             </div>
             <div style="flex: 1; min-width: 0;">
                 <div style="font-weight: 700; color: #7C2D12; font-size: 0.9rem; line-height: 1.4;">
-                    Hurry — your cart expires in
+                    {{ trans('flash.warn_hurry') }}
                     <span id="flash-seconds" style="display: inline-block; background: #F76707; color: #fff; font-weight: 800; padding: 0 7px; border-radius: 5px; min-width: 2ch; text-align: center;">30</span>
-                    seconds
+                    {{ trans('flash.warn_second') }}
                 </div>
-                <div style="color: #9A3412; font-size: 0.75rem; margin-top: 1px;">Complete your purchase before your tickets are released.</div>
+                <div style="color: #9A3412; font-size: 0.75rem; margin-top: 1px;">{{ trans('flash.warn_sub') }}</div>
                 <div style="height: 3px; background: #FDBA74; border-radius: 2px; margin-top: 7px; overflow: hidden;">
                     <div id="expiry-progress" style="height: 100%; background: #F76707; width: 100%; border-radius: 2px;"></div>
                 </div>
             </div>
             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0;">
-                <button id="expiry-warn-close" type="button" aria-label="Close"
+                <button id="expiry-warn-close" type="button" aria-label="{{ trans('flash.go_to_cart') }}"
                         style="background: none; border: none; cursor: pointer; color: #9A3412; font-size: 1rem; line-height: 1; padding: 0; opacity: 0.55; transition: opacity .2s;">
                     <i class="bi bi-x-lg"></i>
                 </button>
                 <a href="{{ base_path }}/cart" style="font-size: 0.72rem; color: #F76707; font-weight: 700; text-decoration: none; white-space: nowrap;">
-                    Go to cart &rsaquo;
+                    {{ trans('flash.go_to_cart') }} &rsaquo;
                 </a>
             </div>
         </div>
@@ -49,14 +49,14 @@
                 <i class="bi bi-cart-x-fill" style="color: #fff; font-size: 1.15rem;"></i>
             </div>
             <div style="flex: 1; min-width: 0;">
-                <div style="font-weight: 700; color: #F3F0FF; font-size: 0.9rem; line-height: 1.4;">Cart expired</div>
-                <div style="color: #C4B5FD; font-size: 0.75rem; margin-top: 1px;">Your tickets have been released — add them again to continue.</div>
+                <div style="font-weight: 700; color: #F3F0FF; font-size: 0.9rem; line-height: 1.4;">{{ trans('flash.expired') }}</div>
+                <div style="color: #C4B5FD; font-size: 0.75rem; margin-top: 1px;">{{ trans('flash.expired_sub') }}</div>
             </div>
             <div style="display: flex; align-items: center; gap: 14px; flex-shrink: 0;">
                 <a href="{{ base_path }}/events" style="font-size: 0.75rem; color: #C084FC; font-weight: 700; text-decoration: none; white-space: nowrap;">
-                    Browse events &rsaquo;
+                    {{ trans('flash.browse_events') }} &rsaquo;
                 </a>
-                <button id="expiry-expired-close" type="button" aria-label="Close"
+                <button id="expiry-expired-close" type="button" aria-label="{{ trans('flash.browse_events') }}"
                         style="background: none; border: none; cursor: pointer; color: #9CA3AF; font-size: 1rem; line-height: 1; padding: 0; opacity: 0.55; transition: opacity .2s;">
                     <i class="bi bi-x-lg"></i>
                 </button>

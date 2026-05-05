@@ -1,24 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ current_locale }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ category.name|default('Events') }} - TicketMaestrix</title>
+    <title>{{ category.name|default(trans('events.header')) }} - {{ trans('app.title') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-        :root { 
-            --brand-purple: #5E246E; 
-            --brand-hover: #4a1d56; 
+        :root {
+            --brand-purple: #5E246E;
+            --brand-hover: #4a1d56;
         }
 
-        body { 
-            background-color: #ffffff; 
-            font-family: 'Inter', sans-serif; 
-            color: #1a202c; 
+        body {
+            background-color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            color: #1a202c;
         }
 
         .category-header { padding: 40px 0 20px 0; }
@@ -49,7 +49,7 @@
             align-items: center;
         }
 
-        /* Fixed Button Hover - No more black text */
+        /* Fixed Button Hover */
         .btn-get-tickets {
             background-color: var(--brand-purple) !important;
             color: white !important;
@@ -65,14 +65,14 @@
 
         .btn-get-tickets:hover {
             background-color: var(--brand-hover) !important;
-            color: white !important; /* Strictly prevents Bootstrap black text */
+            color: white !important;
             box-shadow: 0 4px 15px rgba(94, 36, 110, 0.3);
             transform: translateY(-2px);
         }
 
-        .event-card { 
-            border: 1px solid #f0f0f0; 
-            border-radius: 20px; 
+        .event-card {
+            border: 1px solid #f0f0f0;
+            border-radius: 20px;
             overflow: hidden;
             transition: transform 0.3s ease;
             height: 100%;
@@ -90,21 +90,20 @@
     <div class="container mt-4">
         <!-- Back Arrow Link -->
         <a href="javascript:history.back()" class="btn-back">
-            <i class="bi bi-arrow-left me-2"></i> Back
+            <i class="bi bi-arrow-left me-2"></i> {{ trans('evcatpage.back') }}
         </a>
 
         <header class="category-header">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <div>
                     <h1 class="category-title mb-1">
-                        Events in <span class="category-highlight">{{ category.name|default('this Category') }}</span>
+                        {{ trans('evcatpage.header_prefix') }} <span class="category-highlight">{{ category.name|default('') }}</span>
                     </h1>
-                    <p class="text-muted mb-0">Discover incredible experiences near you.</p>
                 </div>
                 <!-- Restored Count Badge -->
                 <div class="results-badge">
                     <i class="bi bi-ticket-perforated me-2"></i>
-                    {{ events|length }} Results Found
+                    {{ events|length }}
                 </div>
             </div>
         </header>
@@ -112,7 +111,7 @@
         {% if events is empty %}
             <div class="text-center py-5">
                 <i class="bi bi-search text-muted mb-3" style="font-size: 3rem;"></i>
-                <h3 class="text-muted">No events currently listed in this category.</h3>
+                <h3 class="text-muted">{{ trans('evcatpage.no_events') }}</h3>
             </div>
         {% else %}
             <div class="row g-4 pb-5">
@@ -126,11 +125,11 @@
                                 <i class="bi bi-calendar3 me-2" style="color: var(--brand-purple);"></i>{{ event.date }}
                             </div>
                             <div class="small text-muted mb-4">
-                                <i class="bi bi-geo-alt-fill me-2" style="color: var(--brand-purple);"></i>Venue #{{ event.venue_id }}
+                                <i class="bi bi-geo-alt-fill me-2" style="color: var(--brand-purple);"></i>{{ event.venue_name ?: ('Venue #' ~ event.venue_id) }}
                             </div>
-                            
+
                             <a href="{{ base_path }}/events/{{ event.id }}" class="btn-get-tickets">
-                                Get Tickets
+                                {{ trans('evcatpage.details') }}
                             </a>
                         </div>
                     </div>

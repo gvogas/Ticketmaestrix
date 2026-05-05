@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ current_locale }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Users - TicketMaestrix Admin</title>
+    <title>{{ trans('useradmin.header') }} - {{ trans('app.title') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
@@ -18,7 +18,7 @@
 
     <div class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold">Users</h2>
+            <h2 class="fw-bold">{{ trans('useradmin.header') }}</h2>
             <span class="text-muted">{{ users|length }} total</span>
         </div>
 
@@ -28,10 +28,10 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th class="text-end">Actions</th>
+                            <th>{{ trans('useradmin.col_name') }}</th>
+                            <th>{{ trans('useradmin.col_email') }}</th>
+                            <th>{{ trans('useradmin.col_role') }}</th>
+                            <th class="text-end">{{ trans('useradmin.col_actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -46,15 +46,15 @@
                                 </td>
                                 <td class="text-end">
                                     <form method="POST" action="{{ base_path }}/users/{{ u.id }}/role" class="d-inline">
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Toggle role</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">{{ trans('useradmin.toggle_role') }}</button>
                                     </form>
-                                    <form method="POST" action="{{ base_path }}/users/{{ u.id }}/delete" class="d-inline" onsubmit="return confirm('Delete this user?');">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    <form method="POST" action="{{ base_path }}/users/{{ u.id }}/delete" class="d-inline" onsubmit="return confirm('{{ trans('confirm.delete_user')|e('js') }}');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">{{ trans('useradmin.delete') }}</button>
                                     </form>
                                 </td>
                             </tr>
                         {% else %}
-                            <tr><td colspan="5" class="text-center text-muted py-4">No users yet.</td></tr>
+                            <tr><td colspan="5" class="text-center text-muted py-4">{{ trans('useradmin.no_users') }}</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>

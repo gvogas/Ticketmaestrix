@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ current_locale }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Venue - TicketMaestrix</title>
-    
+    <title>{{ trans('vadmin.crud.subcreate') }} - {{ trans('app.title') }}</title>
+
     <!-- Bootstrap 5 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -13,16 +13,16 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-        :root { 
-            --brand-purple: #5E246E; 
-            --brand-hover: #4a1d56; 
+        :root {
+            --brand-purple: #5E246E;
+            --brand-hover: #4a1d56;
             --bg-light: #f8fafc;
             --border-color: #e2e8f0;
         }
 
-        body { 
-            background-color: #ffffff; 
-            font-family: 'Inter', sans-serif; 
+        body {
+            background-color: #ffffff;
+            font-family: 'Inter', sans-serif;
             color: #1a202c;
         }
 
@@ -112,27 +112,27 @@
     {% include 'partials/navbar.html.twig' %}
 
     <div class="container">
-        
+
         <!-- Header -->
         <header class="admin-header">
             <div class="row align-items-center">
                 <div class="col-lg-5">
-                    <h1 class="fw-800 display-5 mb-1">Create Venue</h1>
-                    <p class="text-muted fs-5">Add a new stadium or hall to the system.</p>
+                    <h1 class="fw-800 display-5 mb-1">{{ trans('vadmin.crud.subcreate') }}</h1>
+                    <p class="text-muted fs-5">{{ trans('vadmin.crud.subheader') }}</p>
                 </div>
                 <div class="col-lg-7 text-lg-end mt-4 mt-lg-0">
                     <div class="d-flex gap-2 justify-content-lg-end flex-wrap">
                         <a href="{{ base_path }}/categories" class="btn-mgmt">
-                            <i class="bi bi-tags-fill me-2"></i> Categories
+                            <i class="bi bi-tags-fill me-2"></i> {{ trans('evadmin.cat') }}
                         </a>
                         <a href="{{ base_path }}/events" class="btn-mgmt">
-                            <i class="bi bi-calendar-event me-2"></i> Events
+                            <i class="bi bi-calendar-event me-2"></i> {{ trans('evadmin.events') }}
                         </a>
                         <a href="{{ base_path }}/tickets" class="btn-mgmt">
-                            <i class="bi bi-ticket-perforated me-2"></i> Tickets
+                            <i class="bi bi-ticket-perforated me-2"></i> {{ trans('evadmin.tickets') }}
                         </a>
                         <a href="{{ base_path }}/venues" class="btn-mgmt">
-                            <i class="bi bi-arrow-left me-2"></i> Back to Venues
+                            <i class="bi bi-arrow-left me-2"></i> {{ trans('vadmin.back_venues') }}
                         </a>
                     </div>
                 </div>
@@ -143,10 +143,10 @@
         <div class="form-container">
             <form action="{{ base_path }}/venues" method="post">
                 <div class="row g-4">
-                    
+
                     <!-- Venue Name -->
                     <div class="col-12">
-                        <label for="name" class="form-label">Venue Name</label>
+                        <label for="name" class="form-label">{{ trans('vadmin.crud.name') }}</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-building"></i></span>
                             <input type="text" id="name" name="name" required
@@ -161,13 +161,13 @@
 
                     <!-- Description -->
                     <div class="col-12">
-                        <label for="description" class="form-label">Description</label>
+                        <label for="description" class="form-label">{{ trans('vadmin.crud.description') }}</label>
                         <textarea id="description" name="description" class="form-control" rows="3" placeholder="Brief details about the venue..."></textarea>
                     </div>
 
                     <!-- Address -->
                     <div class="col-md-8">
-                        <label for="address" class="form-label">Address</label>
+                        <label for="address" class="form-label">{{ trans('vadmin.crud.address') }}</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
                             <input type="text" id="address" name="address" required
@@ -182,7 +182,7 @@
 
                     <!-- Capacity -->
                     <div class="col-md-4">
-                        <label for="capacity" class="form-label">Total Capacity</label>
+                        <label for="capacity" class="form-label">{{ trans('vadmin.crud.total_cap') }}</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-people"></i></span>
                             <input type="number" id="capacity" name="capacity" required
@@ -197,22 +197,22 @@
 
                     <!-- Image URL -->
                     <div class="col-12">
-                        <label for="image_url" class="form-label">Image URL</label>
+                        <label for="image_url" class="form-label">{{ trans('vadmin.crud.image') }}</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-image"></i></span>
                             <input type="url" id="image_url" name="image_url" class="form-control" placeholder="https://example.com/venue-photo.jpg">
                         </div>
-                        <div class="form-text mt-2">Optional: Provide a direct link to an image of the venue.</div>
+                        <div class="form-text mt-2">{{ trans('vadmin.crud.opt_img') }}</div>
                     </div>
 
                     <!-- Actions -->
                     <div class="col-12 mt-5">
                         <div class="d-flex gap-3 pt-4 border-top">
                             <button type="submit" class="btn-purple px-5">
-                                <i class="bi bi-plus-lg me-2"></i> Create Venue
+                                <i class="bi bi-plus-lg me-2"></i> {{ trans('vadmin.crud.createbtn') }}
                             </button>
                             <a href="{{ base_path }}/venues" class="btn btn-outline-secondary px-5 py-2 fw-bold" style="border-radius: 10px; display: flex; align-items: center;">
-                                Cancel
+                                {{ trans('vadmin.crud.cancel') }}
                             </a>
                         </div>
                     </div>

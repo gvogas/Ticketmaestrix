@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ current_locale }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - TicketMaestrix</title>
+    <title>{{ trans('dashboard.tab_overview') }} - {{ trans('app.title') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
@@ -14,7 +14,7 @@
             --bg-light: #F8F9FA;
         }
         body { background-color: var(--bg-light); font-family: 'Inter', sans-serif; }
-        
+
         /* Header & Banner */
         .admin-banner {
             background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-purple) 100%);
@@ -44,7 +44,7 @@
         }
         .nav-tabs-custom .nav-link {
             border: none;
-            color: #666 !important; 
+            color: #666 !important;
             font-weight: 500;
             padding: 0.8rem 2rem;
             border-radius: 8px;
@@ -90,7 +90,7 @@
         }
         .form-label { font-weight: 600; font-size: 0.85rem; }
         .form-control { padding: 0.75rem; border-radius: 8px; border: 1px solid #dee2e6; }
-        
+
         .btn-create {
             background-color: var(--accent-purple);
             border: none;
@@ -130,7 +130,7 @@
                 </div>
                 <div>
                     <h2 class="fw-bold mb-1">{{ admin_user.first_name }} {{ admin_user.last_name }}</h2>
-                    <p class="mb-0 opacity-75">Manage your events and track performance</p>
+                    <p class="mb-0 opacity-75">{{ trans('dashboard.subtitle') }}</p>
                 </div>
             </div>
         </div>
@@ -140,81 +140,81 @@
         <!-- Dashboard Navigation Tabs -->
         <ul class="nav nav-tabs nav-tabs-custom mb-5" id="adminTabs" role="tablist">
             <li class="nav-item">
-                <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button>
+                <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button">{{ trans('dashboard.tab_overview') }}</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" id="myevents-tab" data-bs-toggle="tab" data-bs-target="#myevents" type="button">My Events ({{ events|length }})</button>
+                <button class="nav-link" id="myevents-tab" data-bs-toggle="tab" data-bs-target="#myevents" type="button">{{ trans('dashboard.tab_my_events') }} ({{ events|length }})</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" id="create-tab" data-bs-toggle="tab" data-bs-target="#create" type="button"><i class="bi bi-plus"></i> Create Event</button>
+                <button class="nav-link" id="create-tab" data-bs-toggle="tab" data-bs-target="#create" type="button"><i class="bi bi-plus"></i> {{ trans('dashboard.tab_create') }}</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" id="admins-tab" data-bs-toggle="tab" data-bs-target="#admins" type="button"><i class="bi bi-shield-lock"></i> Manage Admins</button>
+                <button class="nav-link" id="admins-tab" data-bs-toggle="tab" data-bs-target="#admins" type="button"><i class="bi bi-shield-lock"></i> {{ trans('dashboard.tab_admins') }}</button>
             </li>
         </ul>
 
         <div class="tab-content" id="adminTabsContent">
-            
+
             <!-- Tab 1: Overview -->
             <div class="tab-pane fade show active" id="overview" role="tabpanel">
                 <div class="row g-4 mb-4">
                     <div class="col-md-3">
                         <div class="stat-card">
                             <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-currency-dollar"></i></div>
-                            <small class="text-muted d-block">Total Revenue</small>
+                            <small class="text-muted d-block">{{ trans('dashboard.stat_revenue') }}</small>
                             <h3 class="fw-bold mb-0">${{ stats.revenue|number_format(2) }}</h3>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="stat-card">
                             <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-graph-up-arrow"></i></div>
-                            <small class="text-muted d-block">Tickets Sold</small>
+                            <small class="text-muted d-block">{{ trans('dashboard.stat_tickets') }}</small>
                             <h3 class="fw-bold mb-0">{{ stats.tickets_sold }}</h3>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="stat-card">
                             <div class="stat-icon bg-purple bg-opacity-10" style="color: #6f42c1; background: #f3f0ff;"><i class="bi bi-calendar-event"></i></div>
-                            <small class="text-muted d-block">Active Events</small>
+                            <small class="text-muted d-block">{{ trans('dashboard.stat_events') }}</small>
                             <h3 class="fw-bold mb-0">{{ stats.active_events }}</h3>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="stat-card">
                             <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-people"></i></div>
-                            <small class="text-muted d-block">Total Customers</small>
+                            <small class="text-muted d-block">{{ trans('dashboard.stat_customers') }}</small>
                             <h3 class="fw-bold mb-0">{{ stats.customers }}</h3>
                         </div>
                     </div>
                 </div>
                 <div class="card stat-card">
-                    <h6 class="fw-bold">Event Performance</h6>
+                    <h6 class="fw-bold">{{ trans('dashboard.perf_placeholder') }}</h6>
                     <hr class="text-muted opacity-25">
-                    <div class="py-5 text-center text-muted">No data available for the selected period.</div>
+                    <div class="py-5 text-center text-muted">{{ trans('evadmin.no_events') }}</div>
                 </div>
             </div>
 
             <!-- Tab 2: My Events -->
             <div class="tab-pane fade" id="myevents" role="tabpanel">
                 <div class="card form-card p-4">
-                    <h5 class="fw-bold mb-4">Manage Events</h5>
+                    <h5 class="fw-bold mb-4">{{ trans('dashboard.manage') }}</h5>
                     {% if events|length == 0 %}
                         <div class="empty-state">
                             <i class="bi bi-calendar-x mb-3 d-block"></i>
-                            <h5 class="fw-bold">No events yet</h5>
-                            <p class="text-muted">Create your first event to get started</p>
-                            <button class="btn btn-create px-4" onclick="document.getElementById('create-tab').click()">Create Event</button>
+                            <h5 class="fw-bold">{{ trans('dashboard.no_events') }}</h5>
+                            <p class="text-muted">{{ trans('evadmin.create_first') }}</p>
+                            <button class="btn btn-create px-4" onclick="document.getElementById('create-tab').click()">{{ trans('dashboard.tab_create') }}</button>
                         </div>
                     {% else %}
                         <div class="table-responsive">
                             <table class="table align-middle">
                                 <thead>
                                     <tr>
-                                        <th>Title</th>
-                                        <th>Date</th>
-                                        <th>Venue</th>
-                                        <th>Min Price</th>
-                                        <th class="text-end">Actions</th>
+                                        <th>{{ trans('dashboard.col_title') }}</th>
+                                        <th>{{ trans('dashboard.col_date') }}</th>
+                                        <th>{{ trans('dashboard.col_venue') }}</th>
+                                        <th>{{ trans('dashboard.col_price') }}</th>
+                                        <th class="text-end">{{ trans('dashboard.col_actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -225,9 +225,10 @@
                                             <td>{{ event.venue_name }}</td>
                                             <td>{% if event.min_price is not null %}${{ event.min_price|number_format(2) }}{% else %}—{% endif %}</td>
                                             <td class="text-end">
-                                                <a href="{{ base_path }}/events/{{ event.id }}/edit" class="btn btn-sm btn-outline-secondary me-1">Edit</a>
-                                                <form method="POST" action="{{ base_path }}/events/{{ event.id }}/delete" class="d-inline" onsubmit="return confirm('Delete this event?');">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                                <a href="{{ base_path }}/events/{{ event.id }}/edit" class="btn btn-sm btn-outline-secondary me-1">{{ trans('dashboard.edit') }}</a>
+                                                <form method="POST" action="{{ base_path }}/events/{{ event.id }}/delete" class="d-inline"
+                                                      onsubmit="return confirm('{{ trans('confirm.delete_event')|e('js') }}');">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">{{ trans('dashboard.delete') }}</button>
                                                 </form>
                                             </td>
                                         </tr>
@@ -242,15 +243,15 @@
             <!-- Tab 3: Create Event -->
             <div class="tab-pane fade" id="create" role="tabpanel">
                 <div class="card form-card p-4 p-md-5">
-                    <h5 class="fw-bold mb-4">Create New Event</h5>
+                    <h5 class="fw-bold mb-4">{{ trans('dashboard.tab_create') }}</h5>
                     <form method="POST" action="{{ base_path }}/events">
                         <div class="row g-3">
                             <div class="col-12">
-                                <label class="form-label">Event Title *</label>
+                                <label class="form-label">{{ trans('evadmin.crud.title') }}</label>
                                 <input type="text" name="title" required class="form-control" placeholder="e.g. Summer Music Festival">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Category *</label>
+                                <label class="form-label">{{ trans('evadmin.crud.category') }}</label>
                                 <select name="category_id" required class="form-select form-control">
                                     <option selected disabled value="">Select category</option>
                                     {% for c in categories %}
@@ -259,7 +260,7 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Venue *</label>
+                                <label class="form-label">{{ trans('evadmin.crud.venue') }}</label>
                                 <select name="venue_id" required class="form-select form-control">
                                     <option selected disabled value="">Select venue</option>
                                     {% for v in venues %}
@@ -268,20 +269,20 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Date *</label>
+                                <label class="form-label">{{ trans('evadmin.crud.date') }}</label>
                                 <input type="datetime-local" name="date" required class="form-control">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Image URL</label>
+                                <label class="form-label">{{ trans('evadmin.crud.image') }}</label>
                                 <input type="text" name="event_image" class="form-control" placeholder="https://...">
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Description</label>
+                                <label class="form-label">{{ trans('evadmin.crud.description') }}</label>
                                 <textarea name="description" class="form-control" rows="4" placeholder="Describe your event..."></textarea>
                             </div>
                             <div class="col-12 d-flex gap-3 mt-4">
-                                <button type="submit" class="btn btn-create flex-grow-1">Create Event</button>
-                                <a href="{{ base_path }}/admin" class="btn btn-light px-4 border">Cancel</a>
+                                <button type="submit" class="btn btn-create flex-grow-1">{{ trans('evadmin.crud.create') }}</button>
+                                <a href="{{ base_path }}/admin" class="btn btn-light px-4 border">{{ trans('evadmin.crud.cancel') }}</a>
                             </div>
                         </div>
                     </form>
@@ -292,18 +293,18 @@
             <div class="tab-pane fade" id="admins" role="tabpanel">
                 <div class="card form-card p-4">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="fw-bold mb-0">System Administrators</h5>
+                        <h5 class="fw-bold mb-0">{{ trans('dashboard.tab_admins') }}</h5>
                         <button class="btn btn-create px-4" data-bs-toggle="modal" data-bs-target="#addAdminModal">
-                            Add New Admin
+                            {{ trans('dashboard.add_admin') }}
                         </button>
                     </div>
                     <div class="table-responsive">
                         <table class="table align-middle">
                             <thead>
                                 <tr class="text-muted small">
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th class="text-end">Actions</th>
+                                    <th>{{ trans('dashboard.col_title') }}</th>
+                                    <th>{{ trans('dashboard.admin_email') }}</th>
+                                    <th class="text-end">{{ trans('dashboard.col_actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -315,13 +316,13 @@
                                         </td>
                                         <td>{{ admin.email }}</td>
                                         <td class="text-end">
-                                            <!-- UPDATED: Trigger Button for Edit Modal -->
                                             <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editAdminModal{{ admin.id }}">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
 
                                             {% if admin.id != admin_user.id %}
-                                                <form action="{{ base_path }}/admin/users/{{ admin.id }}/delete" method="POST" class="d-inline" onsubmit="return confirm('Revoke admin access?');">
+                                                <form action="{{ base_path }}/admin/users/{{ admin.id }}/delete" method="POST" class="d-inline"
+                                                      onsubmit="return confirm('{{ trans('confirm.revoke_admin')|e('js') }}');">
                                                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                                                 </form>
                                             {% endif %}
@@ -344,7 +345,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow">
                 <div class="modal-header border-0 pt-4 px-4">
-                    <h5 class="fw-bold">Edit Administrator</h5>
+                    <h5 class="fw-bold">{{ trans('dashboard.modal_edit_admin') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="{{ base_path }}/admin/users/{{ admin.id }}/edit" method="POST" id="editAdminForm{{ admin.id }}">
@@ -359,7 +360,7 @@
                                 <input type="text" name="last_name" class="form-control" value="{{ admin.last_name }}" required>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Email</label>
+                                <label class="form-label">{{ trans('dashboard.admin_email') }}</label>
                                 <input type="email" name="email" class="form-control" value="{{ admin.email }}" required>
                             </div>
                             <div class="col-12">
@@ -369,8 +370,8 @@
                         </div>
                     </div>
                     <div class="modal-footer border-0 pb-4 px-4">
-                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-create px-4">Save Changes</button>
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">{{ trans('dashboard.admin_cancel') }}</button>
+                        <button type="submit" class="btn btn-create px-4">{{ trans('dashboard.admin_save') }}</button>
                     </div>
                 </form>
             </div>
@@ -383,7 +384,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow">
                 <div class="modal-header border-0 pt-4 px-4">
-                    <h5 class="fw-bold">Add Administrator</h5>
+                    <h5 class="fw-bold">{{ trans('dashboard.modal_add_admin') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="{{ base_path }}/admin/users/create" method="POST" id="createAdminForm">
@@ -398,7 +399,7 @@
                                 <input type="text" name="last_name" class="form-control" required>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Email</label>
+                                <label class="form-label">{{ trans('dashboard.admin_email') }}</label>
                                 <input type="email" name="email" class="form-control" required>
                             </div>
                             <div class="col-12">
@@ -408,8 +409,8 @@
                         </div>
                     </div>
                     <div class="modal-footer border-0 pb-4 px-4">
-                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-create px-4">Save Admin</button>
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">{{ trans('dashboard.admin_cancel') }}</button>
+                        <button type="submit" class="btn btn-create px-4">{{ trans('dashboard.admin_save') }}</button>
                     </div>
                 </form>
             </div>

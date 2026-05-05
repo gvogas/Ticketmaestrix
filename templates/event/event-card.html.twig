@@ -36,7 +36,7 @@
     .line-clamp-1 {
         display: -webkit-box;
         -webkit-line-clamp: 1;
-        -webkit-box-orient: vertical;  
+        -webkit-box-orient: vertical;
         overflow: hidden;
     }
 </style>
@@ -44,13 +44,13 @@
 <div class="card h-100 event-card border-0 shadow-sm rounded-4 overflow-hidden">
     {# Image Section #}
     <div class="position-relative overflow-hidden">
-        <img 
-            src="{{ event.event_image ?: event.image }}" 
-            class="card-img-top" 
+        <img
+            src="{{ event.event_image ?: event.image }}"
+            class="card-img-top"
             alt="{{ event.title }}"
             loading="lazy"
         >
-        
+
         {% if show_badge|default(true) %}
             {% if event.badge %}
                 <span class="position-absolute top-0 start-0 m-3 badge bg-danger shadow-sm">
@@ -68,7 +68,7 @@
     {# Body Section #}
     <div class="card-body p-4">
         {# Category Chip #}
-        <span class="badge-custom d-inline-block mb-2" 
+        <span class="badge-custom d-inline-block mb-2"
               style="{{ cat_colors[event.category] is defined ? cat_colors[event.category] : 'background-color: #f3f4f6; color: #374151;' }}">
             {{ event.category }}
         </span>
@@ -80,11 +80,11 @@
                 <i class="bi bi-calendar3 me-2"></i>{{ event.date }}
             </div>
             <div class="text-muted small mb-1">
-                <i class="bi bi-geo-alt me-2"></i>{{ event.venue_name ?: event.venue ?: 'Venue TBA' }}
+                <i class="bi bi-geo-alt me-2"></i>{{ event.venue_name ?: event.venue ?: trans('evcard.venue_tba') }}
             </div>
             {% if event.tickets is defined %}
                 <div class="text-muted small">
-                    <i class="bi bi-ticket-perforated me-2"></i>{{ event.tickets }} tickets left
+                    <i class="bi bi-ticket-perforated me-2"></i>{{ event.tickets }} {{ trans('evcard.tickets_left') }}
                 </div>
             {% endif %}
         </div>
@@ -97,9 +97,9 @@
                     <span class="text-decoration-line-through text-muted small ms-1">${{ event.original_price|number_format(2) }}</span>
                 {% endif %}
             </div>
-            <a href="{{ base_path }}/events/{{ event.id }}" class="btn btn-sm px-3 rounded-pill" 
+            <a href="{{ base_path }}/events/{{ event.id }}" class="btn btn-sm px-3 rounded-pill"
                style="background-color: var(--brand-purple); color: white;">
-                Details
+                {{ trans('events.details') }}
             </a>
         </div>
     </div>
