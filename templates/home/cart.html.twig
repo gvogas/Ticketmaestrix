@@ -142,8 +142,8 @@
                         </div>
                         {% endif %}
 
-                        {# Checkout posts to /cart/checkout, which requires login. #}
-                        <form method="POST" action="{{ base_path }}/cart/checkout" class="m-0" id="checkout-form">
+                        {# Change method to GET to redirect to the checkout page instead of processing #}
+                        <form method="GET" action="{{ base_path }}/checkout" class="m-0" id="checkout-form">
                             {% if user_points > 0 and cart is not empty %}
                             <input type="hidden" id="points-hidden" name="points_to_use" value="0">
                             {% endif %}
@@ -212,7 +212,7 @@
             var checkingOut = false;
             var timerEl      = document.getElementById('cart-timer');
             var expireForm   = document.getElementById('cart-expire-form');
-            var checkoutForm = document.querySelector('form[action$="/cart/checkout"]');
+            var checkoutForm = document.querySelector('form[action$="/checkout"]');
 
             if (checkoutForm) {
                 checkoutForm.addEventListener('submit', function () {

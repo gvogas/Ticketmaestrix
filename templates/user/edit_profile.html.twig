@@ -92,6 +92,13 @@
                         <textarea class="form-control" rows="4" placeholder="{{ trans('editprofile.bio_ph') }}"></textarea>
                         <div class="text-end text-muted small mt-1">0/500 characters</div>
                     </div>
+                    <div class="col-12">
+                        <label class="form-label">{{ trans('editprofile.password') }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="bi bi-shield-lock"></i></span>
+                            <input type="password" name="user[password]" class="form-control" placeholder="{{ trans('editprofile.password.message') }}">
+                        </div>
+                    </div>
                 </div>
 
                 <h6 class="fw-bold mb-3">{{ trans('editprofile.prefs_heading') }}</h6>
