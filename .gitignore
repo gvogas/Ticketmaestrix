@@ -11,6 +11,11 @@ node_modules/
 
 # Logs
 var/app.log
+.claude/
+CLAUDE.md
+assets/
+docs/
+.claude-flow/
+.mcp.json
+quantity]`
 
-# Environment variables
-.env
