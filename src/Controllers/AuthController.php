@@ -55,15 +55,13 @@ class AuthController
 
         if ($user && $user->id && password_verify($password, $user->password)) {
             $_SESSION['pending_user_id'] = (int) $user->id;
+
             if (empty($user->totp_secret)) {
                 $_SESSION['2fa_setup_pending_user_id'] = (int) $user->id;
-                return $response
-                    ->withHeader('Location', $this->basePath . '/2fa/setup')
-                    ->withStatus(302);
+                return $response->withHeader('Location', $this->basePath . '/2fa/setup')->withStatus(302);
             }
-            return $response
-                ->withHeader('Location', $this->basePath . '/2fa/login')
-                ->withStatus(302);
+
+            return $response->withHeader('Location', $this->basePath . '/2fa/login')->withStatus(302);
         }
 
         $html = $this->twig->render('auth/login.html.twig', [
@@ -88,12 +86,9 @@ class AuthController
             'last_name'    => $lastName,
             'email'        => $email,
             'password'     => (string) ($data['password'] ?? ''),
-            'phone_number' => (string) ($data['phone_number'] ?? ''),
         ];
 
-        return $response
-            ->withHeader('Location', $this->basePath . '/2fa/setup')
-            ->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/2fa/setup')->withStatus(302);
     }
 
     public function show2faSetup(Request $request, Response $response): Response
@@ -102,9 +97,7 @@ class AuthController
         $pendingUserId = $_SESSION['2fa_setup_pending_user_id'] ?? null;
 
         if (!$signupData && !$pendingUserId) {
-            return $response
-                ->withHeader('Location', $this->basePath . '/signup')
-                ->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . '/signup')->withStatus(302);
         }
 
         $cached = $_SESSION['2fa_setup_data'] ?? null;
@@ -112,148 +105,104 @@ class AuthController
             $qrCode = $cached['qr_code'];
             $secret = $cached['secret'];
         } else {
-            $email = $pendingUserId
-                ? $this->users->load($pendingUserId)->email
-                : $signupData['email'];
-
-            $label = $email;
-            if ($pendingUserId) {
-                $result = $this->otpService->generateForExisting($pendingUserId, $label);
-            } else {
-                $result = $this->otpService->generate($label, $signupData);
+            $userEmail = $signupData['email'] ?? '';
+            if (!$userEmail && $pendingUserId) {
+                $u = $this->users->load((int)$pendingUserId);
+                $userEmail = $u->email ?? '';
             }
 
-            $qrCode = $result['qr_code'];
-            $secret = $result['secret'];
+            $secret = $this->otpService->generateSecret();
+            $qrCode = $this->otpService->getQrCode($userEmail, $secret);
+            
             $_SESSION['2fa_setup_data'] = [
                 'qr_code' => $qrCode,
-                'secret'  => $secret,
+                'secret'  => $secret
             ];
         }
 
-        $error = $_SESSION['2fa_setup_error'] ?? null;
-        unset($_SESSION['2fa_setup_error']);
-
-        $html = $this->twig->render('auth/2fa_qr.html.twig', [
-            'base_path' => $this->basePath,
-            'qr_code'   => $qrCode,
-            'secret'    => $secret,
-            'error'     => $error,
+        return $this->render($response, 'auth/2fa_setup.html.twig', [
+            'qr_code' => $qrCode,
+            'secret'  => $secret,
         ]);
-
-        $response->getBody()->write($html);
-        return $response;
     }
 
     public function verify2faSetup(Request $request, Response $response): Response
     {
+        $data = $request->getParsedBody();
+        $code = preg_replace('/\s+/', '', (string) ($data['code'] ?? ''));
+
+        $setupData = $_SESSION['2fa_setup_data'] ?? null;
         $signupData = $_SESSION['signup_user_data'] ?? null;
         $pendingUserId = $_SESSION['2fa_setup_pending_user_id'] ?? null;
 
-        if (!$signupData && !$pendingUserId) {
-            return $response
-                ->withHeader('Location', $this->basePath . '/signup')
-                ->withStatus(302);
-        }
-
-        $data = $request->getParsedBody();
-        $otp  = (string) ($data['otp'] ?? '');
-
-        if ($pendingUserId) {
-            if (!$this->otpService->verify($pendingUserId, $otp)) {
-                $_SESSION['2fa_setup_error'] = 'Invalid code. Please try again.';
-                return $response
-                    ->withHeader('Location', $this->basePath . '/2fa/setup')
-                    ->withStatus(302);
+        if ($setupData && $this->otpService->verifySecret($setupData['secret'], $code)) {
+            if ($signupData) {
+                $signupData['totp_secret'] = $setupData['secret'];
+                $user = $this->users->create($signupData);
+                Auth::login((int) $user->id);
+                unset($_SESSION['signup_user_data'], $_SESSION['2fa_setup_data']);
+                return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
+            } elseif ($pendingUserId) {
+                $user = $this->users->load((int)$pendingUserId);
+                $user->totp_secret = $setupData['secret'];
+                $this->users->save($user);
+                Auth::login((int) $user->id);
+                unset($_SESSION['2fa_setup_pending_user_id'], $_SESSION['2fa_setup_data'], $_SESSION['pending_user_id']);
+                return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
             }
-            unset($_SESSION['2fa_setup_pending_user_id']);
-            return $response
-                ->withHeader('Location', $this->basePath . '/2fa/login')
-                ->withStatus(302);
         }
 
-        $user = $this->users->findByEmail($signupData['email']);
-        if (!$user || !$this->otpService->verify((int) $user->id, $otp)) {
-            $_SESSION['2fa_setup_error'] = 'Invalid code. Please try again.';
-            return $response
-                ->withHeader('Location', $this->basePath . '/2fa/setup')
-                ->withStatus(302);
-        }
-
-        unset($_SESSION['signup_user_data']);
-
-        return $response
-            ->withHeader('Location', $this->basePath . '/login')
-            ->withStatus(302);
+        return $this->render($response, 'auth/2fa_setup.html.twig', [
+            'qr_code' => $setupData['qr_code'] ?? '',
+            'secret'  => $setupData['secret'] ?? '',
+            'error'   => 'Invalid verification code. Please try again.'
+        ]);
     }
 
     public function show2faLogin(Request $request, Response $response): Response
     {
         if (!isset($_SESSION['pending_user_id'])) {
-            return $response
-                ->withHeader('Location', $this->basePath . '/login')
-                ->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . '/login')->withStatus(302);
         }
-
-        $error = $_SESSION['2fa_login_error'] ?? null;
-        unset($_SESSION['2fa_login_error']);
-
-        $html = $this->twig->render('auth/2fa_login.html.twig', [
-            'base_path' => $this->basePath,
-            'error'     => $error,
-        ]);
-
-        $response->getBody()->write($html);
-        return $response;
+        return $this->render($response, 'auth/2fa_login.html.twig');
     }
 
     public function verify2faLogin(Request $request, Response $response): Response
     {
-        $pendingId = $_SESSION['pending_user_id'] ?? null;
-        if (!$pendingId) {
-            return $response
-                ->withHeader('Location', $this->basePath . '/login')
-                ->withStatus(302);
+        $userId = $_SESSION['pending_user_id'] ?? null;
+        $code = preg_replace('/\s+/', '', (string) ($request->getParsedBody()['code'] ?? ''));
+
+        if ($userId && $this->otpService->verify((int) $userId, $code)) {
+            Auth::login((int) $userId);
+            unset($_SESSION['pending_user_id']);
+            return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
         }
 
-        $data = $request->getParsedBody();
-        $otp  = (string) ($data['otp'] ?? '');
-
-        if (!$this->otpService->verify((int) $pendingId, $otp)) {
-            $_SESSION['2fa_login_error'] = 'Invalid code. Please try again.';
-            return $response
-                ->withHeader('Location', $this->basePath . '/2fa/login')
-                ->withStatus(302);
-        }
-
-        Auth::login((int) $pendingId);
-        unset($_SESSION['pending_user_id']);
-
-        return $response
-            ->withHeader('Location', $this->basePath . '/')
-            ->withStatus(302);
+        return $this->render($response, 'auth/2fa_login.html.twig', ['error' => 'Invalid code.']);
     }
 
     /**
-     * Wipe the session and bounce the user back to the home page.
-     * Called from POST /logout (the navbar's logout form).
+     * POST /logout — Terminate session.
      */
     public function logout(Request $request, Response $response): Response
     {
         Auth::logout();
-        return $response
-            ->withHeader('Location', $this->basePath . '/')
-            ->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
     }
 
-    private function render(Response $response, string $template): Response
+    /**
+     * Internal helper to render templates with the base_path.
+     */
+    private function render(Response $response, string $template, array $data = []): Response
     {
-        $html = $this->twig->render($template, [
-            'base_path' => $this->basePath,
-        ]);
-
-        $response->getBody()->write($html);
-
+        $data['base_path'] = $this->basePath;
+        try {
+            $html = $this->twig->render($template, $data);
+            $response->getBody()->write($html);
+        } catch (\Exception $e) {
+            $response->getBody()->write("Template Error: " . $e->getMessage());
+            return $response->withStatus(500);
+        }
         return $response;
     }
 }

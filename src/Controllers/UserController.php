@@ -198,7 +198,7 @@ class UserController
             'first_name'   => $firstName,
             'last_name'    => $lastName,
             'email'        => (string) ($form['email'] ?? ''),
-            'phone_number' => (string) ($form['phone'] ?? ''),
+            'password'     => (string) ($form['password'] ?? ''),
         ]);
 
         return $response

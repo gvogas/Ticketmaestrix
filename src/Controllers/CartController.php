@@ -42,6 +42,11 @@ class CartController
             return $redirect;
         }
 
+        // Admins should manage the system, not use the checkout flow
+        if (Auth::isAdmin()) {
+            return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
+        }
+
         $queryParams = $request->getQueryParams();
         $pointsToUse = (int) ($queryParams['points_to_use'] ?? 0);
 
@@ -76,6 +81,11 @@ class CartController
     /** POST /cart/add — add a ticket id to the session cart. */
     public function add(Request $request, Response $response): Response
     {
+        // If an admin clicks 'Buy', redirect them to the management inventory instead
+        if (Auth::isAdmin()) {
+            return $response->withHeader('Location', $this->basePath . '/tickets')->withStatus(302);
+        }
+
         $data     = $request->getParsedBody();
         $ticketId = (int) ($data['ticket_id'] ?? 0);
         $qty      = (int) ($data['quantity']  ?? 1);
@@ -132,6 +142,10 @@ class CartController
     {
         if ($redirect = Auth::requireLogin($response, $this->basePath)) {
             return $redirect;
+        }
+
+        if (Auth::isAdmin()) {
+            return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
         }
 
         Cart::checkExpiry();
