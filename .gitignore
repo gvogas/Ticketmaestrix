@@ -8,9 +8,14 @@ composer.phar
 
 #Node modules
 node_modules/
-
+.env
 # Logs
 var/app.log
+.claude/
+CLAUDE.md
+assets/
+docs/
+.claude-flow/
+.mcp.json
+quantity]`
 
-# Environment variables
-.env

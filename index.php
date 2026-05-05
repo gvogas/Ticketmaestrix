@@ -1,4 +1,5 @@
 <?php
+//test 
 declare(strict_types=1);
 
 // Suppress deprecation warnings for libraries not yet fully compatible with PHP 8.4+
@@ -249,6 +250,11 @@ $loggerMiddleware = function (Request $request, RequestHandler $handler) use ($l
 
     return $response;
 };
+
+$app->add(new MaintenanceMiddleware(
+    __DIR__ . '/var/maintenance.flag',
+    $app->getResponseFactory()
+));
 
 $app->add(new SecurityHeadersMiddleware());
 $app->add($loggerMiddleware);
