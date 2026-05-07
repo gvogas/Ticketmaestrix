@@ -151,7 +151,7 @@
                             <span class="input-group-text"><i class="bi bi-plus-circle"></i></span>
                             <input type="text" id="name" name="name" required
                                    class="form-control{{ errors.name is defined ? ' is-invalid' : '' }}"
-                                   placeholder="e.g. Music Festivals"
+                                   placeholder="{{ trans('ph.category_name') }}"
                                    value="{{ input.name ?? '' }}">
                         </div>
                         {% if errors.name is defined %}

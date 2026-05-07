@@ -287,12 +287,12 @@
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label">{{ trans('evadmin.crud.title') }}</label>
-                                <input type="text" name="title" required class="form-control" placeholder="e.g. Summer Music Festival">
+                                <input type="text" name="title" required class="form-control" placeholder="{{ trans('ph.event_title') }}">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">{{ trans('evadmin.crud.category') }}</label>
                                 <select name="category_id" required class="form-select form-control">
-                                    <option selected disabled value="">Select category</option>
+                                    <option selected disabled value="">{{ trans('evadmin.crud.select_category') }}</option>
                                     {% for c in categories %}
                                         <option value="{{ c.id }}">{{ c.name }}</option>
                                     {% endfor %}
@@ -301,7 +301,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">{{ trans('evadmin.crud.venue') }}</label>
                                 <select name="venue_id" required class="form-select form-control">
-                                    <option selected disabled value="">Select venue</option>
+                                    <option selected disabled value="">{{ trans('evadmin.crud.select_venue') }}</option>
                                     {% for v in venues %}
                                         <option value="{{ v.id }}">{{ v.name }}</option>
                                     {% endfor %}
@@ -313,11 +313,11 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">{{ trans('evadmin.crud.image') }}</label>
-                                <input type="text" name="event_image" class="form-control" placeholder="https://...">
+                                <input type="text" name="event_image" class="form-control" placeholder="{{ trans('ph.event_image') }}">
                             </div>
                             <div class="col-12">
                                 <label class="form-label">{{ trans('evadmin.crud.description') }}</label>
-                                <textarea name="description" class="form-control" rows="4" placeholder="Describe your event..."></textarea>
+                                <textarea name="description" class="form-control" rows="4" placeholder="{{ trans('ph.event_desc') }}"></textarea>
                             </div>
                             <div class="col-12 d-flex gap-3 mt-4">
                                 <button type="submit" class="btn btn-create flex-grow-1">{{ trans('evadmin.crud.create') }}</button>
@@ -416,7 +416,7 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Password</label>
-                                <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current">
+                                <input type="password" name="password" class="form-control" placeholder="{{ trans('editprofile.password.message') }}">
                             </div>
                         </div>
                     </div>

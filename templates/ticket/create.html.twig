@@ -163,7 +163,7 @@
                             <span class="input-group-text"><i class="bi bi-grid-3x2"></i></span>
                             <input type="text" id="row" name="row" required
                                    class="form-control{{ errors.row is defined ? ' is-invalid' : '' }}"
-                                   placeholder="e.g. A, Premium, Row 12"
+                                    placeholder="{{ trans('ph.ticket_row') }}"
                                    value="{{ input.row ?? '' }}">
                         </div>
                         {% if errors.row is defined %}
@@ -178,7 +178,7 @@
                             <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
                             <input type="text" id="seat" name="seat" required
                                    class="form-control{{ errors.seat is defined ? ' is-invalid' : '' }}"
-                                   placeholder="e.g. 101, B22"
+                                    placeholder="{{ trans('ph.ticket_seat') }}"
                                    value="{{ input.seat ?? '' }}">
                         </div>
                         {% if errors.seat is defined %}
@@ -193,7 +193,7 @@
                             <span class="input-group-text">$</span>
                             <input type="number" id="price" name="price" required
                                    class="form-control{{ errors.price is defined ? ' is-invalid' : '' }}"
-                                   min="0.01" step="0.01" placeholder="0.00"
+                                    min="0.01" step="0.01" placeholder="{{ trans('ph.ticket_price') }}"
                                    value="{{ input.price ?? '' }}">
                         </div>
                         {% if errors.price is defined %}

@@ -102,39 +102,39 @@
             </div>
 
             <div class="mb-4">
-                <label class="form-label fw-bold">Payment Method</label>
+                <label class="form-label fw-bold">{{ trans('checkout.payment_method') }}</label>
                 <div class="input-group input-group-lg">
                     <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-credit-card"></i></span>
-                    <input type="text" name="payment_method" class="form-control border-start-0" placeholder="Visa, Mastercard, etc." required>
+                    <input type="text" name="payment_method" class="form-control border-start-0" placeholder="{{ trans('ph.checkout_payment') }}" required>
                 </div>
             </div>
 
             <div class="mb-4">
-                <label class="form-label fw-bold">Card Number</label>
+                <label class="form-label fw-bold">{{ trans('checkout.card_number') }}</label>
                 <div class="input-group input-group-lg">
                     <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-credit-card"></i></span>
-                    <input type="text" name="card_number" class="form-control border-start-0" placeholder="0000 0000 0000 0000" required>
+                    <input type="text" name="card_number" class="form-control border-start-0" placeholder="{{ trans('ph.checkout_card') }}" required>
                 </div>
             </div>
 
             <div class="mb-4">
-                <label class="form-label fw-bold">Expiry Date</label>
+                <label class="form-label fw-bold">{{ trans('checkout.expiry_date') }}</label>
                 <div class="input-group input-group-lg">
                     <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-calendar-date"></i></span>
-                    <input type="text" name="expiry_date" class="form-control border-start-0" placeholder="MM/YY" required>
+                    <input type="text" name="expiry_date" class="form-control border-start-0" placeholder="{{ trans('ph.checkout_expiry') }}" required>
                 </div>
             </div>
 
             <div class="mb-4">
-                <label class="form-label fw-bold">CVV</label>
+                <label class="form-label fw-bold">{{ trans('checkout.cvv') }}</label>
                 <div class="input-group input-group-lg">
                     <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-shield-lock"></i></span>
-                    <input type="text" name="cvv" class="form-control border-start-0" placeholder="000" required>
+                    <input type="text" name="cvv" class="form-control border-start-0" placeholder="{{ trans('ph.checkout_cvv') }}" required>
                 </div>
             </div>
 
             <button type="submit" class="btn btn-primary-tm">
-                Place Order
+                {{ trans('checkout.place_order') }}
             </button>
         </form>
     </div>

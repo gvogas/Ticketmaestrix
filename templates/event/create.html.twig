@@ -115,7 +115,7 @@
                                 <label for="title" class="form-label">{{ trans('evadmin.crud.title') }}</label>
                                 <input type="text" id="title" name="title" required
                                        class="form-control{{ errors.title is defined ? ' is-invalid' : '' }}"
-                                       placeholder="e.g. Summer Music Festival"
+                                        placeholder="{{ trans('ph.event_title') }}"
                                        value="{{ input.title ?? '' }}">
                                 {% if errors.title is defined %}
                                     <div class="invalid-feedback">{{ errors.title | first }}</div>
@@ -127,9 +127,9 @@
                                 <label for="category_id" class="form-label">{{ trans('evadmin.crud.category') }}</label>
                                 <select id="category_id" name="category_id" required
                                         class="form-select{{ errors.category_id is defined ? ' is-invalid' : '' }}">
-                                    <option value="" selected disabled>— Select a category —</option>
+                                    <option value="" selected disabled>{{ trans('evadmin.crud.select_category') }}</option>
                                     {% for category in categories %}
-                                        <option value="{{ category.id }}">{{ category.name }}</option>
+                                        <option value="{{ category.id }}">{{ trans_cat(category.name) }}</option>
                                     {% endfor %}
                                 </select>
                                 {% if errors.category_id is defined %}
@@ -141,7 +141,7 @@
                                 <label for="venue_id" class="form-label">{{ trans('evadmin.crud.venue') }}</label>
                                 <select id="venue_id" name="venue_id" required
                                         class="form-select{{ errors.venue_id is defined ? ' is-invalid' : '' }}">
-                                    <option value="" selected disabled>— Select a venue —</option>
+                                    <option value="" selected disabled>{{ trans('evadmin.crud.select_venue') }}</option>
                                     {% for venue in venues %}
                                         <option value="{{ venue.id }}">{{ venue.name }}</option>
                                     {% endfor %}
@@ -165,7 +165,7 @@
                             <!-- Image URL -->
                             <div class="col-md-6">
                                 <label for="event_image" class="form-label">{{ trans('evadmin.crud.image') }}</label>
-                                <input type="url" id="event_image" name="event_image" class="form-control" placeholder="https://example.com/image.jpg">
+                                <input type="url" id="event_image" name="event_image" class="form-control" placeholder="{{ trans('ph.event_image') }}">
                             </div>
 
                             <!-- Description -->
@@ -174,7 +174,7 @@
                                 <textarea id="description" name="description" required
                                           class="form-control{{ errors.description is defined ? ' is-invalid' : '' }}"
                                           rows="5"
-                                          placeholder="Provide a detailed description of the event...">{{ input.description ?? '' }}</textarea>
+                                          placeholder="{{ trans('ph.event_desc_full') }}">{{ input.description ?? '' }}</textarea>
                                 {% if errors.description is defined %}
                                     <div class="invalid-feedback">{{ errors.description | first }}</div>
                                 {% endif %}

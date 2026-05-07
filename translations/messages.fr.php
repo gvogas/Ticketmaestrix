@@ -179,6 +179,8 @@ return [
     'evadmin.crud.create'   => 'Créer l\'événement',
     'evadmin.crud.update'   => 'Mettre à jour l\'événement',
     'evadmin.crud.cancel'   => 'Annuler',
+    'evadmin.crud.select_category' => '— Sélectionnez une catégorie —',
+    'evadmin.crud.select_venue'    => '— Sélectionnez un lieu —',
 
     // Create and Edit Category
     'catadmin.crud.header'   => 'Catégories',
@@ -530,6 +532,15 @@ return [
     'editprofile.danger.submessage' => 'Supprimer définitivement votre compte et toutes vos données',
     'editprofile.danger.button' => 'Supprimer le compte',
 
+    // Category names (used in event cards & filters)
+    'categories.concert'  => 'Concert',
+    'categories.movies'   => 'Films',
+    'categories.sports'   => 'Sports',
+    'categories.theater'  => 'Théâtre',
+    'categories.raffle'   => 'Tombola',
+    'categories.festival' => 'Festival',
+    'categories.comedy'   => 'Comédie',
+
     // Admin
     'admin.header'   => 'Gérez vos événements et suivez vos performances',
     'admin.overview'   => 'Aperçu',
@@ -545,4 +556,32 @@ return [
     'admin.manage_admins.name'   => 'Nom',
     'admin.manage_admins.email'   => 'E-mail',
     'admin.manage_admins.action'   => 'Actions',
+
+    // Placeholders
+    'ph.email'         => 'jean@exemple.com',
+    'ph.password'      => '••••••••',
+    'ph.full_name'     => 'Jean Dupont',
+    'ph.event_title'   => 'p. ex. Festival d\'été',
+    'ph.event_image'   => 'https://...',
+    'ph.event_desc'    => 'Décrivez votre événement...',
+    'ph.event_desc_full' => 'Fournissez une description détaillée de l\'événement...',
+    'ph.category_name' => 'p. ex. Festivals de musique',
+    'ph.ticket_row'    => 'p. ex. A, Premium, Rangée 12',
+    'ph.ticket_seat'   => 'p. ex. 101, B22',
+    'ph.ticket_price'  => '0.00',
+    'ph.venue_name'    => 'p. ex. Parc des Princes',
+    'ph.venue_desc'    => 'Brèves informations sur le lieu...',
+    'ph.venue_address' => '123 Rue de l\'Événement, Ville',
+    'ph.venue_capacity' => '5000',
+    'ph.venue_image'   => 'https://exemple.com/photo-lieu.jpg',
+    'ph.password_keep' => 'Laissez vide pour conserver le mot de passe actuel',
+    'checkout.payment_method' => 'Mode de paiement',
+    'checkout.card_number'    => 'Numéro de carte',
+    'checkout.expiry_date'    => 'Date d\'expiration',
+    'checkout.cvv'            => 'CVV',
+    'checkout.place_order'    => 'Passer la commande',
+    'ph.checkout_payment' => 'Visa, Mastercard, etc.',
+    'ph.checkout_card'    => '0000 0000 0000 0000',
+    'ph.checkout_expiry'  => 'MM/AA',
+    'ph.checkout_cvv'     => '000',
 ];

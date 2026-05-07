@@ -243,12 +243,13 @@ class EventController
     {
         $categoryId = (int) $args['id'];
         $events     = $this->eventModel->findByCategory($categoryId);
+        $category   = $this->categoryModel->getById($categoryId);
 
         $html = $this->twig->render('event/events_by_category.html.twig', [
             'base_path'     => $this->basePath,
             'current_route' => 'events',
             'events'        => $events,
-            'category_id'   => $categoryId,
+            'category'      => $category,
         ]);
         $response->getBody()->write($html);
         return $response;

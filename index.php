@@ -106,6 +106,15 @@ $twig->addFunction(new TwigFunction('trans', function (string $key, array $param
     $locale = $_SESSION['lang'] ?? 'en';
     return $translator->trans($key, $params, null, $locale);
 }));
+// Translate a category name; falls back to the raw name if no translation exists.
+$twig->addFunction(new TwigFunction('trans_cat', function ($name) use ($translator) {
+    if (is_object($name) && method_exists($name, '__toString')) $name = (string) $name;
+    if (!is_string($name) || $name === '') return is_string($name) ? $name : '';
+    $locale = $_SESSION['lang'] ?? 'en';
+    $key = 'categories.' . strtolower(str_replace([' ', '-', '\''], '_', $name));
+    $translated = $translator->trans($key, [], null, $locale);
+    return $translated !== $key ? $translated : $name;
+}));
 $twig->addGlobal('current_locale', $_SESSION['lang'] ?? 'en');
 
 

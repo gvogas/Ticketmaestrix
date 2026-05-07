@@ -151,7 +151,7 @@
                             <span class="input-group-text"><i class="bi bi-building"></i></span>
                             <input type="text" id="name" name="name" required
                                    class="form-control{{ errors.name is defined ? ' is-invalid' : '' }}"
-                                   placeholder="e.g. Madison Square Garden"
+                                    placeholder="{{ trans('ph.venue_name') }}"
                                    value="{{ input.name ?? '' }}">
                         </div>
                         {% if errors.name is defined %}
@@ -162,7 +162,7 @@
                     <!-- Description -->
                     <div class="col-12">
                         <label for="description" class="form-label">{{ trans('vadmin.crud.description') }}</label>
-                        <textarea id="description" name="description" class="form-control" rows="3" placeholder="Brief details about the venue..."></textarea>
+                        <textarea id="description" name="description" class="form-control" rows="3" placeholder="{{ trans('ph.venue_desc') }}"></textarea>
                     </div>
 
                     <!-- Address -->
@@ -172,7 +172,7 @@
                             <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
                             <input type="text" id="address" name="address" required
                                    class="form-control{{ errors.address is defined ? ' is-invalid' : '' }}"
-                                   placeholder="123 Event St, City, Country"
+                                    placeholder="{{ trans('ph.venue_address') }}"
                                    value="{{ input.address ?? '' }}">
                         </div>
                         {% if errors.address is defined %}
@@ -187,7 +187,7 @@
                             <span class="input-group-text"><i class="bi bi-people"></i></span>
                             <input type="number" id="capacity" name="capacity" required
                                    class="form-control{{ errors.capacity is defined ? ' is-invalid' : '' }}"
-                                   min="1" placeholder="5000"
+                                    min="1" placeholder="{{ trans('ph.venue_capacity') }}"
                                    value="{{ input.capacity ?? '' }}">
                         </div>
                         {% if errors.capacity is defined %}
@@ -200,7 +200,7 @@
                         <label for="image_url" class="form-label">{{ trans('vadmin.crud.image') }}</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-image"></i></span>
-                            <input type="url" id="image_url" name="image_url" class="form-control" placeholder="https://example.com/venue-photo.jpg">
+                            <input type="url" id="image_url" name="image_url" class="form-control" placeholder="{{ trans('ph.venue_image') }}">
                         </div>
                         <div class="form-text mt-2">{{ trans('vadmin.crud.opt_img') }}</div>
                     </div>

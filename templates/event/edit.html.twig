@@ -156,7 +156,7 @@
                                         class="form-select{{ errors.category_id is defined ? ' is-invalid' : '' }}">
                                     {% for category in categories %}
                                     <option value="{{ category.id }}" {% if category.id == event.category_id %}selected{% endif %}>
-                                        {{ category.name }}
+                                        {{ trans_cat(category.name) }}
                                     </option>
                                     {% endfor %}
                                 </select>

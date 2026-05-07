@@ -118,7 +118,7 @@
         <div class="d-flex gap-2 mb-5 flex-wrap justify-content-center">
             <a href="{{ base_path }}/" class="category-pill active">{{ trans('home.all') }}</a>
             {% for c in categories %}
-                <a href="{{ base_path }}/events/category/{{ c.id }}" class="category-pill">{{ c.name }}</a>
+                <a href="{{ base_path }}/events/category/{{ c.id }}" class="category-pill">{{ trans_cat(c.name) }}</a>
             {% endfor %}
         </div>
 

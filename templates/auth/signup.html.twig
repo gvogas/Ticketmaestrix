@@ -76,8 +76,8 @@
                     <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-person"></i></span>
                     <input type="text" name="fullname" required
                            class="form-control border-start-0{{ errors.fullname is defined ? ' is-invalid' : '' }}"
-                           placeholder="John Doe"
-                           value="{{ input.fullname ?? '' }}">
+                            placeholder="{{ trans('ph.full_name') }}"
+                            value="{{ input.fullname ?? '' }}">
                     {% if errors.fullname is defined %}
                         <div class="invalid-feedback">{{ errors.fullname | first }}</div>
                     {% endif %}
@@ -90,8 +90,8 @@
                     <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-envelope"></i></span>
                     <input type="email" name="email" required
                            class="form-control border-start-0{{ errors.email is defined ? ' is-invalid' : '' }}"
-                           placeholder="john@example.com"
-                           value="{{ input.email ?? '' }}">
+                            placeholder="{{ trans('ph.email') }}"
+                            value="{{ input.email ?? '' }}">
                     {% if errors.email is defined %}
                         <div class="invalid-feedback">{{ errors.email | first }}</div>
                     {% endif %}
@@ -104,7 +104,7 @@
                     <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-lock"></i></span>
                     <input type="password" name="password" required minlength="8"
                            class="form-control border-start-0{{ errors.password is defined ? ' is-invalid' : '' }}"
-                           placeholder="••••••••">
+                            placeholder="{{ trans('ph.password') }}">
                     {% if errors.password is defined %}
                         <div class="invalid-feedback">{{ errors.password | first }}</div>
                     {% endif %}
@@ -117,7 +117,7 @@
                     <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-lock-fill"></i></span>
                     <input type="password" name="password2" required minlength="8"
                            class="form-control border-start-0{{ errors.password2 is defined ? ' is-invalid' : '' }}"
-                           placeholder="••••••••">
+                           placeholder="{{ trans('ph.password') }}">
                     {% if errors.password2 is defined %}
                         <div class="invalid-feedback">{{ errors.password2 | first }}</div>
                     {% endif %}

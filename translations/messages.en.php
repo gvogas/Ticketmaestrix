@@ -172,6 +172,8 @@ return [
     'evadmin.crud.create'   => 'Create Event',
     'evadmin.crud.update'   => 'Update Event',
     'evadmin.crud.cancel'   => 'Cancel',
+    'evadmin.crud.select_category' => '— Select a category —',
+    'evadmin.crud.select_venue'    => '— Select a venue —',
 
     // Create and Edit Category
     'catadmin.crud.header'   => 'Categories',
@@ -523,6 +525,15 @@ return [
     'editprofile.danger.submessage' => 'Permanently delete your account and all data',
     'editprofile.danger.button' => 'Delete Account',
 
+    // Category names (used in event cards & filters)
+    'categories.concert' => 'Concert',
+    'categories.movies'  => 'Movies',
+    'categories.sports'  => 'Sports',
+    'categories.theater' => 'Theater',
+    'categories.raffle'  => 'Raffle',
+    'categories.festival' => 'Festival',
+    'categories.comedy'  => 'Comedy',
+
     // Admin
     'admin.header'   => 'Manage your events and track performance',
     'admin.overview'   => 'Overview',
@@ -538,4 +549,32 @@ return [
     'admin.manage_admins.name'   => 'Name',
     'admin.manage_admins.email'   => 'Email',
     'admin.manage_admins.action'   => 'Actions',
+
+    // Placeholders
+    'ph.email'         => 'john@example.com',
+    'ph.password'      => '••••••••',
+    'ph.full_name'     => 'John Doe',
+    'ph.event_title'   => 'e.g. Summer Music Festival',
+    'ph.event_image'   => 'https://...',
+    'ph.event_desc'    => 'Describe your event...',
+    'ph.event_desc_full' => 'Provide a detailed description of the event...',
+    'ph.category_name' => 'e.g. Music Festivals',
+    'ph.ticket_row'    => 'e.g. A, Premium, Row 12',
+    'ph.ticket_seat'   => 'e.g. 101, B22',
+    'ph.ticket_price'  => '0.00',
+    'ph.venue_name'    => 'e.g. Madison Square Garden',
+    'ph.venue_desc'    => 'Brief details about the venue...',
+    'ph.venue_address' => '123 Event St, City, Country',
+    'ph.venue_capacity' => '5000',
+    'ph.venue_image'   => 'https://example.com/venue-photo.jpg',
+    'ph.password_keep' => 'Leave blank to keep current',
+    'checkout.payment_method' => 'Payment Method',
+    'checkout.card_number'    => 'Card Number',
+    'checkout.expiry_date'    => 'Expiry Date',
+    'checkout.cvv'            => 'CVV',
+    'checkout.place_order'    => 'Place Order',
+    'ph.checkout_payment' => 'Visa, Mastercard, etc.',
+    'ph.checkout_card'    => '0000 0000 0000 0000',
+    'ph.checkout_expiry'  => 'MM/YY',
+    'ph.checkout_cvv'     => '000',
 ];
