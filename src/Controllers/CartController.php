@@ -212,7 +212,7 @@ class CartController
 
         // Save a snapshot of everything the webhook will need to create the order.
         // The webhook runs server-side with no PHP session, so it cannot read the cart.
-        $pending                    = R::dispense('stripe_pending');
+        $pending                    = R::dispense('stripepending');
         $pending->user_id           = $userId;
         $pending->cart_json         = json_encode($rows);
         $pending->points_to_use     = $pointsToUse;

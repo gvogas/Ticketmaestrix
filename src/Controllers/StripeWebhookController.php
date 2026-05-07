@@ -17,7 +17,7 @@ use Stripe\Webhook;
  * Receives and processes Stripe webhook events.
  *
  * Called by Stripe's servers — no PHP session is available here.
- * All order data comes from the stripe_pending table, which was populated
+ * All order data comes from the stripepending table, which was populated
  * by CartController::checkout() before the Stripe redirect.
  */
 class StripeWebhookController
@@ -33,7 +33,7 @@ class StripeWebhookController
      * POST /stripe/webhook
      *
      * Verifies the Stripe-Signature header, then on checkout.session.completed:
-     * loads stripe_pending, creates the order + order items, handles points,
+     * loads stripepending, creates the order + order items, handles points,
      * deletes the pending row. Returns 200 for all handled events so Stripe
      * stops retrying. Returns 500 on transaction failure so Stripe retries.
      */
@@ -59,10 +59,10 @@ class StripeWebhookController
             $pendingId = (int) ($session->metadata->pending_id ?? 0);
 
             // Load the cart snapshot saved before the Stripe redirect
-            $pending = R::load('stripe_pending', $pendingId);
+            $pending = R::load('stripepending', $pendingId);
             if (!$pending->id) {
                 // Row gone — already processed or manually deleted; acknowledge so Stripe stops retrying
-                error_log("Stripe webhook: stripe_pending #{$pendingId} not found for session {$sessionId}");
+                error_log("Stripe webhook: stripepending #{$pendingId} not found for session {$sessionId}");
                 $response->getBody()->write('ok');
                 return $response->withStatus(200);
             }
