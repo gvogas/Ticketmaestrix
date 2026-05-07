@@ -198,5 +198,68 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Live search for events
+        (function() {
+            var searchInput = document.querySelector('input[name="q"]');
+            var catSelect   = document.querySelector('select[name="category"]');
+            var venueSelect = document.querySelector('select[name="venue"]');
+            var resultsGrid = document.querySelector('.row.g-4.mt-2');
+            var sectionTitle = document.querySelector('.section-title');
+            var pagination   = document.querySelector('nav.my-5');
+            var form         = document.querySelector('.filter-box form');
+            var debounceTimer;
+
+            function doSearch() {
+                var q = searchInput ? searchInput.value : '';
+                var cat = catSelect ? catSelect.value : '';
+                var ven = venueSelect ? venueSelect.value : '';
+                var params = new URLSearchParams();
+                if (q) params.set('q', q);
+                if (cat) params.set('category', cat);
+                if (ven) params.set('venue', ven);
+
+                fetch(window.location.pathname + '?' + params.toString(), {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(function(r) { return r.text(); })
+                .then(function(html) {
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(html, 'text/html');
+                    var newGrid = doc.querySelector('.row.g-4.mt-2');
+                    var newPagination = doc.querySelector('nav.my-5');
+                    if (newGrid) resultsGrid.innerHTML = newGrid.innerHTML;
+                    if (newPagination && pagination) {
+                        pagination.innerHTML = newPagination.innerHTML;
+                    } else if (pagination) {
+                        pagination.innerHTML = '';
+                    }
+                    var count = newGrid ? newGrid.querySelectorAll('.col-md-6').length : 0;
+                    if (sectionTitle) sectionTitle.textContent = '{{ trans('events.all') }}' + (q ? ' — "' + q + '"' : '') + (count ? ' (' + count + ')' : '');
+                    // Update URL without reload
+                    if (history.pushState) {
+                        history.replaceState(null, '', window.location.pathname + '?' + params.toString());
+                    }
+                });
+            }
+
+            function onInput() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(doSearch, 350);
+            }
+
+            if (searchInput) searchInput.addEventListener('input', onInput);
+            if (catSelect) catSelect.addEventListener('change', doSearch);
+            if (venueSelect) venueSelect.addEventListener('change', doSearch);
+
+            // Intercept form submit to use AJAX
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    doSearch();
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

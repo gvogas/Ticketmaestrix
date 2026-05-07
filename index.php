@@ -373,6 +373,9 @@ $app->group('/order-items', function ($group) {
     $group->post('/{id}/delete', [OrderItemController::class, 'delete']);
 });
 
+// --- API ---
+$app->get('/api/search', [EventController::class, 'searchJson']);
+
 // --- Cart ---
 $app->group('/cart', function ($group) {
     $group->post('/add',                  [CartController::class, 'add']);
@@ -392,7 +395,21 @@ $app->get('/lang/{locale}', function (Request $request, Response $response, arra
     if (in_array($args['locale'], $allowed, true)) {
         $_SESSION['lang'] = $args['locale'];
     }
-    return $response->withHeader('Location', $basePath . '/')->withStatus(302);
+    $referer = $request->getHeaderLine('Referer');
+    $dest = $basePath . '/';
+    if ($referer) {
+        $parts = parse_url($referer);
+        $dest = ($parts['path'] ?? '') . (isset($parts['query']) ? '?' . $parts['query'] : '') . (isset($parts['fragment']) ? '#' . $parts['fragment'] : '');
+        // Strip base path prefix if present so we don't double it
+        if ($basePath && str_starts_with($dest, $basePath)) {
+            $dest = substr($dest, strlen($basePath));
+        }
+        // Fallback to home if the resulting path is empty
+        if (!$dest || $dest === '?' || $dest === '#') {
+            $dest = '/';
+        }
+    }
+    return $response->withHeader('Location', $basePath . $dest)->withStatus(302);
 });
 
 

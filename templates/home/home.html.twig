@@ -99,9 +99,10 @@
             <h1 class="display-4 fw-bold">{{ trans('home.header') }}</h1>
             <p class="opacity-75">{{ trans('home.subheader') }}</p>
 
-            <div class="search-container">
-                <input type="text" class="form-control" placeholder="{{ trans('home.search_placeholder') }}">
-                <button class="btn-search">{{ trans('home.search') }}</button>
+            <div class="search-container" style="position:relative;">
+                <input type="text" class="form-control" id="homeSearch" placeholder="{{ trans('home.search_placeholder') }}" autocomplete="off">
+                <button class="btn-search" id="homeSearchBtn">{{ trans('home.search') }}</button>
+                <div id="homeSearchResults" class="list-group position-absolute w-100 shadow-sm" style="top:100%;z-index:1000;display:none;border-radius:0 0 12px 12px;overflow:hidden;"></div>
             </div>
 
             <div class="d-flex justify-content-center gap-5 mt-4">
@@ -207,5 +208,60 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function() {
+            var input = document.getElementById('homeSearch');
+            var btn   = document.getElementById('homeSearchBtn');
+            var results = document.getElementById('homeSearchResults');
+            var timer;
+
+            // Navigate on search
+            function goSearch() {
+                var q = input.value.trim();
+                if (q) window.location.href = '{{ base_path }}/events?q=' + encodeURIComponent(q);
+            }
+
+            btn.addEventListener('click', goSearch);
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') goSearch();
+            });
+
+            // Live suggestions
+            input.addEventListener('input', function() {
+                var q = input.value.trim();
+                clearTimeout(timer);
+                if (q.length < 2) {
+                    results.style.display = 'none';
+                    return;
+                }
+                timer = setTimeout(function() {
+                    fetch('{{ base_path }}/api/search?q=' + encodeURIComponent(q))
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            results.innerHTML = '';
+                            if (data.length === 0) {
+                                results.style.display = 'none';
+                                return;
+                            }
+                            data.forEach(function(ev) {
+                                var a = document.createElement('a');
+                                a.href = ev.url;
+                                a.className = 'list-group-item list-group-item-action d-flex align-items-center gap-3 border-0 border-bottom';
+                                a.innerHTML = '<div style="width:50px;height:50px;flex-shrink:0;background:#f0f0f0;border-radius:8px;overflow:hidden;">' +
+                                    (ev.image ? '<img src="' + ev.image + '" style="width:100%;height:100%;object-fit:cover;">' : '<div style="padding:12px;text-align:center;"><i class="bi bi-ticket" style="color:#ccc;"></i></div>') +
+                                    '</div><div class="text-start"><div class="fw-bold small">' + ev.title + '</div><small class="text-muted">' + ev.venue_name + ' &middot; ' + ev.date + '</small></div>';
+                                results.appendChild(a);
+                            });
+                            results.style.display = 'block';
+                        });
+                }, 300);
+            });
+
+            // Hide dropdown on outside click
+            document.addEventListener('click', function(e) {
+                if (!input.parentElement.contains(e.target)) results.style.display = 'none';
+            });
+        })();
+    </script>
 </body>
 </html>

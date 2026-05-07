@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Helpers\Auth;
 use App\Models\CategoryModel;
 use App\Models\EventModel;
+use App\Models\TicketModel;
 use App\Models\VenueModel;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -253,5 +254,35 @@ class EventController
         ]);
         $response->getBody()->write($html);
         return $response;
+    }
+
+    /** GET /api/search?q= — JSON live-search endpoint */
+    public function searchJson(Request $request, Response $response): Response
+    {
+        $params = $request->getQueryParams();
+        $q      = trim($params['q'] ?? '');
+
+        $events = [];
+        if (strlen($q) >= 2) {
+            $filters = ['q' => $q, 'category' => '', 'venue' => ''];
+            $events  = $this->eventModel->search($filters, 10, 0);
+            $events  = $this->eventModel->hydrate($events, $this->venueModel, new TicketModel(), $this->categoryModel);
+        }
+
+        $data = array_map(function ($e) {
+            return [
+                'id'         => $e->id,
+                'title'      => $e->title,
+                'date'       => $e->date,
+                'venue_name' => $e->venue_name ?? '',
+                'category'   => $e->category ?? '',
+                'image'      => $e->event_image ?? '',
+                'min_price'  => $e->min_price,
+                'url'        => $this->basePath . '/events/' . $e->id,
+            ];
+        }, $events);
+
+        $response->getBody()->write(json_encode($data));
+        return $response->withHeader('Content-Type', 'application/json');
     }
 }
