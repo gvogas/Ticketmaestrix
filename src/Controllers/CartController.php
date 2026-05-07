@@ -25,6 +25,8 @@ use Twig\Environment;
  */
 class CartController
 {
+    private const ORDER_STATUS_PAID = 1;
+
     public function __construct(
         private Environment        $twig,
         private TicketModel        $ticketModel,
@@ -52,7 +54,6 @@ class CartController
         $queryParams = $request->getQueryParams();
         $pointsToUse = (int) ($queryParams['points_to_use'] ?? 0);
 
-        // Hydrate cart to calculate actual totals
         $rows = Cart::hydrate($this->ticketModel, $this->eventModel, $this->venueModel);
 
         // Navigating to /checkout with an empty cart would show a $0.00 form
@@ -60,19 +61,12 @@ class CartController
             return $response->withHeader('Location', $this->basePath . '/cart')->withStatus(302);
         }
 
-        $subtotal = Cart::subtotal($rows);
-
-        // Validate points selection against user balance and subtotal
+        $subtotal        = Cart::subtotal($rows);
         $user            = Auth::user();
         $availablePoints = (int) ($user->points ?? 0);
-        $maxDiscountPts  = (int) floor($subtotal * 100);
-
-        if ($pointsToUse < 0)               $pointsToUse = 0;
-        if ($pointsToUse > $availablePoints) $pointsToUse = $availablePoints;
-        if ($pointsToUse > $maxDiscountPts)  $pointsToUse = $maxDiscountPts;
-
-        $discount = $pointsToUse * 0.01;
-        $total    = max(0, $subtotal - $discount);
+        $pointsToUse     = $this->clampPoints($pointsToUse, $availablePoints, (int) floor($subtotal * 100));
+        $discount        = $pointsToUse * 0.01;
+        $total           = max(0, $subtotal - $discount);
 
         $html = $this->twig->render('home/checkout.html.twig', [
             'base_path'     => $this->basePath,
@@ -137,7 +131,7 @@ class CartController
     }
 
     /**
-     * POST /checkout — validate the cart, save a snapshot in stripe_pending,
+     * POST /checkout — validate the cart, save a snapshot in stripepending,
      * create a Stripe Checkout Session, and redirect the user to Stripe.
      *
      * Order creation happens in StripeWebhookController after Stripe confirms
@@ -165,25 +159,14 @@ class CartController
                 ->withStatus(302);
         }
 
-        $userId   = (int) Auth::userId();
-        $subtotal = Cart::subtotal($rows);
-
-        $pointsToUse = (int) ($request->getParsedBody()['points_to_use'] ?? 0);
-
-        $user            = R::load('users', $userId);
+        $userId          = (int) Auth::userId();
+        $subtotal        = Cart::subtotal($rows);
+        $pointsToUse     = (int) ($request->getParsedBody()['points_to_use'] ?? 0);
+        $user            = Auth::user(); // request-cached; avoids a redundant R::load
         $availablePoints = (int) ($user->points ?? 0);
-        $maxDiscount     = (int) floor($subtotal * 100);
-
-        if ($pointsToUse <= 0) {
-            $pointsToUse = 0;
-        } elseif ($pointsToUse > $availablePoints) {
-            $pointsToUse = $availablePoints;
-        } elseif ($pointsToUse > $maxDiscount) {
-            $pointsToUse = $maxDiscount;
-        }
-
-        $discount = $pointsToUse * 0.01;
-        $total    = round($subtotal - $discount, 2);
+        $pointsToUse     = $this->clampPoints($pointsToUse, $availablePoints, (int) floor($subtotal * 100));
+        $discount        = $pointsToUse * 0.01;
+        $total           = round($subtotal - $discount, 2);
 
         // Stripe requires a minimum charge of $0.50 — bypass for fully-discounted orders
         if ($total < 0.50) {
@@ -206,9 +189,9 @@ class CartController
             }
         }
 
-        // Extend cart expiry to 30 minutes so it survives the Stripe redirect
+        // Extend cart expiry so it survives the Stripe redirect
         // (the normal 5-minute window is too short for an offsite payment flow)
-        $_SESSION['cart_expires_at'] = time() + 1800;
+        Cart::extendExpiry(1800);
 
         // Save a snapshot of everything the webhook will need to create the order.
         // The webhook runs server-side with no PHP session, so it cannot read the cart.
@@ -250,10 +233,10 @@ class CartController
         }
 
         // Save the Stripe session ID so the webhook can find this pending row by it
-        $pending->stripe_session_id = $session->id;
+        $pending->stripe_session_id = $session['id'];
         R::store($pending);
 
-        return $response->withHeader('Location', $session->url)->withStatus(302);
+        return $response->withHeader('Location', $session['url'])->withStatus(302);
     }
 
     /**
@@ -304,7 +287,7 @@ class CartController
         try {
             $order                    = R::dispense('orders');
             $order->total_price       = $total;
-            $order->status            = 1; // paid
+            $order->status            = self::ORDER_STATUS_PAID;
             $order->order_time        = date('Y-m-d H:i:s');
             $order->user_id           = $userId;
             $order->points_earned     = $pointsEarned;
@@ -351,5 +334,14 @@ class CartController
         return $response
             ->withHeader('Location', $this->basePath . '/profile')
             ->withStatus(302);
+    }
+
+    /**
+     * Clamps a points value so it cannot exceed the user's balance or the
+     * maximum discount allowed (subtotal in cents). Ensures non-negative.
+     */
+    private function clampPoints(int $points, int $available, int $maxDiscount): int
+    {
+        return min(max(0, $points), $available, $maxDiscount);
     }
 }

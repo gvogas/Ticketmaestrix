@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Helpers\BeanHelper;
 use App\Models\OrderItemModel;
 use App\Models\OrderModel;
 use App\Models\PointsHistoryModel;
@@ -22,6 +23,8 @@ use Stripe\Webhook;
  */
 class StripeWebhookController
 {
+    private const ORDER_STATUS_PAID = 1;
+
     public function __construct(
         private OrderModel         $orderModel,
         private OrderItemModel     $orderItemModel,
@@ -58,9 +61,8 @@ class StripeWebhookController
             $sessionId = $session->id;
             $pendingId = (int) ($session->metadata->pending_id ?? 0);
 
-            // Load the cart snapshot saved before the Stripe redirect
             $pending = R::load('stripepending', $pendingId);
-            if (!$pending->id) {
+            if (!BeanHelper::isValidBean($pending)) {
                 // Row gone — already processed or manually deleted; acknowledge so Stripe stops retrying
                 error_log("Stripe webhook: stripepending #{$pendingId} not found for session {$sessionId}");
                 $response->getBody()->write('ok');
@@ -68,8 +70,7 @@ class StripeWebhookController
             }
 
             // Idempotency guard — Stripe may deliver the same event more than once
-            $existing = R::findOne('orders', 'stripe_session_id = ?', [$sessionId]);
-            if ($existing) {
+            if (R::findOne('orders', 'stripe_session_id = ?', [$sessionId])) {
                 $response->getBody()->write('ok');
                 return $response->withStatus(200);
             }
@@ -83,10 +84,9 @@ class StripeWebhookController
 
             R::begin();
             try {
-                // Create the paid order
                 $order                    = R::dispense('orders');
                 $order->total_price       = $total;
-                $order->status            = 1; // paid
+                $order->status            = self::ORDER_STATUS_PAID;
                 $order->order_time        = date('Y-m-d H:i:s');
                 $order->user_id           = $userId;
                 $order->points_earned     = $pointsEarned;
@@ -94,7 +94,6 @@ class StripeWebhookController
                 $order->stripe_session_id = $sessionId; // stored for idempotency on duplicate delivery
                 $orderId = (int) R::store($order);
 
-                // One orderitem row per cart line
                 foreach ($rows as $row) {
                     $item            = R::dispense('orderitem');
                     $item->quantity  = (int) $row['quantity'];
@@ -103,7 +102,6 @@ class StripeWebhookController
                     R::store($item);
                 }
 
-                // Update user's points balance
                 $user = R::load('users', $userId);
 
                 if ($pointsToUse > 0) {

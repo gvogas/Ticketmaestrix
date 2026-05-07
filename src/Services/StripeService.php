@@ -14,16 +14,20 @@ use Stripe\Stripe;
  */
 class StripeService
 {
-    public function __construct(private string $secretKey) {}
+    public function __construct(private string $secretKey)
+    {
+        Stripe::setApiKey($secretKey);
+    }
 
     /**
      * Build a Stripe Checkout Session from a hydrated cart.
      *
      * @param array  $rows        Cart::hydrate() output — each row has: ticket_id, name, price, quantity, total
      * @param int    $pointsToUse Validated points to spend; 1 point = 1 cent ($0.01)
-     * @param int    $pendingId   stripe_pending.id passed back via Stripe metadata so the webhook can find the row
+     * @param int    $pendingId   stripepending.id passed back via Stripe metadata so the webhook can find the row
      * @param string $successUrl  Full public URL Stripe redirects to after payment
      * @param string $cancelUrl   Full public URL Stripe redirects to when user clicks Back
+     * @return array{url: string, id: string}
      */
     public function createCheckoutSession(
         array  $rows,
@@ -31,12 +35,9 @@ class StripeService
         int    $pendingId,
         string $successUrl,
         string $cancelUrl,
-    ): Session {
-        Stripe::setApiKey($this->secretKey);
-
+    ): array {
         $lineItems = [];
 
-        // One line item per cart row
         foreach ($rows as $row) {
             $lineItems[] = [
                 'price_data' => [
@@ -60,14 +61,17 @@ class StripeService
             ];
         }
 
-        return Session::create([
+        $session = Session::create([
             'payment_method_types' => ['card'],
             'line_items'           => $lineItems,
             'mode'                 => 'payment',
             'success_url'          => $successUrl,
             'cancel_url'           => $cancelUrl,
-            // pending_id lets the webhook load the right stripe_pending row
+            // pending_id lets the webhook load the right stripepending row
             'metadata'             => ['pending_id' => $pendingId],
         ]);
+
+        // Return only what the controller needs — keeps Stripe SDK types out of caller code
+        return ['url' => $session->url, 'id' => $session->id];
     }
 }
