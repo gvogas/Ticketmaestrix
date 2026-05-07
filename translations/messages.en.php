@@ -384,7 +384,7 @@ return [
     'dashboard.tab_overview'     => 'Overview',
     'dashboard.tab_my_events'    => 'My Events',
     'dashboard.tab_create'       => 'Create Event',
-    'dashboard.tab_admins'       => 'Manage Admins',
+    'dashboard.tab_users'        => 'Manage Users',
     'dashboard.stat_revenue'     => 'Total Revenue',
     'dashboard.stat_tickets'     => 'Tickets Sold',
     'dashboard.stat_events'      => 'Active Events',

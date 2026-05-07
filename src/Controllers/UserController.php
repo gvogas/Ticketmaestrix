@@ -55,7 +55,7 @@ class UserController
         ]);
 
         return $response
-            ->withHeader('Location', $this->basePath . '/users')
+            ->withHeader('Location', $this->basePath . '/admin#users')
             ->withStatus(302);
     }
 
@@ -67,13 +67,13 @@ class UserController
         }
         $user = $this->userModel->load((int) ($args['id'] ?? 0));
 
-        if ($user->id) {
+        if ($user->id && $user->id !== Auth::userId()) {
             $user->role = $user->role === 'admin' ? 'user' : 'admin';
             $this->userModel->save($user);
         }
 
         return $response
-            ->withHeader('Location', $this->basePath . '/users')
+            ->withHeader('Location', $this->basePath . '/admin#users')
             ->withStatus(302);
     }
 
@@ -88,7 +88,7 @@ class UserController
         $this->userModel->update($id, $data);
 
         return $response
-            ->withHeader('Location', $this->basePath . '/users')
+            ->withHeader('Location', $this->basePath . '/admin#users')
             ->withStatus(302);
     }
 
@@ -100,9 +100,13 @@ class UserController
         }
         $userId = (int) ($args['id'] ?? 0);
 
+        if ($userId === Auth::userId()) {
+            return $response->withHeader('Location', $this->basePath . '/admin#users')->withStatus(302);
+        }
+
         $this->userModel->delete($userId);
 
-        return $response->withHeader('Location', $this->basePath . '/users')->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/admin#users')->withStatus(302);
     }
 
     /** GET /users/{id} — admin views one user's detail page. */

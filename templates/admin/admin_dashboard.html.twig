@@ -115,6 +115,45 @@
             border-radius: 4px;
             margin-left: 5px;
         }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            vertical-align: middle;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #adb5bd;
+            border-radius: 24px;
+            transition: 0.3s;
+        }
+        .toggle-slider::before {
+            content: "";
+            position: absolute;
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: var(--brand-purple);
+        }
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(20px);
+        }
     </style>
 </head>
 <body>
@@ -149,7 +188,7 @@
                 <button class="nav-link" id="create-tab" data-bs-toggle="tab" data-bs-target="#create" type="button"><i class="bi bi-plus"></i> {{ trans('dashboard.tab_create') }}</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" id="admins-tab" data-bs-toggle="tab" data-bs-target="#admins" type="button"><i class="bi bi-shield-lock"></i> {{ trans('dashboard.tab_admins') }}</button>
+                <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button"><i class="bi bi-people"></i> {{ trans('dashboard.tab_users') }}</button>
             </li>
         </ul>
 
@@ -289,46 +328,58 @@
                 </div>
             </div>
 
-            <!-- Tab 4: Manage Admins -->
-            <div class="tab-pane fade" id="admins" role="tabpanel">
+            <!-- Tab 4: Manage Users -->
+            <div class="tab-pane fade" id="users" role="tabpanel">
                 <div class="card form-card p-4">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="fw-bold mb-0">{{ trans('dashboard.tab_admins') }}</h5>
-                        <button class="btn btn-create px-4" data-bs-toggle="modal" data-bs-target="#addAdminModal">
-                            {{ trans('dashboard.add_admin') }}
-                        </button>
+                        <h5 class="fw-bold mb-0">{{ trans('dashboard.tab_users') }}</h5>
+                        <span class="text-muted">{{ users|length }} total</span>
                     </div>
                     <div class="table-responsive">
                         <table class="table align-middle">
                             <thead>
                                 <tr class="text-muted small">
-                                    <th>{{ trans('dashboard.col_title') }}</th>
-                                    <th>{{ trans('dashboard.admin_email') }}</th>
+                                    <th>#</th>
+                                    <th>{{ trans('useradmin.col_name') }}</th>
+                                    <th>{{ trans('useradmin.col_email') }}</th>
+                                    <th>{{ trans('useradmin.col_role') }}</th>
                                     <th class="text-end">{{ trans('dashboard.col_actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for admin in admins %}
+                                {% for u in users %}
                                     <tr>
+                                        <td class="text-muted">{{ u.id }}</td>
                                         <td>
-                                            <span class="fw-bold">{{ admin.first_name }} {{ admin.last_name }}</span>
-                                            {% if admin.id == admin_user.id %}<span class="badge-you">YOU</span>{% endif %}
+                                            <span class="fw-bold">{{ u.first_name }} {{ u.last_name }}</span>
+                                            {% if u.id == admin_user.id %}<span class="badge-you">YOU</span>{% endif %}
                                         </td>
-                                        <td>{{ admin.email }}</td>
+                                        <td>{{ u.email }}</td>
+                                        <td>
+                                            <span class="badge {% if u.role == 'admin' %}bg-primary{% else %}bg-secondary{% endif %}">{{ u.role }}</span>
+                                        </td>
                                         <td class="text-end">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editAdminModal{{ admin.id }}">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-
-                                            {% if admin.id != admin_user.id %}
-                                                <form action="{{ base_path }}/admin/users/{{ admin.id }}/delete" method="POST" class="d-inline"
-                                                      onsubmit="return confirm('{{ trans('confirm.revoke_admin')|e('js') }}');">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                            {% if u.id != admin_user.id %}
+                                                <form method="POST" action="{{ base_path }}/users/{{ u.id }}/role" class="d-inline toggle-role-form">
+                                                    <label class="toggle-switch mb-0">
+                                                        <input type="checkbox" class="toggle-role-input" {% if u.role == 'admin' %}checked{% endif %}>
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </form>
+                                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ u.id }}" title="{{ trans('dashboard.edit') }}">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <form method="POST" action="{{ base_path }}/users/{{ u.id }}/delete" class="d-inline"
+                                                      onsubmit="return confirm('{{ trans('confirm.delete_user')|e('js') }}');">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="{{ trans('dashboard.delete') }}">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
                                                 </form>
                                             {% endif %}
                                         </td>
                                     </tr>
-
+                                {% else %}
+                                    <tr><td colspan="5" class="text-center text-muted py-4">{{ trans('useradmin.no_users') }}</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -339,29 +390,29 @@
         </div>
     </div>
 
-    <!-- Edit Admin Modals (moved outside table for proper DOM structure) -->
-    {% for admin in admins %}
-    <div class="modal fade" id="editAdminModal{{ admin.id }}" tabindex="-1" aria-hidden="true">
+    <!-- Edit User Modals -->
+    {% for u in users %}
+    <div class="modal fade" id="editUserModal{{ u.id }}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow">
                 <div class="modal-header border-0 pt-4 px-4">
                     <h5 class="fw-bold">{{ trans('dashboard.modal_edit_admin') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ base_path }}/admin/users/{{ admin.id }}/edit" method="POST" id="editAdminForm{{ admin.id }}">
+                <form action="{{ base_path }}/users/{{ u.id }}" method="POST">
                     <div class="modal-body p-4">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">First Name</label>
-                                <input type="text" name="first_name" class="form-control" value="{{ admin.first_name }}" required>
+                                <input type="text" name="first_name" class="form-control" value="{{ u.first_name }}" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Last Name</label>
-                                <input type="text" name="last_name" class="form-control" value="{{ admin.last_name }}" required>
+                                <input type="text" name="last_name" class="form-control" value="{{ u.last_name }}" required>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">{{ trans('dashboard.admin_email') }}</label>
-                                <input type="email" name="email" class="form-control" value="{{ admin.email }}" required>
+                                <input type="email" name="email" class="form-control" value="{{ u.email }}" required>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Password</label>
@@ -379,44 +430,25 @@
     </div>
     {% endfor %}
 
-    <!-- Modal for Adding New Admin -->
-    <div class="modal fade" id="addAdminModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 shadow">
-                <div class="modal-header border-0 pt-4 px-4">
-                    <h5 class="fw-bold">{{ trans('dashboard.modal_add_admin') }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form action="{{ base_path }}/admin/users/create" method="POST" id="createAdminForm">
-                    <div class="modal-body p-4">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">First Name</label>
-                                <input type="text" name="first_name" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Last Name</label>
-                                <input type="text" name="last_name" class="form-control" required>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">{{ trans('dashboard.admin_email') }}</label>
-                                <input type="email" name="email" class="form-control" required>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Password</label>
-                                <input type="password" name="password" class="form-control" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-0 pb-4 px-4">
-                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">{{ trans('dashboard.admin_cancel') }}</button>
-                        <button type="submit" class="btn btn-create px-4">{{ trans('dashboard.admin_save') }}</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Activate tab from URL hash on page load
+        (function() {
+            var hash = window.location.hash;
+            if (hash) {
+                var tabBtn = document.querySelector('[data-bs-target="' + hash + '"]');
+                if (tabBtn) {
+                    var tab = new bootstrap.Tab(tabBtn);
+                    tab.show();
+                }
+            }
+            // Submit toggle form on switch change
+            document.querySelectorAll('.toggle-role-input').forEach(function(input) {
+                input.addEventListener('change', function() {
+                    this.closest('form').submit();
+                });
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -391,7 +391,7 @@ return [
     'dashboard.tab_overview'     => 'Vue d\'ensemble',
     'dashboard.tab_my_events'    => 'Mes événements',
     'dashboard.tab_create'       => 'Créer un événement',
-    'dashboard.tab_admins'       => 'Gérer les admins',
+    'dashboard.tab_users'        => 'Gérer les utilisateurs',
     'dashboard.stat_revenue'     => 'Revenus totaux',
     'dashboard.stat_tickets'     => 'Billets vendus',
     'dashboard.stat_events'      => 'Événements actifs',
