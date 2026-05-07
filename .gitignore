@@ -9,3 +9,5 @@ node_modules/
 # Logs
 var/app.log
 
+vendor/
+

@@ -6,18 +6,15 @@
     <title>TicketMaestrix - Checkout</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
     <style>
         body {
             background: linear-gradient(135deg, #a060a8 0%, #4a215d 100%);
             min-height: 100vh;
         }
-
-        .login-container {
-            max-width: 500px; 
+        .checkout-container {
+            max-width: 500px;
             width: 100%;
         }
-
         .logo-circle {
             width: 60px;
             height: 60px;
@@ -25,9 +22,8 @@
             color: #7b2cbf;
             font-size: 30px;
         }
-
-        .btn-primary-tm {
-            background-color: #5E246E;
+        .btn-stripe {
+            background-color: #635BFF;
             color: white !important;
             border: none;
             padding: 0.8rem;
@@ -36,30 +32,16 @@
             border-radius: 0.5rem;
             transition: background-color 0.25s ease;
             width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            cursor: pointer;
         }
-
-        .btn-primary-tm:hover {
-            background-color: #371840;
+        .btn-stripe:hover {
+            background-color: #4B44CC;
             color: white !important;
         }
-
-        .otp-input {
-            letter-spacing: 0.3em;
-            text-align: center;
-            font-size: 1.4rem;
-            font-weight: 600;
-            padding: 0.7rem 1rem;
-            border: 1.5px solid #d0aee8;
-            border-radius: 0.5rem;
-            color: #2d1b3d;
-        }
-
-        .otp-input:focus {
-            border-color: #7b2cbf;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(123, 44, 191, 0.15);
-        }
-
         .alert-error-tm {
             background: #fdecea;
             border: 1px solid #ef9a9a;
@@ -77,10 +59,10 @@
             <i class="bi bi-ticket-perforated-fill"></i>
         </div>
         <h1 class="fw-bold display-5">Checkout</h1>
-        <p class="fs-5 opacity-75">Secure checkout powered by TicketMaestrix</p>
+        <p class="fs-5 opacity-75">Secure payment via Stripe</p>
     </div>
 
-    <div class="card login-container shadow-lg border-0 rounded-4 p-4 p-sm-5">
+    <div class="card checkout-container shadow-lg border-0 rounded-4 p-4 p-sm-5">
 
         {% if error %}
         <div class="alert-error-tm mb-4">
@@ -88,59 +70,50 @@
         </div>
         {% endif %}
 
+        {# Order summary — amounts calculated server-side before redirect #}
+        <div class="mb-3 p-3 bg-light rounded-3 border text-center">
+            <label class="form-label d-block text-muted small text-uppercase fw-bold">Subtotal</label>
+            <span class="fs-5 text-dark">${{ subtotal|number_format(2) }}</span>
+        </div>
+
+        {% if discount > 0 %}
+        <div class="mb-3 p-3 bg-light rounded-3 border text-center">
+            <label class="form-label d-block text-muted small text-uppercase fw-bold">Points Discount</label>
+            <span class="fs-5 text-success">-${{ discount|number_format(2) }}</span>
+        </div>
+        {% endif %}
+
+        <div class="mb-4 p-3 bg-light rounded-3 border text-center">
+            <label class="form-label d-block text-muted small text-uppercase fw-bold">Total to Pay</label>
+            <span class="display-6 fw-bold text-dark">${{ total|number_format(2) }}</span>
+        </div>
+
         <form action="{{ base_path }}/checkout" method="POST">
             <input type="hidden" name="points_to_use" value="{{ points_to_use }}">
-            
-            <div class="mb-4 p-3 bg-light rounded-3 border text-center">
-                <label class="form-label d-block text-muted small text-uppercase fw-bold">Amount to Pay</label>
-                <span class="display-6 fw-bold text-dark">${{ total|number_format(2) }}</span>
-                {% if discount > 0 %}
-                    <div class="text-success small mt-1">
-                        <i class="bi bi-tag-fill"></i> Includes ${{ discount|number_format(2) }} points discount
-                    </div>
-                {% endif %}
-            </div>
-
-            <div class="mb-4">
-                <label class="form-label fw-bold">Payment Method</label>
-                <div class="input-group input-group-lg">
-                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-credit-card"></i></span>
-                    <input type="text" name="payment_method" class="form-control border-start-0" placeholder="Visa, Mastercard, etc." required>
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <label class="form-label fw-bold">Card Number</label>
-                <div class="input-group input-group-lg">
-                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-credit-card"></i></span>
-                    <input type="text" name="card_number" class="form-control border-start-0" placeholder="0000 0000 0000 0000" required>
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <label class="form-label fw-bold">Expiry Date</label>
-                <div class="input-group input-group-lg">
-                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-calendar-date"></i></span>
-                    <input type="text" name="expiry_date" class="form-control border-start-0" placeholder="MM/YY" required>
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <label class="form-label fw-bold">CVV</label>
-                <div class="input-group input-group-lg">
-                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-shield-lock"></i></span>
-                    <input type="text" name="cvv" class="form-control border-start-0" placeholder="000" required>
-                </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary-tm">
-                Place Order
+            <button type="submit" class="btn-stripe">
+                {# Stripe wordmark "S" logo #}
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 28 28" fill="white" aria-hidden="true">
+                    <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305
+                             2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0
+                             9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218
+                             c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583
+                             0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555
+                             C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813
+                             1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z"/>
+                </svg>
+                Pay with Stripe
             </button>
         </form>
+
+        <div class="text-center mt-3">
+            <a href="{{ base_path }}/cart" class="text-muted small">
+                <i class="bi bi-arrow-left"></i> Back to cart
+            </a>
+        </div>
     </div>
 
     <div class="text-center mt-4 text-white-50 px-4" style="font-size: 0.85rem; max-width: 500px;">
-        Secure checkout powered by TicketMaestrix
+        Your payment is processed securely by Stripe. TicketMaestrix never sees your card details.
     </div>
 
 </body>
