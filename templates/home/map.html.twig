@@ -37,6 +37,24 @@
     /* Sidebar card fade-in */
     @keyframes card-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
     .card-in { animation:card-in 0.2s ease both; }
+
+    /* Mobile */
+    @media (max-width: 767.98px) {
+        .content-area { flex-direction: column; }
+        .map-sidebar {
+            width: 100% !important;
+            border-right: none;
+            border-bottom: 1px solid #dee2e6;
+            padding: 0.875rem 1rem;
+            max-height: 42vh;
+            flex-shrink: 0;
+        }
+        .map-container { min-height: 0; }
+        .map-placeholder-box { max-width: calc(100% - 2rem); padding: 1.25rem; }
+        .legend-box { bottom: 10px; left: 10px; padding: 10px; font-size: 0.8rem; }
+        .zoom-controls { top: 10px; right: 10px; }
+        .zoom-btn { width: 40px; height: 40px; } 
+    }
 </style>
 {% endblock %}
 {% block content %}

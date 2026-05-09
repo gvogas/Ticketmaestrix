@@ -289,6 +289,11 @@ return [
     'flash.expired_sub'     => 'Your tickets have been released — add them again to continue.',
     'flash.browse_events'   => 'Browse events',
 
+    // Mobile drawer section labels
+    'nav.section.navigate' => 'Navigate',
+    'nav.section.account'  => 'Account',
+    'nav.section.language' => 'Language',
+
     // Footer
     'footer.rights' => 'All rights reserved.',
 
