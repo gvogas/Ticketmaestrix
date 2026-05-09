@@ -5,102 +5,179 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ trans('events.header') }} | {{ trans('app.title') }}</title>
 
-    <!-- Bootstrap 5 & Font Awesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <style>
         :root {
             --brand-purple: #5E246E;
-            --brand-deep: #371840;
-            --brand-bg: #f8fafc;
-            --border-color: #cbd5e1;
+            --brand-deep:   #371840;
+            --brand-bg:     #f8fafc;
         }
 
-        /* 1. GLOBAL FLAT DESIGN */
-        * { border-radius: 0 !important; }
+        body { background: var(--brand-bg); font-family: 'Inter', sans-serif; color: #1a202c; }
 
-        /* 2. REMOVE BLUE FOCUS RING */
-        .form-control:focus, .form-select:focus, .btn:focus {
-            outline: none !important;
-            box-shadow: none !important;
-            border-color: var(--brand-purple) !important;
-        }
-
-        body {
-            background-color: var(--brand-bg);
-            font-family: 'Inter', sans-serif;
-            color: #1a202c;
-        }
-
-        /* 3. HERO SECTION */
+        /* ── Hero ─────────────────────────────────────── */
         .events-hero {
-            background: linear-gradient(to right, var(--brand-deep), var(--brand-purple));
+            background: linear-gradient(135deg, var(--brand-deep), var(--brand-purple));
             color: white;
-            padding: 6rem 0 8rem 0;
+            padding: 5rem 0 8rem;
             text-align: center;
         }
+        .events-hero h1 { font-weight: 800; font-size: 2.8rem; margin-bottom: 0.4rem; }
+        .events-hero p  { opacity: 0.75; font-size: 1.05rem; }
 
-        .events-hero h1 {
-            font-weight: 700;
-            font-size: 3rem;
-            margin-bottom: 0.5rem;
-        }
-
-        /* 4. STRUCTURED FILTER BAR */
-        .filter-wrapper {
-            margin-top: -3.5rem;
-            position: relative;
-            z-index: 10;
-        }
-
-        .filter-box {
+        /* ── Filter card ──────────────────────────────── */
+        .filter-wrapper { margin-top: -3.5rem; position: relative; z-index: 10; }
+        .filter-card {
             background: white;
-            border: 2px solid var(--brand-deep);
-            padding: 1rem;
-            box-shadow: 10px 10px 0px rgba(55, 24, 64, 0.1);
+            border-radius: 20px;
+            border: 1px solid #ede8f5;
+            padding: 1.5rem 1.75rem;
+            box-shadow: 0 10px 40px rgba(94,36,110,0.13);
         }
 
-        /* Fixed Filter Button */
-        .btn-filter {
-            background-color: #7b3091;
+        /* Search input */
+        .search-wrap { position: relative; }
+        .search-wrap .bi-search {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: #adb5bd; font-size: 0.95rem; pointer-events: none;
+        }
+        .search-wrap input {
+            padding-left: 2.5rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 50px !important;
+            font-size: 0.9rem;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .search-wrap input:focus {
+            border-color: var(--brand-purple) !important;
+            box-shadow: 0 0 0 3px rgba(94,36,110,0.1) !important;
+            outline: none;
+        }
+
+        /* Divider */
+        .filter-divider { border-top: 1px solid #f0eaf8; margin: 1rem 0; }
+
+        /* Category pills */
+        .cat-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .cat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border-radius: 50px;
+            border: 1.5px solid #e2e8f0;
+            background: white;
+            color: #555;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .cat-pill:hover { border-color: #9b51e0; color: #9b51e0; background: #faf5ff; }
+        .cat-pill.active {
+            background: linear-gradient(135deg, #9b51e0, var(--brand-purple));
+            border-color: transparent;
             color: white;
-            border: none;
-            font-weight: 700;
-            text-transform: uppercase;
-            height: 100%;
-            width: 100%;
-            transition: background 0.2s;
+            box-shadow: 0 3px 10px rgba(94,36,110,0.3);
         }
-
-        .btn-filter:hover {
-            background-color: var(--brand-purple);
-            color: white;
+        .cat-pill .dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: currentColor; opacity: 0.7; flex-shrink: 0;
         }
+        .cat-pill.active .dot { opacity: 1; background: rgba(255,255,255,0.8); }
 
-        /* 5. TITLES & CONTENT */
+        /* Custom venue dropdown */
+        .venue-dd { position: relative; }
+        .venue-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 7px 14px 7px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 50px;
+            background: white;
+            font-size: 0.85rem; font-weight: 600; color: #555;
+            cursor: pointer; white-space: nowrap;
+            transition: border-color 0.15s, box-shadow 0.15s, color 0.15s;
+        }
+        .venue-btn:hover { border-color: #9b51e0; color: #9b51e0; }
+        .venue-btn.open, .venue-btn.has-value {
+            border-color: #9b51e0; color: var(--brand-purple); background: #faf5ff;
+        }
+        .venue-btn .chevron {
+            font-size: 0.7rem; transition: transform 0.2s; margin-left: 2px;
+        }
+        .venue-btn.open .chevron { transform: rotate(180deg); }
+
+        .venue-panel {
+            position: absolute; top: calc(100% + 8px); right: 0;
+            min-width: 220px;
+            background: white;
+            border: 1.5px solid #ede8f5;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(94,36,110,0.15);
+            overflow: hidden;
+            z-index: 200;
+            opacity: 0; transform: translateY(-6px);
+            transition: opacity 0.15s ease, transform 0.15s ease;
+            pointer-events: none;
+        }
+        .venue-panel.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        .venue-option {
+            padding: 9px 16px;
+            font-size: 0.85rem; font-weight: 500; color: #333;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .venue-option:hover { background: #f5f0fc; }
+        .venue-option.active { color: var(--brand-purple); font-weight: 700; background: #faf5ff; }
+        .venue-option + .venue-option { border-top: 1px solid #f5f0fa; }
+
+        /* Active filter summary */
+        .filter-summary { font-size: 0.8rem; color: #888; }
+        .filter-summary .clear-link { color: #9b51e0; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .filter-summary .clear-link:hover { text-decoration: underline; }
+
+        /* Section title */
         .section-title {
-            font-weight: 700;
-            text-transform: uppercase;
+            font-weight: 700; font-size: 1.1rem;
             color: var(--brand-deep);
-            border-left: 6px solid var(--brand-purple);
-            padding-left: 15px;
-            margin-top: 4rem;
+            border-left: 4px solid var(--brand-purple);
+            padding-left: 12px;
         }
+
+        /* Skeleton shimmer */
+        @keyframes shimmer {
+            0%   { background-position: -400px 0; }
+            100% { background-position:  400px 0; }
+        }
+        .sk-block {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e6e6e6 50%, #f0f0f0 75%);
+            background-size: 400px 100%;
+            animation: shimmer 1.2s infinite linear;
+            border-radius: 6px;
+        }
+
+        /* Card entrance */
+        @keyframes card-in {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: none; }
+        }
+        .card-in { animation: card-in 0.2s ease both; }
 
         /* Pagination */
-        .pagination .page-link {
-            color: var(--brand-purple);
-            border-radius: 8px;
-            margin: 0 3px;
-            font-weight: 600;
-        }
-
+        .pagination .page-link { color: var(--brand-purple); border-radius: 8px !important; margin: 0 2px; font-weight: 600; }
         .pagination .page-item.active .page-link {
             background-color: var(--brand-purple) !important;
             border-color: var(--brand-purple) !important;
-            color: #ffffff !important;
+            color: white !important;
         }
     </style>
 </head>
@@ -108,7 +185,6 @@
 
     {% include 'partials/navbar.html.twig' %}
 
-    <!-- Hero Section -->
     <section class="events-hero">
         <div class="container">
             <h1>{{ trans('events.header') }}</h1>
@@ -116,70 +192,82 @@
         </div>
     </section>
 
-    <!-- WORKING SEARCH FORM -->
     <div class="container filter-wrapper">
-        <div class="filter-box">
-            <form action="{{ base_path }}/events" method="GET" class="row g-2">
-                <div class="col-lg-5">
-                    <div class="input-group h-100">
-                        <span class="input-group-text bg-white border-end-0 text-muted">
-                            <i class="fas fa-search"></i>
-                        </span>
-                        <input type="text" name="q" class="form-control border-start-0"
+        <div class="filter-card">
+
+           
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <div class="search-wrap">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="evSearch" class="form-control"
                                placeholder="{{ trans('events.search_placeholder') }}"
-                               value="{{ query_params.q|default('') }}">
+                               value="{{ query_params.q|default('') }}"
+                               autocomplete="off">
                     </div>
                 </div>
-                <div class="col-lg-3">
-                    <select name="category" class="form-select h-100">
-                        <option value="">{{ trans('events.all_cats') }}</option>
-                        {% for cat in categories %}
-                            <option value="{{ cat.id }}" {{ query_params.category == cat.id ? 'selected' : '' }}>{{ trans_cat(cat.name) }}</option>
-                        {% endfor %}
-                    </select>
+                <div class="col-auto">
+                    <div class="venue-dd" id="venueDd">
+                        <button type="button" class="venue-btn {{ query_params.venue is not empty ? 'has-value' : '' }}" id="venueBtn">
+                            <i class="bi bi-geo-alt"></i>
+                            <span id="venueBtnLabel">{{ query_params.venue is not empty ? venues|filter(v => v.id == query_params.venue)|first.name|default(trans('events.all_venues')) : trans('events.all_venues') }}</span>
+                            <i class="bi bi-chevron-down chevron"></i>
+                        </button>
+                        <div class="venue-panel" id="venuePanel">
+                            <div class="venue-option active" data-id="">{{ trans('events.all_venues') }}</div>
+                            {% for v in venues %}
+                            <div class="venue-option {{ query_params.venue == v.id ? 'active' : '' }}" data-id="{{ v.id }}">{{ v.name }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
-                <div class="col-lg-2">
-                    <select name="venue" class="form-select h-100">
-                        <option value="">{{ trans('events.all_venues') }}</option>
-                        {% for v in venues %}
-                            <option value="{{ v.id }}" {{ query_params.venue == v.id ? 'selected' : '' }}>{{ v.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-lg-2">
-                    <button type="submit" class="btn btn-filter py-2">
-                        {{ trans('events.search') }}
+            </div>
+
+            <div class="filter-divider"></div>
+
+            {# ── Row 2: category pills + active summary ── #}
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="cat-pills" id="catPills">
+                    <button class="cat-pill {{ query_params.category is empty ? 'active' : '' }}" data-cat="">
+                        {{ trans('events.all_cats') }}
                     </button>
+                    {% for cat in categories %}
+                    <button class="cat-pill {{ query_params.category == cat.id ? 'active' : '' }}" data-cat="{{ cat.id }}">
+                        <span class="dot"></span>{{ trans_cat(cat.name) }}
+                    </button>
+                    {% endfor %}
                 </div>
-            </form>
+                <div class="filter-summary" id="filterSummary" style="display:none;">
+                    <a class="clear-link" id="clearFilters">{{ trans('events.clear_filters')|default('Clear filters') }}</a>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <div class="container mb-5">
-        <div class="mb-4">
-            <h2 class="section-title">{{ trans('events.all') }}</h2>
+    <div class="container mb-5 mt-4">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h2 class="section-title mb-0" id="evSectionTitle">{{ trans('events.all') }}</h2>
+            <span class="text-muted small" id="evCount"></span>
         </div>
 
-        <div class="row g-4 mt-2">
+        <div class="row g-4" id="evGrid">
             {% for event in events %}
-            <div class="col-md-6 col-lg-4">
-                {% include 'event/event-card.html.twig' with {
-                    'event': event,
-                    'base_path': base_path
-                } %}
+            <div class="col-md-6 col-lg-4 card-in" style="animation-delay:{{ loop.index0 * 40 }}ms">
+                {% include 'event/event-card.html.twig' with { 'event': event, 'base_path': base_path } %}
             </div>
             {% else %}
-            <div class="col-12 text-center py-5">
-                <div class="border-2 border-dashed border-secondary p-5 bg-white">
-                    <h4 class="text-muted mb-0">{{ trans('events.no_events') }}</h4>
+            <div class="col-12">
+                <div class="text-center py-5 bg-white rounded-4 border">
+                    <i class="bi bi-calendar-x display-3 text-muted opacity-50 mb-3 d-block"></i>
+                    <p class="text-muted fs-5 mb-0">{{ trans('events.no_events') }}</p>
                 </div>
             </div>
             {% endfor %}
         </div>
 
-        <!-- Pagination -->
         {% if totalPages > 1 %}
-        <nav class="my-5">
+        <nav class="my-5" id="evPagination">
             <ul class="pagination justify-content-center">
                 <li class="page-item {{ currentPage <= 1 ? 'disabled' : '' }}">
                     <a class="page-link" href="{{ base_path }}/events?page={{ currentPage - 1 }}&q={{ query_params.q }}&category={{ query_params.category }}&venue={{ query_params.venue }}">{{ trans('events.previous') }}</a>
@@ -199,67 +287,169 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Live search for events
-        (function() {
-            var searchInput = document.querySelector('input[name="q"]');
-            var catSelect   = document.querySelector('select[name="category"]');
-            var venueSelect = document.querySelector('select[name="venue"]');
-            var resultsGrid = document.querySelector('.row.g-4.mt-2');
-            var sectionTitle = document.querySelector('.section-title');
-            var pagination   = document.querySelector('nav.my-5');
-            var form         = document.querySelector('.filter-box form');
-            var debounceTimer;
+    (function () {
+        var searchInput  = document.getElementById('evSearch');
+        var catPills     = document.getElementById('catPills');
+        var grid         = document.getElementById('evGrid');
+        var countEl      = document.getElementById('evCount');
+        var pagination   = document.getElementById('evPagination');
+        var summary      = document.getElementById('filterSummary');
+        var clearBtn     = document.getElementById('clearFilters');
+        var venueBtn     = document.getElementById('venueBtn');
+        var venuePanel   = document.getElementById('venuePanel');
+        var venueBtnLabel = document.getElementById('venueBtnLabel');
+        var debounceTimer, controller;
 
-            function doSearch() {
-                var q = searchInput ? searchInput.value : '';
-                var cat = catSelect ? catSelect.value : '';
-                var ven = venueSelect ? venueSelect.value : '';
-                var params = new URLSearchParams();
-                if (q) params.set('q', q);
-                if (cat) params.set('category', cat);
-                if (ven) params.set('venue', ven);
+        var selectedCat   = '{{ query_params.category|default('')|e('js') }}';
+        var selectedVenue = '{{ query_params.venue|default('')|e('js') }}';
+        var allVenuesLabel = '{{ trans('events.all_venues')|e('js') }}';
 
-                fetch(window.location.pathname + '?' + params.toString(), {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                .then(function(r) { return r.text(); })
-                .then(function(html) {
-                    var parser = new DOMParser();
-                    var doc = parser.parseFromString(html, 'text/html');
-                    var newGrid = doc.querySelector('.row.g-4.mt-2');
-                    var newPagination = doc.querySelector('nav.my-5');
-                    if (newGrid) resultsGrid.innerHTML = newGrid.innerHTML;
-                    if (newPagination && pagination) {
-                        pagination.innerHTML = newPagination.innerHTML;
-                    } else if (pagination) {
-                        pagination.innerHTML = '';
+        
+        venueBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var open = venuePanel.classList.toggle('open');
+            venueBtn.classList.toggle('open', open);
+        });
+
+        venuePanel.querySelectorAll('.venue-option').forEach(function (opt) {
+            opt.addEventListener('click', function () {
+                selectedVenue = opt.dataset.id;
+                venueBtnLabel.textContent = selectedVenue ? opt.textContent.trim() : allVenuesLabel;
+                venuePanel.querySelectorAll('.venue-option').forEach(function (o) { o.classList.remove('active'); });
+                opt.classList.add('active');
+                venueBtn.classList.remove('open');
+                venuePanel.classList.remove('open');
+                venueBtn.classList.toggle('has-value', !!selectedVenue);
+                doSearch();
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!venueBtn.parentElement.contains(e.target)) {
+                venueBtn.classList.remove('open');
+                venuePanel.classList.remove('open');
+            }
+        });
+        
+
+        function getParams() {
+            var q = searchInput.value.trim();
+            var p = new URLSearchParams();
+            if (q)            p.set('q', q);
+            if (selectedCat)  p.set('category', selectedCat);
+            if (selectedVenue) p.set('venue', selectedVenue);
+            return p;
+        }
+
+        function updateSummary() {
+            var active = searchInput.value.trim() || selectedCat || selectedVenue;
+            summary.style.display = active ? '' : 'none';
+        }
+
+        function showSkeleton() {
+            grid.innerHTML = '';
+            for (var i = 0; i < 6; i++) {
+                var col = document.createElement('div');
+                col.className = 'col-md-6 col-lg-4';
+                col.innerHTML =
+                    '<div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">' +
+                        '<div class="sk-block" style="height:180px;border-radius:0 !important;"></div>' +
+                        '<div class="card-body p-4">' +
+                            '<div class="sk-block mb-2" style="height:13px;width:55%;"></div>' +
+                            '<div class="sk-block mb-3" style="height:18px;width:80%;"></div>' +
+                            '<div class="sk-block mb-2" style="height:12px;width:45%;"></div>' +
+                            '<div class="sk-block mb-4" style="height:12px;width:38%;"></div>' +
+                            '<div class="sk-block" style="height:34px;"></div>' +
+                        '</div>' +
+                    '</div>';
+                grid.appendChild(col);
+            }
+        }
+
+        function doSearch() {
+            var params = getParams();
+            updateSummary();
+            showSkeleton();
+            if (pagination) pagination.innerHTML = '';
+            if (countEl) countEl.textContent = '';
+
+            if (controller) controller.abort();
+            controller = new AbortController();
+
+            fetch(window.location.pathname + '?' + params.toString(), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                signal: controller.signal
+            })
+            .then(function (r) { return r.text(); })
+            .then(function (html) {
+                var doc      = new DOMParser().parseFromString(html, 'text/html');
+                var newGrid  = doc.getElementById('evGrid');
+                var newPag   = doc.getElementById('evPagination');
+
+                if (newGrid) {
+                    grid.innerHTML = newGrid.innerHTML;
+                    var cols = grid.querySelectorAll('.col-md-6, .col-lg-4');
+                    cols.forEach(function (col, i) {
+                        col.style.opacity = '0';
+                        col.style.transform = 'translateY(12px)';
+                        col.style.transition = 'opacity 0.2s ease ' + (i * 35) + 'ms, transform 0.2s ease ' + (i * 35) + 'ms';
+                        requestAnimationFrame(function () {
+                            requestAnimationFrame(function () {
+                                col.style.opacity = '1';
+                                col.style.transform = '';
+                            });
+                        });
+                    });
+                    if (countEl) {
+                        var n = cols.length;
+                        countEl.textContent = n ? n + ' {{ trans('events.results')|default('results')|e('js') }}' : '';
                     }
-                    var count = newGrid ? newGrid.querySelectorAll('.col-md-6').length : 0;
-                    if (sectionTitle) sectionTitle.textContent = '{{ trans('events.all') }}' + (q ? ' — "' + q + '"' : '') + (count ? ' (' + count + ')' : '');
-                    // Update URL without reload
-                    if (history.pushState) {
-                        history.replaceState(null, '', window.location.pathname + '?' + params.toString());
-                    }
-                });
-            }
+                }
 
-            function onInput() {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(doSearch, 350);
-            }
+                if (pagination) pagination.innerHTML = newPag ? newPag.innerHTML : '';
 
-            if (searchInput) searchInput.addEventListener('input', onInput);
-            if (catSelect) catSelect.addEventListener('change', doSearch);
-            if (venueSelect) venueSelect.addEventListener('change', doSearch);
+                if (history.replaceState) {
+                    history.replaceState(null, '', window.location.pathname + (params.toString() ? '?' + params.toString() : ''));
+                }
+            })
+            .catch(function (e) { if (e.name !== 'AbortError') showSkeleton(); });
+        }
 
-            // Intercept form submit to use AJAX
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    doSearch();
-                });
-            }
-        })();
+        function debounce() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(doSearch, 300);
+        }
+
+        // Category pill clicks
+        catPills.querySelectorAll('.cat-pill').forEach(function (pill) {
+            pill.addEventListener('click', function () {
+                catPills.querySelectorAll('.cat-pill').forEach(function (p) { p.classList.remove('active'); });
+                pill.classList.add('active');
+                selectedCat = pill.dataset.cat;
+                doSearch();
+            });
+        });
+
+        // Clear all filters
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function () {
+                searchInput.value = '';
+                selectedCat   = '';
+                selectedVenue = '';
+                venueBtnLabel.textContent = allVenuesLabel;
+                venueBtn.classList.remove('has-value');
+                venuePanel.querySelectorAll('.venue-option').forEach(function (o) { o.classList.remove('active'); });
+                venuePanel.querySelector('[data-id=""]').classList.add('active');
+                catPills.querySelectorAll('.cat-pill').forEach(function (p) { p.classList.remove('active'); });
+                catPills.querySelector('[data-cat=""]').classList.add('active');
+                doSearch();
+            });
+        }
+
+        searchInput.addEventListener('input', debounce);
+
+        updateSummary();
+    })();
     </script>
 </body>
 </html>

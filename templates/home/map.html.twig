@@ -35,6 +35,13 @@
         .legend-box { position: absolute; bottom: 20px; left: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .legend-item { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; margin-bottom: 5px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        /* Sidebar loading skeleton */
+        @keyframes shimmer { from { background-position:-300px 0; } to { background-position:300px 0; } }
+        .skeleton-block { background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%); background-size:600px 100%; animation:shimmer 1.2s infinite linear; border-radius:4px; }
+        /* Sidebar card fade-in */
+        @keyframes card-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+        .card-in { animation:card-in 0.2s ease both; }
     </style>
 </head>
 <body>
@@ -47,10 +54,9 @@
             <div class="map-sidebar">
                 <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill text-primary me-2"></i>{{ trans('map.header') }}</h5>
 
-                <div class="search-box" style="position:relative;">
+                <div class="search-box">
                     <i class="bi bi-search"></i>
                     <input type="text" id="mapSearch" class="form-control" placeholder="{{ trans('map.search_placeholder') }}" autocomplete="off">
-                    <div id="mapSearchResults" class="list-group position-absolute w-100 shadow-sm" style="top:100%;z-index:1000;display:none;border-radius:0 0 12px 12px;overflow:hidden;"></div>
                 </div>
 
                 <button class="btn-location"><i class="bi bi-send-fill me-2"></i> {{ trans('map.use_location') }}</button>
@@ -108,69 +114,126 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        (function() {
-            var input = document.getElementById('mapSearch');
-            var results = document.getElementById('mapSearchResults');
-            var eventsList = document.getElementById('mapEventsList');
-            var originalHTML = eventsList.innerHTML;
-            var timer;
+    (function () {
+        // Sidebar event card — uses DOM methods; no innerHTML with untrusted data.
+        // Image src blocks javascript: URIs while allowing relative paths and https:// URLs.
+        function buildSidebarCard(ev) {
+            var url = (typeof ev.url === 'string' && ev.url.startsWith('/')) ? ev.url : '#';
+            var a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.className = 'text-decoration-none text-reset';
 
-            input.addEventListener('input', function() {
-                var q = input.value.trim();
-                clearTimeout(timer);
-                if (q.length < 2) {
-                    results.style.display = 'none';
-                    eventsList.innerHTML = originalHTML;
-                    return;
-                }
-                timer = setTimeout(function() {
-                    fetch('{{ base_path }}/api/search?q=' + encodeURIComponent(q))
-                        .then(function(r) { return r.json(); })
-                        .then(function(data) {
-                            // Show dropdown suggestions
-                            results.innerHTML = '';
-                            if (data.length === 0) {
-                                results.style.display = 'none';
-                            } else {
-                                data.forEach(function(ev) {
-                                    var a = document.createElement('a');
-                                    a.href = ev.url;
-                                    a.className = 'list-group-item list-group-item-action d-flex align-items-center gap-2 border-0 border-bottom py-2';
-                                    a.innerHTML = '<div style="width:40px;height:40px;flex-shrink:0;background:#f0f0f0;border-radius:6px;overflow:hidden;">' +
-                                        (ev.image ? '<img src="' + ev.image + '" style="width:100%;height:100%;object-fit:cover;">' : '<div style="padding:8px;text-align:center;"><i class="bi bi-ticket" style="color:#ccc;font-size:0.8rem;"></i></div>') +
-                                        '</div><div class="text-start"><div class="fw-bold" style="font-size:0.85rem;">' + ev.title + '</div><small class="text-muted" style="font-size:0.75rem;">' + ev.venue_name + '</small></div>';
-                                    results.appendChild(a);
-                                });
-                                results.style.display = 'block';
-                            }
+            var card = document.createElement('div');
+            card.className = 'event-card-mini';
 
-                            // Also filter side list
-                            eventsList.innerHTML = '';
-                            if (data.length === 0) {
-                                eventsList.innerHTML = '<div class="text-muted text-center py-4">{{ trans('map.no_events')|e('js') }}</div>';
-                            } else {
-                                data.forEach(function(ev) {
-                                    var a = document.createElement('a');
-                                    a.href = ev.url;
-                                    a.className = 'text-decoration-none text-reset';
-                                    var price = ev.min_price ? '$' + parseFloat(ev.min_price).toFixed(2) : '{{ trans('home.tba')|e('js') }}';
-                                    a.innerHTML = '<div class="event-card-mini">' +
-                                        (ev.image ? '<img src="' + ev.image + '" class="event-img">' : '<div class="event-img"></div>') +
-                                        '<div><h6 class="fw-bold mb-0" style="font-size:0.95rem;">' + ev.title + '</h6>' +
-                                        '<small class="text-muted d-block">' + ev.venue_name + '</small>' +
-                                        '<small class="fw-bold text-primary">' + price + '</small>' +
-                                        '<small class="text-muted"> &middot; ' + ev.date + '</small></div></div>';
-                                    eventsList.appendChild(a);
-                                });
-                            }
-                        });
-                }, 300);
-            });
+            var imgSrc = (typeof ev.image === 'string' && ev.image && !/^javascript:/i.test(ev.image)) ? ev.image : '';
+            if (imgSrc) {
+                var img = document.createElement('img');
+                img.setAttribute('src', imgSrc);
+                img.setAttribute('alt', ev.title || '');
+                img.className = 'event-img';
+                card.appendChild(img);
+            } else {
+                var placeholder = document.createElement('div');
+                placeholder.className = 'event-img';
+                card.appendChild(placeholder);
+            }
 
-            document.addEventListener('click', function(e) {
-                if (!input.parentElement.contains(e.target)) results.style.display = 'none';
-            });
-        })();
+            var info = document.createElement('div');
+
+            var h6 = document.createElement('h6');
+            h6.className = 'fw-bold mb-0';
+            h6.style.fontSize = '0.95rem';
+            h6.textContent = ev.title || '';
+
+            var venue = document.createElement('small');
+            venue.className = 'text-muted d-block';
+            venue.textContent = ev.venue_name || '';
+
+            var priceEl = document.createElement('small');
+            priceEl.className = 'fw-bold text-primary';
+            // null/undefined means price is not yet set — show TBA rather than Free.
+            priceEl.textContent = (ev.min_price === null || ev.min_price === undefined)
+                ? '{{ trans('home.tba')|e('js') }}'
+                : (ev.min_price > 0 ? '$' + parseFloat(ev.min_price).toFixed(2) : 'Free');
+
+            var dateEl = document.createElement('small');
+            dateEl.className = 'text-muted';
+            dateEl.textContent = ' · ' + (ev.date || '');
+
+            info.appendChild(h6);
+            info.appendChild(venue);
+            info.appendChild(priceEl);
+            info.appendChild(dateEl);
+            card.appendChild(info);
+            a.appendChild(card);
+            return a;
+        }
+
+        function buildSkeletons() {
+            for (var i = 0; i < 3; i++) {
+                var s = document.createElement('div');
+                s.className = 'event-card-mini';
+                var imgS = document.createElement('div');
+                imgS.className = 'event-img skeleton-block';
+                var info = document.createElement('div');
+                info.style.flex = '1';
+                ['80%', '60%', '40%'].forEach(function (w) {
+                    var line = document.createElement('div');
+                    line.className = 'skeleton-block';
+                    line.style.cssText = 'height:12px;margin-bottom:7px;width:' + w + ';';
+                    info.appendChild(line);
+                });
+                s.appendChild(imgS);
+                s.appendChild(info);
+                eventsList.appendChild(s);
+            }
+        }
+
+        var input = document.getElementById('mapSearch');
+        var eventsList = document.getElementById('mapEventsList');
+        // Safe to restore via innerHTML — source is server-rendered Twig, not user input.
+        var originalHTML = eventsList.innerHTML;
+        var timer, controller;
+
+        input.addEventListener('input', function () {
+            var q = input.value.trim();
+            clearTimeout(timer);
+            if (controller) controller.abort();
+            if (!q) {
+                eventsList.innerHTML = originalHTML;
+                return;
+            }
+
+            timer = setTimeout(function () {
+                // Show skeleton placeholders while the request is in flight.
+                while (eventsList.firstChild) eventsList.removeChild(eventsList.firstChild);
+                buildSkeletons();
+
+                controller = new AbortController();
+                fetch('{{ base_path }}/api/search?q=' + encodeURIComponent(q), { signal: controller.signal })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        while (eventsList.firstChild) eventsList.removeChild(eventsList.firstChild);
+                        if (!data.length) {
+                            var empty = document.createElement('div');
+                            empty.className = 'text-muted text-center py-4';
+                            empty.textContent = '{{ trans('map.no_events')|e('js') }}';
+                            eventsList.appendChild(empty);
+                        } else {
+                            data.forEach(function (ev, i) {
+                                var card = buildSidebarCard(ev);
+                                // Stagger cards by 40ms each so they cascade in.
+                                card.classList.add('card-in');
+                                card.style.animationDelay = (i * 40) + 'ms';
+                                eventsList.appendChild(card);
+                            });
+                        }
+                    })
+                    .catch(function (e) { if (e.name !== 'AbortError') eventsList.innerHTML = originalHTML; });
+            }, 300);
+        });
+    })();
     </script>
 </body>
 </html>

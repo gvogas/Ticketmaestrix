@@ -263,7 +263,8 @@ class EventController
         $q      = trim($params['q'] ?? '');
 
         $events = [];
-        if (strlen($q) >= 2) {
+        $qLen = mb_strlen($q);
+        if ($qLen >= 1 && $qLen <= 100) {
             $filters = ['q' => $q, 'category' => '', 'venue' => ''];
             $events  = $this->eventModel->search($filters, 10, 0);
             $events  = $this->eventModel->hydrate($events, $this->venueModel, new TicketModel(), $this->categoryModel);
@@ -278,6 +279,7 @@ class EventController
                 'category'   => $e->category ?? '',
                 'image'      => $e->event_image ?? '',
                 'min_price'  => $e->min_price,
+                'venue_address' => $e->venue_address ?? '',
                 'url'        => $this->basePath . '/events/' . $e->id,
             ];
         }, $events);
