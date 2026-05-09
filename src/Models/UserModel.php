@@ -19,13 +19,6 @@ class UserModel
         return R::load('users', $id);
     }
 
-    // --- ADDED FOR ADMIN CRUD ---
-    public function getAllAdmins(): array
-    {
-        // Finds all users where the role is 'admin'
-        return BeanHelper::castBeanArray(R::findAll('users', 'role = ?', ['admin']));
-    }
-
     public function findByEmail(string $email): mixed
     {
         return R::findOne('users', 'email = ?', [$email]);

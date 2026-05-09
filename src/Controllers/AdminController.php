@@ -60,8 +60,8 @@ class AdminController
             $this->ticketModel
         );
 
-        // 3. Fetch all admins for the "Manage Admins" tab
-        $admins = $this->userModel->getAllAdmins();
+        // 3. Fetch all users for the "Manage Users" tab
+        $users = $this->userModel->findAll();
 
         $html = $this->twig->render('admin/admin_dashboard.html.twig', [
             'base_path'     => $this->basePath,
@@ -69,7 +69,7 @@ class AdminController
             'admin_user'    => Auth::user(),
             'stats'         => $stats,
             'events'        => $events,
-            'admins'        => $admins,
+            'users'         => $users,
             'categories'    => $this->categoryModel->getAll(),
             'venues'        => $this->venueModel->getAll(),
         ]);
@@ -78,61 +78,4 @@ class AdminController
         return $response;
     }
 
-    public function createAdmin(Request $request, Response $response): Response
-    {
-        if (!Auth::isAdmin()) {
-            return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
-        }
-
-        $data = $request->getParsedBody();
-
-        $this->userModel->create([
-            'first_name'   => $data['first_name'] ?? '',
-            'last_name'    => $data['last_name'] ?? '',
-            'email'        => $data['email'] ?? '',
-            'password'     => $data['password'] ?? '',
-            'role'         => 'admin',
-        ]);
-
-        return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
-    }
-
-    /**
-     * POST /admin/users/{id}/edit — Process the admin update via AJAX
-     */
-    public function updateAdmin(Request $request, Response $response, array $args): Response
-    {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
-
-        $adminId = (int)$args['id'];
-        $data = $request->getParsedBody();
-
-        $updateData = [
-            'first_name'   => $data['first_name'] ?? '',
-            'last_name'    => $data['last_name'] ?? '',
-            'email'        => $data['email'] ?? '',
-        ];
-
-        // Only update password if a new one was provided
-        if (!empty($data['password'])) {
-            $updateData['password'] = $data['password'];
-        }
-
-        $this->userModel->update($adminId, $updateData);
-
-        return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
-    }
-
-    public function deleteAdmin(Request $request, Response $response, array $args): Response
-    {
-        if (!Auth::isAdmin() || (int)$args['id'] === Auth::user()->id) {
-            return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
-        }
-
-        $this->userModel->delete((int)$args['id']);
-
-        return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
-    }
 }

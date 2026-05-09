@@ -1,4 +1,4 @@
-AddHandler application/x-httpd-ea-php81 .php
+
 
 RewriteEngine On
 

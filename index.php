@@ -108,6 +108,15 @@ $twig->addFunction(new TwigFunction('trans', function (string $key, array $param
     $locale = $_SESSION['lang'] ?? 'en';
     return $translator->trans($key, $params, null, $locale);
 }));
+// Translate a category name; falls back to the raw name if no translation exists.
+$twig->addFunction(new TwigFunction('trans_cat', function ($name) use ($translator) {
+    if (is_object($name) && method_exists($name, '__toString')) $name = (string) $name;
+    if (!is_string($name) || $name === '') return is_string($name) ? $name : '';
+    $locale = $_SESSION['lang'] ?? 'en';
+    $key = 'categories.' . strtolower(str_replace([' ', '-', '\''], '_', $name));
+    $translated = $translator->trans($key, [], null, $locale);
+    return $translated !== $key ? $translated : $name;
+}));
 $twig->addGlobal('current_locale', $_SESSION['lang'] ?? 'en');
 
 
@@ -295,9 +304,7 @@ $app->group('', function ($group) {
 
 // --- Admin ---
 $app->get('/admin', [AdminController::class, 'showAdminDashboard']);
-$app->post('/admin/users/create', [AdminController::class, 'createAdmin']);
-$app->post('/admin/users/{id}/edit', [AdminController::class, 'updateAdmin']);
-$app->post('/admin/users/{id}/delete', [AdminController::class, 'deleteAdmin']);
+
 
 // --- Users ---
 $app->group('/users', function ($group) {
@@ -376,6 +383,9 @@ $app->group('/order-items', function ($group) {
     $group->post('/{id}/delete', [OrderItemController::class, 'delete']);
 });
 
+// --- API ---
+$app->get('/api/search', [EventController::class, 'searchJson']);
+
 // --- Cart ---
 $app->group('/cart', function ($group) {
     $group->post('/add',                  [CartController::class, 'add']);
@@ -400,7 +410,21 @@ $app->get('/lang/{locale}', function (Request $request, Response $response, arra
     if (in_array($args['locale'], $allowed, true)) {
         $_SESSION['lang'] = $args['locale'];
     }
-    return $response->withHeader('Location', $basePath . '/')->withStatus(302);
+    $referer = $request->getHeaderLine('Referer');
+    $dest = $basePath . '/';
+    if ($referer) {
+        $parts = parse_url($referer);
+        $dest = ($parts['path'] ?? '') . (isset($parts['query']) ? '?' . $parts['query'] : '') . (isset($parts['fragment']) ? '#' . $parts['fragment'] : '');
+        // Strip base path prefix if present so we don't double it
+        if ($basePath && str_starts_with($dest, $basePath)) {
+            $dest = substr($dest, strlen($basePath));
+        }
+        // Fallback to home if the resulting path is empty
+        if (!$dest || $dest === '?' || $dest === '#') {
+            $dest = '/';
+        }
+    }
+    return $response->withHeader('Location', $basePath . $dest)->withStatus(302);
 });
 
 

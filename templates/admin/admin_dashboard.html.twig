@@ -1,125 +1,157 @@
-<!DOCTYPE html>
-<html lang="{{ current_locale }}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ trans('dashboard.tab_overview') }} - {{ trans('app.title') }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        :root {
-            --brand-purple: #5E246E;
-            --brand-dark: #371840;
-            --accent-purple: #9b51e0;
-            --bg-light: #F8F9FA;
-        }
-        body { background-color: var(--bg-light); font-family: 'Inter', sans-serif; }
+﻿{% extends "layout.html.twig" %}
+{% block title %}{{ trans('dashboard.tab_overview') }} - {{ trans('app.title') }}{% endblock %}
+{% block head %}
+<style>
+    :root {
+        --brand-purple: #5E246E;
+        --brand-dark: #371840;
+        --accent-purple: #9b51e0;
+        --bg-light: #F8F9FA;
+    }
+    body { background-color: var(--bg-light); font-family: 'Inter', sans-serif; }
 
-        /* Header & Banner */
-        .admin-banner {
-            background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-purple) 100%);
-            color: white;
-            padding: 3rem 0;
-        }
-        .admin-avatar {
-            width: 70px;
-            height: 70px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-        }
+    /* Header & Banner */
+    .admin-banner {
+        background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-purple) 100%);
+        color: white;
+        padding: 3rem 0;
+    }
+    .admin-avatar {
+        width: 70px;
+        height: 70px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+    }
 
-        /* Tabs Navigation */
-        .nav-tabs-custom {
-            background: white;
-            border-radius: 12px;
-            padding: 0.5rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border: none;
-            display: flex;
-            justify-content: space-around;
-        }
-        .nav-tabs-custom .nav-link {
-            border: none;
-            color: #666 !important;
-            font-weight: 500;
-            padding: 0.8rem 2rem;
-            border-radius: 8px;
-            transition: all 0.2s ease-in-out;
-        }
+    /* Tabs Navigation */
+    .nav-tabs-custom {
+        background: white;
+        border-radius: 12px;
+        padding: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border: none;
+        display: flex;
+        justify-content: space-around;
+    }
+    .nav-tabs-custom .nav-link {
+        border: none;
+        color: #666 !important;
+        font-weight: 500;
+        padding: 0.8rem 2rem;
+        border-radius: 8px;
+        transition: all 0.2s ease-in-out;
+    }
 
-        .nav-tabs-custom .nav-link:hover {
-            color: var(--brand-purple) !important;
-            background-color: rgba(94, 36, 110, 0.05);
-        }
+    .nav-tabs-custom .nav-link:hover {
+        color: var(--brand-purple) !important;
+        background-color: rgba(94, 36, 110, 0.05);
+    }
 
-        .nav-tabs-custom .nav-link.active {
-            background-color: transparent !important;
-            color: var(--brand-purple) !important;
-            border-bottom: 3px solid var(--brand-purple) !important;
-            border-radius: 0;
-        }
+    .nav-tabs-custom .nav-link.active {
+        background-color: transparent !important;
+        color: var(--brand-purple) !important;
+        border-bottom: 3px solid var(--brand-purple) !important;
+        border-radius: 0;
+    }
 
-        /* Stats Cards */
-        .stat-card {
-            border: none;
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            background: white;
-        }
-        .stat-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-        }
+    /* Stats Cards */
+    .stat-card {
+        border: none;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        background: white;
+    }
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
 
-        /* Form Styling */
-        .form-card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            background: white;
-        }
-        .form-label { font-weight: 600; font-size: 0.85rem; }
-        .form-control { padding: 0.75rem; border-radius: 8px; border: 1px solid #dee2e6; }
+    /* Form Styling */
+    .form-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        background: white;
+    }
+    .form-label { font-weight: 600; font-size: 0.85rem; }
+    .form-control { padding: 0.75rem; border-radius: 8px; border: 1px solid #dee2e6; }
 
-        .btn-create {
-            background-color: var(--accent-purple);
-            border: none;
-            color: white;
-            padding: 0.8rem;
-            border-radius: 10px;
-            font-weight: 600;
-        }
-        .btn-create:hover { background-color: #8339c9; color: white; }
+    .btn-create {
+        background-color: var(--accent-purple);
+        border: none;
+        color: white;
+        padding: 0.8rem;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .btn-create:hover { background-color: #8339c9; color: white; }
 
-        .empty-state {
-            padding: 5rem 0;
-            text-align: center;
-        }
-        .empty-state i { font-size: 4rem; color: #dee2e6; }
+    .empty-state {
+        padding: 5rem 0;
+        text-align: center;
+    }
+    .empty-state i { font-size: 4rem; color: #dee2e6; }
 
-        .badge-you {
-            background-color: var(--brand-purple);
-            color: white;
-            font-size: 0.65rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            margin-left: 5px;
-        }
-    </style>
-</head>
-<body>
+    .badge-you {
+        background-color: var(--brand-purple);
+        color: white;
+        font-size: 0.65rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        margin-left: 5px;
+    }
 
-    {% include 'partials/navbar.html.twig' %}
+    /* Toggle Switch */
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+        vertical-align: middle;
+    }
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #adb5bd;
+        border-radius: 24px;
+        transition: 0.3s;
+    }
+    .toggle-slider::before {
+        content: "";
+        position: absolute;
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        border-radius: 50%;
+        transition: 0.3s;
+    }
+    .toggle-switch input:checked + .toggle-slider {
+        background-color: var(--brand-purple);
+    }
+    .toggle-switch input:checked + .toggle-slider::before {
+        transform: translateX(20px);
+    }
+</style>
+{% endblock %}
+{% block content %}
 
     <!-- Admin Header -->
     <div class="admin-banner mb-5">
@@ -149,7 +181,7 @@
                 <button class="nav-link" id="create-tab" data-bs-toggle="tab" data-bs-target="#create" type="button"><i class="bi bi-plus"></i> {{ trans('dashboard.tab_create') }}</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" id="admins-tab" data-bs-toggle="tab" data-bs-target="#admins" type="button"><i class="bi bi-shield-lock"></i> {{ trans('dashboard.tab_admins') }}</button>
+                <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button"><i class="bi bi-people"></i> {{ trans('dashboard.tab_users') }}</button>
             </li>
         </ul>
 
@@ -248,12 +280,12 @@
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label">{{ trans('evadmin.crud.title') }}</label>
-                                <input type="text" name="title" required class="form-control" placeholder="e.g. Summer Music Festival">
+                                <input type="text" name="title" required class="form-control" placeholder="{{ trans('ph.event_title') }}">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">{{ trans('evadmin.crud.category') }}</label>
                                 <select name="category_id" required class="form-select form-control">
-                                    <option selected disabled value="">Select category</option>
+                                    <option selected disabled value="">{{ trans('evadmin.crud.select_category') }}</option>
                                     {% for c in categories %}
                                         <option value="{{ c.id }}">{{ c.name }}</option>
                                     {% endfor %}
@@ -262,7 +294,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">{{ trans('evadmin.crud.venue') }}</label>
                                 <select name="venue_id" required class="form-select form-control">
-                                    <option selected disabled value="">Select venue</option>
+                                    <option selected disabled value="">{{ trans('evadmin.crud.select_venue') }}</option>
                                     {% for v in venues %}
                                         <option value="{{ v.id }}">{{ v.name }}</option>
                                     {% endfor %}
@@ -274,11 +306,11 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">{{ trans('evadmin.crud.image') }}</label>
-                                <input type="text" name="event_image" class="form-control" placeholder="https://...">
+                                <input type="text" name="event_image" class="form-control" placeholder="{{ trans('ph.event_image') }}">
                             </div>
                             <div class="col-12">
                                 <label class="form-label">{{ trans('evadmin.crud.description') }}</label>
-                                <textarea name="description" class="form-control" rows="4" placeholder="Describe your event..."></textarea>
+                                <textarea name="description" class="form-control" rows="4" placeholder="{{ trans('ph.event_desc') }}"></textarea>
                             </div>
                             <div class="col-12 d-flex gap-3 mt-4">
                                 <button type="submit" class="btn btn-create flex-grow-1">{{ trans('evadmin.crud.create') }}</button>
@@ -289,46 +321,58 @@
                 </div>
             </div>
 
-            <!-- Tab 4: Manage Admins -->
-            <div class="tab-pane fade" id="admins" role="tabpanel">
+            <!-- Tab 4: Manage Users -->
+            <div class="tab-pane fade" id="users" role="tabpanel">
                 <div class="card form-card p-4">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="fw-bold mb-0">{{ trans('dashboard.tab_admins') }}</h5>
-                        <button class="btn btn-create px-4" data-bs-toggle="modal" data-bs-target="#addAdminModal">
-                            {{ trans('dashboard.add_admin') }}
-                        </button>
+                        <h5 class="fw-bold mb-0">{{ trans('dashboard.tab_users') }}</h5>
+                        <span class="text-muted">{{ users|length }} total</span>
                     </div>
                     <div class="table-responsive">
                         <table class="table align-middle">
                             <thead>
                                 <tr class="text-muted small">
-                                    <th>{{ trans('dashboard.col_title') }}</th>
-                                    <th>{{ trans('dashboard.admin_email') }}</th>
+                                    <th>#</th>
+                                    <th>{{ trans('useradmin.col_name') }}</th>
+                                    <th>{{ trans('useradmin.col_email') }}</th>
+                                    <th>{{ trans('useradmin.col_role') }}</th>
                                     <th class="text-end">{{ trans('dashboard.col_actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for admin in admins %}
+                                {% for u in users %}
                                     <tr>
+                                        <td class="text-muted">{{ u.id }}</td>
                                         <td>
-                                            <span class="fw-bold">{{ admin.first_name }} {{ admin.last_name }}</span>
-                                            {% if admin.id == admin_user.id %}<span class="badge-you">YOU</span>{% endif %}
+                                            <span class="fw-bold">{{ u.first_name }} {{ u.last_name }}</span>
+                                            {% if u.id == admin_user.id %}<span class="badge-you">YOU</span>{% endif %}
                                         </td>
-                                        <td>{{ admin.email }}</td>
+                                        <td>{{ u.email }}</td>
+                                        <td>
+                                            <span class="badge {% if u.role == 'admin' %}bg-primary{% else %}bg-secondary{% endif %}">{{ u.role }}</span>
+                                        </td>
                                         <td class="text-end">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editAdminModal{{ admin.id }}">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-
-                                            {% if admin.id != admin_user.id %}
-                                                <form action="{{ base_path }}/admin/users/{{ admin.id }}/delete" method="POST" class="d-inline"
-                                                      onsubmit="return confirm('{{ trans('confirm.revoke_admin')|e('js') }}');">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                            {% if u.id != admin_user.id %}
+                                                <form method="POST" action="{{ base_path }}/users/{{ u.id }}/role" class="d-inline toggle-role-form">
+                                                    <label class="toggle-switch mb-0">
+                                                        <input type="checkbox" class="toggle-role-input" {% if u.role == 'admin' %}checked{% endif %}>
+                                                        <span class="toggle-slider"></span>
+                                                    </label>
+                                                </form>
+                                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ u.id }}" title="{{ trans('dashboard.edit') }}">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <form method="POST" action="{{ base_path }}/users/{{ u.id }}/delete" class="d-inline"
+                                                      onsubmit="return confirm('{{ trans('confirm.delete_user')|e('js') }}');">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="{{ trans('dashboard.delete') }}">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
                                                 </form>
                                             {% endif %}
                                         </td>
                                     </tr>
-
+                                {% else %}
+                                    <tr><td colspan="5" class="text-center text-muted py-4">{{ trans('useradmin.no_users') }}</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -339,33 +383,33 @@
         </div>
     </div>
 
-    <!-- Edit Admin Modals (moved outside table for proper DOM structure) -->
-    {% for admin in admins %}
-    <div class="modal fade" id="editAdminModal{{ admin.id }}" tabindex="-1" aria-hidden="true">
+    <!-- Edit User Modals -->
+    {% for u in users %}
+    <div class="modal fade" id="editUserModal{{ u.id }}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow">
                 <div class="modal-header border-0 pt-4 px-4">
                     <h5 class="fw-bold">{{ trans('dashboard.modal_edit_admin') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ base_path }}/admin/users/{{ admin.id }}/edit" method="POST" id="editAdminForm{{ admin.id }}">
+                <form action="{{ base_path }}/users/{{ u.id }}" method="POST">
                     <div class="modal-body p-4">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">First Name</label>
-                                <input type="text" name="first_name" class="form-control" value="{{ admin.first_name }}" required>
+                                <input type="text" name="first_name" class="form-control" value="{{ u.first_name }}" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Last Name</label>
-                                <input type="text" name="last_name" class="form-control" value="{{ admin.last_name }}" required>
+                                <input type="text" name="last_name" class="form-control" value="{{ u.last_name }}" required>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">{{ trans('dashboard.admin_email') }}</label>
-                                <input type="email" name="email" class="form-control" value="{{ admin.email }}" required>
+                                <input type="email" name="email" class="form-control" value="{{ u.email }}" required>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Password</label>
-                                <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current">
+                                <input type="password" name="password" class="form-control" placeholder="{{ trans('editprofile.password.message') }}">
                             </div>
                         </div>
                     </div>
@@ -379,44 +423,25 @@
     </div>
     {% endfor %}
 
-    <!-- Modal for Adding New Admin -->
-    <div class="modal fade" id="addAdminModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 shadow">
-                <div class="modal-header border-0 pt-4 px-4">
-                    <h5 class="fw-bold">{{ trans('dashboard.modal_add_admin') }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form action="{{ base_path }}/admin/users/create" method="POST" id="createAdminForm">
-                    <div class="modal-body p-4">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">First Name</label>
-                                <input type="text" name="first_name" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Last Name</label>
-                                <input type="text" name="last_name" class="form-control" required>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">{{ trans('dashboard.admin_email') }}</label>
-                                <input type="email" name="email" class="form-control" required>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Password</label>
-                                <input type="password" name="password" class="form-control" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-0 pb-4 px-4">
-                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">{{ trans('dashboard.admin_cancel') }}</button>
-                        <button type="submit" class="btn btn-create px-4">{{ trans('dashboard.admin_save') }}</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% endblock %}
+{% block scripts %}
+<script>
+    // Activate tab from URL hash on page load
+    (function() {
+        var hash = window.location.hash;
+        if (hash) {
+            var tabBtn = document.querySelector('[data-bs-target="' + hash + '"]');
+            if (tabBtn) {
+                var tab = new bootstrap.Tab(tabBtn);
+                tab.show();
+            }
+        }
+        // Submit toggle form on switch change
+        document.querySelectorAll('.toggle-role-input').forEach(function(input) {
+            input.addEventListener('change', function() {
+                this.closest('form').submit();
+            });
+        });
+    })();
+</script>
+{% endblock %}

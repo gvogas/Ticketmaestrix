@@ -70,7 +70,7 @@
         {# Category Chip #}
         <span class="badge-custom d-inline-block mb-2"
               style="{{ cat_colors[event.category] is defined ? cat_colors[event.category] : 'background-color: #f3f4f6; color: #374151;' }}">
-            {{ event.category }}
+            {{ trans_cat(event.category) }}
         </span>
 
         <h5 class="card-title fw-bold text-dark line-clamp-1 mb-3">{{ event.title }}</h5>
