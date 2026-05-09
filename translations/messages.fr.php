@@ -296,6 +296,11 @@ return [
     'flash.expired_sub'     => 'Vos billets ont été libérés — ajoutez-les à nouveau pour continuer.',
     'flash.browse_events'   => 'Parcourir les événements',
 
+    // Mobile drawer section labels
+    'nav.section.navigate' => 'Navigation',
+    'nav.section.account'  => 'Compte',
+    'nav.section.language' => 'Langue',
+
     // Footer
     'footer.rights' => 'Tous droits réservés.',
 
