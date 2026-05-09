@@ -1,161 +1,151 @@
-<!DOCTYPE html>
-<html lang="{{ current_locale }}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ trans('vadmin.crud.header') }} - {{ trans('app.title') }}</title>
+﻿{% extends "layout.html.twig" %}
+{% block title %}{{ trans('vadmin.crud.header') }} - {{ trans('app.title') }}{% endblock %}
+{% block head %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-    <!-- Bootstrap 5 & Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    :root {
+        --brand-purple: #5E246E;
+        --brand-hover: #4a1d56;
+        --bg-light: #f8fafc;
+        --border-color: #e2e8f0;
+    }
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+    body {
+        background-color: #ffffff;
+        font-family: 'Inter', sans-serif;
+        color: #1a202c;
+    }
 
-        :root {
-            --brand-purple: #5E246E;
-            --brand-hover: #4a1d56;
-            --bg-light: #f8fafc;
-            --border-color: #e2e8f0;
-        }
+    /* Admin Header Section */
+    .admin-header {
+        padding: 3rem 0 2rem 0;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 3rem;
+    }
 
-        body {
-            background-color: #ffffff;
-            font-family: 'Inter', sans-serif;
-            color: #1a202c;
-        }
+    /* Button Styling */
+    .btn-purple {
+        background-color: var(--brand-purple) !important;
+        color: white !important;
+        border-radius: 10px;
+        font-weight: 700;
+        padding: 12px 24px;
+        border: none !important;
+        transition: all 0.3s ease;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+    }
 
-        /* Admin Header Section */
-        .admin-header {
-            padding: 3rem 0 2rem 0;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 3rem;
-        }
+    .btn-purple:hover {
+        background-color: var(--brand-hover) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(94, 36, 110, 0.25);
+    }
 
-        /* Button Styling */
-        .btn-purple {
-            background-color: var(--brand-purple) !important;
-            color: white !important;
-            border-radius: 10px;
-            font-weight: 700;
-            padding: 12px 24px;
-            border: none !important;
-            transition: all 0.3s ease;
-            text-decoration: none !important;
-            display: inline-flex;
-            align-items: center;
-        }
+    .btn-mgmt {
+        background: white;
+        border: 1px solid var(--border-color);
+        color: #4a5568;
+        font-weight: 600;
+        border-radius: 10px;
+        padding: 10px 20px;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
 
-        .btn-purple:hover {
-            background-color: var(--brand-hover) !important;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(94, 36, 110, 0.25);
-        }
+    .btn-mgmt:hover {
+        border-color: var(--brand-purple);
+        color: var(--brand-purple);
+        background: #fdfaff;
+    }
 
-        .btn-mgmt {
-            background: white;
-            border: 1px solid var(--border-color);
-            color: #4a5568;
-            font-weight: 600;
-            border-radius: 10px;
-            padding: 10px 20px;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-        }
+    /* Venue Card Design */
+    .venue-card {
+        border: 1px solid #f0f0f0;
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        height: 100%;
+        background: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        display: flex;
+        flex-direction: column;
+    }
 
-        .btn-mgmt:hover {
-            border-color: var(--brand-purple);
-            color: var(--brand-purple);
-            background: #fdfaff;
-        }
+    .venue-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+    }
 
-        /* Venue Card Design */
-        .venue-card {
-            border: 1px solid #f0f0f0;
-            border-radius: 20px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            height: 100%;
-            background: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-            display: flex;
-            flex-direction: column;
-        }
+    .venue-visual {
+        background: var(--brand-purple);
+        height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
 
-        .venue-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
-        }
+    .venue-icon {
+        color: #ffffff !important;
+        font-size: 4.5rem;
+    }
 
-        .venue-visual {
-            background: var(--brand-purple);
-            height: 160px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
+    .capacity-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: #ffffff;
+        color: var(--brand-purple);
+        font-weight: 800;
+        padding: 6px 16px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
 
-        .venue-icon {
-            color: #ffffff !important;
-            font-size: 4.5rem;
-        }
+    .card-content {
+        padding: 1.75rem;
+        flex-grow: 1;
+    }
 
-        .capacity-badge {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #ffffff;
-            color: var(--brand-purple);
-            font-weight: 800;
-            padding: 6px 16px;
-            border-radius: 50px;
-            font-size: 0.85rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
+    .card-content h3 {
+        font-weight: 800;
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+        color: #1a202c;
+    }
 
-        .card-content {
-            padding: 1.75rem;
-            flex-grow: 1;
-        }
+    .venue-meta {
+        font-size: 0.9rem;
+        color: #64748b;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
 
-        .card-content h3 {
-            font-weight: 800;
-            font-size: 1.25rem;
-            margin-bottom: 0.75rem;
-            color: #1a202c;
-        }
+    .admin-footer {
+        margin-top: auto;
+        padding: 1.25rem 1.75rem;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        background: #fafafa;
+    }
 
-        .venue-meta {
-            font-size: 0.9rem;
-            color: #64748b;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .admin-footer {
-            margin-top: auto;
-            padding: 1.25rem 1.75rem;
-            border-top: 1px solid #f1f5f9;
-            display: flex;
-            justify-content: space-between;
-            background: #fafafa;
-        }
-
-        .text-truncate-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-    </style>
-</head>
-<body>
-
-    {% include 'partials/navbar.html.twig' %}
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+{% block content %}
 
     <div class="container">
 
@@ -235,7 +225,4 @@
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% endblock %}

@@ -1,124 +1,114 @@
-<!DOCTYPE html>
-<html lang="{{ current_locale }}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ trans('app.title') }} - #{{ ticket.id }}</title>
+﻿{% extends "layout.html.twig" %}
+{% block title %}{{ trans('app.title') }} - #{{ ticket.id }}{% endblock %}
+{% block head %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-    <!-- Bootstrap 5 & Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap/5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    :root {
+        --brand-purple: #5E246E;
+        --brand-hover: #4a1d56;
+        --border-color: #e2e8f0;
+    }
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+    body {
+        background-color: #f8fafc;
+        font-family: 'Inter', sans-serif;
+        color: #1a202c;
+    }
 
-        :root {
-            --brand-purple: #5E246E;
-            --brand-hover: #4a1d56;
-            --border-color: #e2e8f0;
-        }
+    /* Ticket Card Aesthetic */
+    .ticket-container {
+        max-width: 550px;
+        margin: 4rem auto;
+    }
 
-        body {
-            background-color: #f8fafc;
-            font-family: 'Inter', sans-serif;
-            color: #1a202c;
-        }
+    .ticket-card {
+        background: white;
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
 
-        /* Ticket Card Aesthetic */
-        .ticket-container {
-            max-width: 550px;
-            margin: 4rem auto;
-        }
+    /* The Purple "Stub" Edge */
+    .ticket-card::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 12px;
+        background: var(--brand-purple);
+    }
 
-        .ticket-card {
-            background: white;
-            border-radius: 24px;
-            border: 1px solid var(--border-color);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-        }
+    .ticket-header {
+        background: #fafafa;
+        padding: 2rem;
+        border-bottom: 2px dashed #e2e8f0;
+        position: relative;
+    }
 
-        /* The Purple "Stub" Edge */
-        .ticket-card::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0; bottom: 0;
-            width: 12px;
-            background: var(--brand-purple);
-        }
+    /* Decorative "Punch Holes" for the ticket look */
+    .ticket-header::after, .ticket-header::before {
+        content: '';
+        position: absolute;
+        bottom: -12px;
+        width: 24px;
+        height: 24px;
+        background: #f8fafc; /* Matches body bg */
+        border-radius: 50%;
+        border: 1px solid var(--border-color);
+    }
+    .ticket-header::before { left: -13px; }
+    .ticket-header::after { right: -13px; }
 
-        .ticket-header {
-            background: #fafafa;
-            padding: 2rem;
-            border-bottom: 2px dashed #e2e8f0;
-            position: relative;
-        }
+    .price-pill {
+        background: var(--brand-purple);
+        color: white;
+        font-weight: 800;
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-size: 1.1rem;
+    }
 
-        /* Decorative "Punch Holes" for the ticket look */
-        .ticket-header::after, .ticket-header::before {
-            content: '';
-            position: absolute;
-            bottom: -12px;
-            width: 24px;
-            height: 24px;
-            background: #f8fafc; /* Matches body bg */
-            border-radius: 50%;
-            border: 1px solid var(--border-color);
-        }
-        .ticket-header::before { left: -13px; }
-        .ticket-header::after { right: -13px; }
+    .info-label {
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #94a3b8;
+        letter-spacing: 0.05em;
+        display: block;
+        margin-bottom: 2px;
+    }
 
-        .price-pill {
-            background: var(--brand-purple);
-            color: white;
-            font-weight: 800;
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-        }
+    .info-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
 
-        .info-label {
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #94a3b8;
-            letter-spacing: 0.05em;
-            display: block;
-            margin-bottom: 2px;
-        }
+    .btn-purple-outline {
+        color: var(--brand-purple);
+        border: 2px solid var(--brand-purple);
+        font-weight: 700;
+        border-radius: 10px;
+        padding: 10px 20px;
+        transition: all 0.3s;
+    }
 
-        .info-value {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1e293b;
-        }
+    .btn-purple-outline:hover {
+        background: var(--brand-purple);
+        color: white;
+    }
 
-        .btn-purple-outline {
-            color: var(--brand-purple);
-            border: 2px solid var(--brand-purple);
-            font-weight: 700;
-            border-radius: 10px;
-            padding: 10px 20px;
-            transition: all 0.3s;
-        }
-
-        .btn-purple-outline:hover {
-            background: var(--brand-purple);
-            color: white;
-        }
-
-        .back-link {
-            color: #64748b;
-            font-weight: 600;
-            transition: color 0.2s;
-        }
-        .back-link:hover { color: var(--brand-purple); }
-    </style>
-</head>
-<body>
-
-    {% include 'partials/navbar.html.twig' %}
+    .back-link {
+        color: #64748b;
+        font-weight: 600;
+        transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--brand-purple); }
+</style>
+{% endblock %}
+{% block content %}
 
     <div class="container">
         <div class="ticket-container">
@@ -188,6 +178,4 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap/5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% endblock %}
