@@ -16,9 +16,11 @@ use App\Controllers\EventController;
 use App\Controllers\HomeController;
 use App\Controllers\OrderController;
 use App\Controllers\OrderItemController;
+use App\Controllers\StripeWebhookController;
 use App\Controllers\TicketController;
 use App\Controllers\UserController;
 use App\Controllers\VenueController;
+use App\Services\StripeService;
 use App\Helpers\Auth;
 use App\Helpers\Cart;
 use App\Middleware\MaintenanceMiddleware;
@@ -148,7 +150,15 @@ $container->set(CartController::class, fn() => new CartController(
     new OrderModel(),
     new OrderItemModel(),
     new PointsHistoryModel(),
+    new StripeService($_ENV['STRIPE_SECRET_KEY'] ?? ''),
     $basePath,
+));
+
+$container->set(StripeWebhookController::class, fn() => new StripeWebhookController(
+    new OrderModel(),
+    new OrderItemModel(),
+    new PointsHistoryModel(),
+    $_ENV['STRIPE_WEBHOOK_SECRET'] ?? '',
 ));
 
 $container->set(AuthController::class, fn() => new AuthController(
@@ -384,8 +394,13 @@ $app->group('/cart', function ($group) {
     $group->post('/expire',               [CartController::class, 'expire']);
 });
 
-$app->get('/checkout',  [CartController::class, 'showCheckout']);
-$app->post('/checkout', [CartController::class, 'checkout']);
+$app->get('/checkout',         [CartController::class, 'showCheckout']);
+$app->post('/checkout',        [CartController::class, 'checkout']);
+$app->get('/checkout/success', [CartController::class, 'checkoutSuccess']);
+$app->get('/checkout/cancel',  [CartController::class, 'checkoutCancel']);
+
+// Stripe webhooks — no auth middleware; signature verified inside the controller
+$app->post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
 
 
 // --- Language switcher ---

@@ -54,6 +54,16 @@ class Cart
         unset($_SESSION['cart_expires_at']);
     }
 
+    /**
+     * Extend the cart expiry to $seconds from now.
+     * Used before an off-site redirect (e.g. Stripe) where the normal
+     * 5-minute window would expire before the user returns.
+     */
+    public static function extendExpiry(int $seconds): void
+    {
+        $_SESSION['cart_expires_at'] = time() + $seconds;
+    }
+
     /** Raw [ticket_id => qty] map. */
     public static function items(): array
     {

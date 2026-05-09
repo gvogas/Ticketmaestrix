@@ -7,7 +7,8 @@
     "gabordemooij/redbean": "^5.7",
     "vlucas/phpdotenv": "^5.6",
     "symfony/translation": "^8.0",
-    "robthree/twofactorauth": "^3.0"
+    "robthree/twofactorauth": "^3.0",
+    "stripe/stripe-php": "^20.1"
   },
   "autoload": {
     "psr-4": {
