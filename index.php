@@ -86,11 +86,12 @@ $twig   = new Environment($loader, [
 
 // Twig globals — exposed to every template so the navbar (and any other
 // partial) can render auth-aware UI without each controller passing them.
-$twig->addGlobal('current_user',    Auth::user());
-$twig->addGlobal('is_admin',        Auth::isAdmin());
-$twig->addGlobal('cart_count',      Cart::count());
+$twig->addGlobal('current_user',        Auth::user());
+$twig->addGlobal('is_admin',            Auth::isAdmin());
+$twig->addGlobal('cart_count',          Cart::count());
 // Unix timestamp so the JS can compute seconds-remaining without server drift.
-$twig->addGlobal('cart_expires_at', (int) ($_SESSION['cart_expires_at'] ?? 0));
+$twig->addGlobal('cart_expires_at',     (int) ($_SESSION['cart_expires_at'] ?? 0));
+$twig->addGlobal('google_maps_api_key', $_ENV['GOOGLE_MAPS_API_KEY'] ?? '');
 
 
 

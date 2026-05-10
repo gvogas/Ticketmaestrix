@@ -351,6 +351,8 @@ return [
     'vadmin.create_first'      => 'Add your first venue to get started.',
     'vadmin.back_venues'       => 'Back to Venues',
     'vadmin.crud.total_cap'    => 'Total Capacity',
+    'vadmin.crud.latitude'     => 'Latitude',
+    'vadmin.crud.longitude'    => 'Longitude',
     'vadmin.crud.opt_img'      => 'Optional image URL',
     'vadmin.details_header'    => 'Venue Details',
     'vadmin.phys_address'      => 'Physical Address',

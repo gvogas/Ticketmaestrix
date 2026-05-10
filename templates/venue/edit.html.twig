@@ -165,7 +165,7 @@
                     </div>
 
                     <!-- Address -->
-                    <div class="col-md-8">
+                    <div class="col-md-6">
                         <label for="address" class="form-label">{{ trans('vadmin.crud.address') }}</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
@@ -175,6 +175,36 @@
                         </div>
                         {% if errors.address is defined %}
                             <div class="invalid-feedback">{{ errors.address | first }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Latitude -->
+                    <div class="col-md-3">
+                        <label for="lat" class="form-label">{{ trans('vadmin.crud.latitude') }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-geo"></i></span>
+                            <input type="text" id="lat" name="lat"
+                                   class="form-control{{ errors.lat is defined ? ' is-invalid' : '' }}"
+                                   placeholder="40.7128"
+                                   value="{{ input.lat ?? venue.lat }}">
+                        </div>
+                        {% if errors.lat is defined %}
+                            <div class="invalid-feedback">{{ errors.lat | first }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Longitude -->
+                    <div class="col-md-3">
+                        <label for="lng" class="form-label">{{ trans('vadmin.crud.longitude') }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-geo"></i></span>
+                            <input type="text" id="lng" name="lng"
+                                   class="form-control{{ errors.lng is defined ? ' is-invalid' : '' }}"
+                                   placeholder="-74.0060"
+                                   value="{{ input.lng ?? venue.lng }}">
+                        </div>
+                        {% if errors.lng is defined %}
+                            <div class="invalid-feedback">{{ errors.lng | first }}</div>
                         {% endif %}
                     </div>
 
@@ -193,7 +223,7 @@
                     </div>
 
                     <!-- Image URL -->
-                    <div class="col-12">
+                    <div class="col-md-8">
                         <label for="image_url" class="form-label">{{ trans('vadmin.crud.image') }}</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-image"></i></span>
@@ -221,5 +251,26 @@
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% if google_maps_api_key is not empty %}
+    <script>
+        function initVenueForm() {
+            var addressInput = document.getElementById('address');
+            var latInput = document.getElementById('lat');
+            var lngInput = document.getElementById('lng');
+            if (addressInput && latInput && lngInput) {
+                var autocomplete = new google.maps.places.Autocomplete(addressInput);
+                autocomplete.addListener('place_changed', function() {
+                    var place = autocomplete.getPlace();
+                    if (place.geometry) {
+                        latInput.value = place.geometry.location.lat();
+                        lngInput.value = place.geometry.location.lng();
+                    }
+                });
+            }
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&callback=initVenueForm" async defer></script>
+    {% endif %}
 </body>
 </html>

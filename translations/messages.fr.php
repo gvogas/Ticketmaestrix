@@ -358,6 +358,8 @@ return [
     'vadmin.create_first'      => 'Ajoutez votre première salle pour commencer.',
     'vadmin.back_venues'       => 'Retour aux salles',
     'vadmin.crud.total_cap'    => 'Capacité totale',
+    'vadmin.crud.latitude'     => 'Latitude',
+    'vadmin.crud.longitude'    => 'Longitude',
     'vadmin.crud.opt_img'      => 'URL d\'image optionnelle',
     'vadmin.details_header'    => 'Détails de la salle',
     'vadmin.phys_address'      => 'Adresse physique',

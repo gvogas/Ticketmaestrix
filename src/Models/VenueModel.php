@@ -31,7 +31,8 @@ class VenueModel
     }
 
     public function create(string $name, string $description, string $imageUrl,
-                           string $address, int $capacity): void
+                           string $address, int $capacity,
+                           ?float $lat = null, ?float $lng = null): void
     {
         $bean = R::dispense('venue');
         $bean->name        = $name;
@@ -39,6 +40,8 @@ class VenueModel
         $bean->image_url   = $imageUrl;
         $bean->address     = $address;
         $bean->capacity    = $capacity;
+        $bean->lat         = $lat;
+        $bean->lng         = $lng;
         R::store($bean);
     }
 

@@ -53,62 +53,8 @@ class VenueController
         if (empty($data['address']))  $errors['address']  = ['Address is required.'];
         if (empty($data['capacity'])) $errors['capacity'] = ['Capacity is required.'];
         elseif (!is_numeric($data['capacity']) || (int)$data['capacity'] <= 0) $errors['capacity'] = ['Capacity must be a positive number.'];
-
-        if ($errors) {
-            $html = $this->twig->render('venue/create.html.twig', [
-                'base_path' => $this->basePath,
-                'errors'    => $errors,
-                'input'     => $data,
-            ]);
-            $response->getBody()->write($html);
-            return $response->withStatus(422);
-        }
-
-        $this->venueModel->create(
-            (string) ($data['name'] ?? ''),
-            (string) ($data['description'] ?? ''),
-            (string) ($data['image_url'] ?? ''),
-            (string) ($data['address'] ?? ''),
-            (int) ($data['capacity'] ?? 0),
-        );
-
-        return $response->withHeader('Location', $this->basePath . '/venues')->withStatus(302);
-    }
-
-    public function edit(Request $request, Response $response, array $args): Response
-    {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
-        $venue = $this->venueModel->getById((int) $args['id']);
-
-        if (!$venue) {
-            return $response->withHeader('Location', $this->basePath . '/venues')->withStatus(302);
-        }
-
-        $html = $this->twig->render('venue/edit.html.twig', [
-            'base_path' => $this->basePath,
-            'venue'     => $venue,
-        ]);
-        $response->getBody()->write($html);
-        return $response;
-    }
-
-    public function update(Request $request, Response $response, array $args): Response
-    {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
-
-        $id   = (int) $args['id'];
-        $data = (array) ($request->getParsedBody() ?? []);
-
-        $errors = [];
-        if (empty($data['name']))     $errors['name']     = ['Name is required.'];
-        if (empty($data['address']))  $errors['address']  = ['Address is required.'];
-        if (empty($data['capacity'])) $errors['capacity'] = ['Capacity is required.'];
-        elseif (!is_numeric($data['capacity']) || (int)$data['capacity'] <= 0) $errors['capacity'] = ['Capacity must be a positive number.'];
-
+        if (!empty($data['lat']) && !is_numeric($data['lat'])) $errors['lat'] = ['Latitude must be a numeric value.'];
+        if (!empty($data['lng']) && !is_numeric($data['lng'])) $errors['lng'] = ['Longitude must be a numeric value.'];
         if ($errors) {
             $venue = $this->venueModel->getById($id);
             $html  = $this->twig->render('venue/edit.html.twig', [
@@ -129,6 +75,8 @@ class VenueController
             $venue->image_url   = (string) ($data['image_url'] ?? $venue->image_url);
             $venue->address     = (string) ($data['address'] ?? $venue->address);
             $venue->capacity    = (int) ($data['capacity'] ?? $venue->capacity);
+            $venue->lat         = !empty($data['lat']) ? (float) $data['lat'] : null;
+            $venue->lng         = !empty($data['lng']) ? (float) $data['lng'] : null;
             $this->venueModel->save($venue);
         }
 
