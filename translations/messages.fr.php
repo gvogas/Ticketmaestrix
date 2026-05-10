@@ -30,6 +30,7 @@ return [
     'home.subheader'  => 'Concerts, films, sports, théâtre — trouvez et réservez des expériences inoubliables',
     'home.search'     => 'Rechercher',
     'home.search_placeholder' => 'Rechercher des événements, salles ou lieux',
+    'home.search_enter'       => 'Appuyez sur Entrée pour voir tous les résultats',
     'home.live'       => 'Événements en direct',
     'home.onsale'     => 'En promotion',
     'home.points'     => 'Points cumulés',
@@ -55,7 +56,9 @@ return [
     'events.subheader' => 'Trouvez les meilleurs billets pour les événements les plus populaires',
     'events.search'   => 'Rechercher',
     'events.search_placeholder' => 'Rechercher des événements',
-    'events.all'      => 'Événements à venir',
+    'events.all'           => 'Événements à venir',
+    'events.results'       => 'résultats',
+    'events.clear_filters' => 'Effacer les filtres',
     'events.details'  => 'Détails',
     'events.previous' => 'Précédent',
     'events.next'     => 'Suivant',
@@ -179,6 +182,8 @@ return [
     'evadmin.crud.create'   => 'Créer l\'événement',
     'evadmin.crud.update'   => 'Mettre à jour l\'événement',
     'evadmin.crud.cancel'   => 'Annuler',
+    'evadmin.crud.select_category' => '— Sélectionnez une catégorie —',
+    'evadmin.crud.select_venue'    => '— Sélectionnez un lieu —',
 
     // Create and Edit Category
     'catadmin.crud.header'   => 'Catégories',
@@ -291,6 +296,11 @@ return [
     'flash.expired_sub'     => 'Vos billets ont été libérés — ajoutez-les à nouveau pour continuer.',
     'flash.browse_events'   => 'Parcourir les événements',
 
+    // Mobile drawer section labels
+    'nav.section.navigate' => 'Navigation',
+    'nav.section.account'  => 'Compte',
+    'nav.section.language' => 'Langue',
+
     // Footer
     'footer.rights' => 'Tous droits réservés.',
 
@@ -393,7 +403,7 @@ return [
     'dashboard.tab_overview'     => 'Vue d\'ensemble',
     'dashboard.tab_my_events'    => 'Mes événements',
     'dashboard.tab_create'       => 'Créer un événement',
-    'dashboard.tab_admins'       => 'Gérer les admins',
+    'dashboard.tab_users'        => 'Gérer les utilisateurs',
     'dashboard.stat_revenue'     => 'Revenus totaux',
     'dashboard.stat_tickets'     => 'Billets vendus',
     'dashboard.stat_events'      => 'Événements actifs',
@@ -532,6 +542,15 @@ return [
     'editprofile.danger.submessage' => 'Supprimer définitivement votre compte et toutes vos données',
     'editprofile.danger.button' => 'Supprimer le compte',
 
+    // Category names (used in event cards & filters)
+    'categories.concert'  => 'Concert',
+    'categories.movies'   => 'Films',
+    'categories.sports'   => 'Sports',
+    'categories.theater'  => 'Théâtre',
+    'categories.raffle'   => 'Tombola',
+    'categories.festival' => 'Festival',
+    'categories.comedy'   => 'Comédie',
+
     // Admin
     'admin.header'   => 'Gérez vos événements et suivez vos performances',
     'admin.overview'   => 'Aperçu',
@@ -547,4 +566,32 @@ return [
     'admin.manage_admins.name'   => 'Nom',
     'admin.manage_admins.email'   => 'E-mail',
     'admin.manage_admins.action'   => 'Actions',
+
+    // Placeholders
+    'ph.email'         => 'jean@exemple.com',
+    'ph.password'      => '••••••••',
+    'ph.full_name'     => 'Jean Dupont',
+    'ph.event_title'   => 'p. ex. Festival d\'été',
+    'ph.event_image'   => 'https://...',
+    'ph.event_desc'    => 'Décrivez votre événement...',
+    'ph.event_desc_full' => 'Fournissez une description détaillée de l\'événement...',
+    'ph.category_name' => 'p. ex. Festivals de musique',
+    'ph.ticket_row'    => 'p. ex. A, Premium, Rangée 12',
+    'ph.ticket_seat'   => 'p. ex. 101, B22',
+    'ph.ticket_price'  => '0.00',
+    'ph.venue_name'    => 'p. ex. Parc des Princes',
+    'ph.venue_desc'    => 'Brèves informations sur le lieu...',
+    'ph.venue_address' => '123 Rue de l\'Événement, Ville',
+    'ph.venue_capacity' => '5000',
+    'ph.venue_image'   => 'https://exemple.com/photo-lieu.jpg',
+    'ph.password_keep' => 'Laissez vide pour conserver le mot de passe actuel',
+    'checkout.payment_method' => 'Mode de paiement',
+    'checkout.card_number'    => 'Numéro de carte',
+    'checkout.expiry_date'    => 'Date d\'expiration',
+    'checkout.cvv'            => 'CVV',
+    'checkout.place_order'    => 'Passer la commande',
+    'ph.checkout_payment' => 'Visa, Mastercard, etc.',
+    'ph.checkout_card'    => '0000 0000 0000 0000',
+    'ph.checkout_expiry'  => 'MM/AA',
+    'ph.checkout_cvv'     => '000',
 ];

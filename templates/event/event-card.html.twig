@@ -70,7 +70,7 @@
         {# Category Chip #}
         <span class="badge-custom d-inline-block mb-2"
               style="{{ cat_colors[event.category] is defined ? cat_colors[event.category] : 'background-color: #f3f4f6; color: #374151;' }}">
-            {{ event.category }}
+            {{ trans_cat(event.category) }}
         </span>
 
         <h5 class="card-title fw-bold text-dark line-clamp-1 mb-3">{{ event.title }}</h5>
@@ -97,8 +97,8 @@
                     <span class="text-decoration-line-through text-muted small ms-1">${{ event.original_price|number_format(2) }}</span>
                 {% endif %}
             </div>
-            <a href="{{ base_path }}/events/{{ event.id }}" class="btn btn-sm px-3 rounded-pill"
-               style="background-color: var(--brand-purple); color: white;">
+            <a href="{{ base_path }}/events/{{ event.id }}" class="btn px-3 py-2 rounded-pill"
+               style="background-color: var(--brand-purple); color: white; font-size: 0.875rem;">
                 {{ trans('events.details') }}
             </a>
         </div>

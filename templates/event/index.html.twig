@@ -1,135 +1,124 @@
-<!DOCTYPE html>
-<html lang="{{ current_locale }}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ trans('evadmin.header') }} - {{ trans('app.title') }}</title>
+﻿{% extends "layout.html.twig" %}
+{% block title %}{{ trans('evadmin.header') }} - {{ trans('app.title') }}{% endblock %}
+{% block head %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-    <!-- Bootstrap 5 & Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    :root {
+        --brand-purple: #5E246E;
+        --brand-hover: #4a1d56;
+        --bg-light: #f8fafc;
+        --border-color: #e2e8f0;
+    }
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+    body {
+        background-color: #ffffff;
+        font-family: 'Inter', sans-serif;
+        color: #1a202c;
+    }
 
-        :root {
-            --brand-purple: #5E246E;
-            --brand-hover: #4a1d56;
-            --bg-light: #f8fafc;
-            --border-color: #e2e8f0;
-        }
+    /* Admin Header Section */
+    .admin-header {
+        padding: 3rem 0 2rem 0;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 3rem;
+    }
 
-        body {
-            background-color: #ffffff;
-            font-family: 'Inter', sans-serif;
-            color: #1a202c;
-        }
+    /* Management Buttons */
+    .btn-purple {
+        background-color: var(--brand-purple) !important;
+        color: white !important;
+        border-radius: 10px;
+        font-weight: 700;
+        padding: 12px 24px;
+        border: none !important;
+        transition: all 0.3s ease;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+    }
 
-        /* Admin Header Section */
-        .admin-header {
-            padding: 3rem 0 2rem 0;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 3rem;
-        }
+    .btn-purple:hover {
+        background-color: var(--brand-hover) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(94, 36, 110, 0.25);
+    }
 
-        /* Management Buttons */
-        .btn-purple {
-            background-color: var(--brand-purple) !important;
-            color: white !important;
-            border-radius: 10px;
-            font-weight: 700;
-            padding: 12px 24px;
-            border: none !important;
-            transition: all 0.3s ease;
-            text-decoration: none !important;
-            display: inline-flex;
-            align-items: center;
-        }
+    .btn-mgmt {
+        background: white;
+        border: 1px solid var(--border-color);
+        color: #4a5568;
+        font-weight: 600;
+        border-radius: 10px;
+        padding: 10px 20px;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
 
-        .btn-purple:hover {
-            background-color: var(--brand-hover) !important;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(94, 36, 110, 0.25);
-        }
+    .btn-mgmt:hover {
+        border-color: var(--brand-purple);
+        color: var(--brand-purple);
+        background: #fdfaff;
+    }
 
-        .btn-mgmt {
-            background: white;
-            border: 1px solid var(--border-color);
-            color: #4a5568;
-            font-weight: 600;
-            border-radius: 10px;
-            padding: 10px 20px;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-        }
+    /* Event Card Design */
+    .event-card {
+        border: 1px solid #f0f0f0;
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        height: 100%;
+        background: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        display: flex;
+        flex-direction: column;
+    }
 
-        .btn-mgmt:hover {
-            border-color: var(--brand-purple);
-            color: var(--brand-purple);
-            background: #fdfaff;
-        }
+    .event-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+    }
 
-        /* Event Card Design */
-        .event-card {
-            border: 1px solid #f0f0f0;
-            border-radius: 20px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            height: 100%;
-            background: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-            display: flex;
-            flex-direction: column;
-        }
+    .event-img {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        background: #f8fafc;
+    }
 
-        .event-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
-        }
+    .card-content {
+        padding: 1.75rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
 
-        .event-img {
-            width: 100%;
-            height: 220px;
-            object-fit: cover;
-            background: #f8fafc;
-        }
+    .admin-footer {
+        margin-top: auto;
+        padding: 1.25rem 1.75rem;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+    }
 
-        .card-content {
-            padding: 1.75rem;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
+    /* Pagination */
+    .pagination .page-link {
+        color: var(--brand-purple);
+        border-radius: 8px;
+        margin: 0 3px;
+        font-weight: 600;
+    }
 
-        .admin-footer {
-            margin-top: auto;
-            padding: 1.25rem 1.75rem;
-            border-top: 1px solid #f1f5f9;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        /* Pagination */
-        .pagination .page-link {
-            color: var(--brand-purple);
-            border-radius: 8px;
-            margin: 0 3px;
-            font-weight: 600;
-        }
-
-        .pagination .page-item.active .page-link {
-            background-color: var(--brand-purple) !important;
-            border-color: var(--brand-purple) !important;
-            color: #ffffff !important; /* Forces the text to be visible */
-        }
-    </style>
-</head>
-<body>
-
-    <!-- Existing Navbar Include -->
-    {% include 'partials/navbar.html.twig' %}
+    .pagination .page-item.active .page-link {
+        background-color: var(--brand-purple) !important;
+        border-color: var(--brand-purple) !important;
+        color: #ffffff !important; /* Forces the text to be visible */
+    }
+</style>
+{% endblock %}
+{% block content %}
 
     <div class="container">
 
@@ -238,7 +227,4 @@
 
     </div>
 
-    <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% endblock %}

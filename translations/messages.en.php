@@ -23,6 +23,7 @@ return [
     'home.subheader'  => 'From conceerts to movies, sports to theater - find and book tikets for unforgettable experiences',
     'home.search'     => 'Search',
     'home.search_placeholder' => 'Search events, venues, or locations',
+    'home.search_enter'       => 'Press Enter to see all results',
     'home.live'       => 'Live Events',
     'home.onsale'     => 'On Sale',
     'home.points'     => 'Points Back',
@@ -48,7 +49,9 @@ return [
     'events.subheader' => 'Find the best tickets for the hottest events',
     'events.search'   => 'Search',
     'events.search_placeholder' => 'Search events',
-    'events.all'      => 'Upcoming Events',
+    'events.all'           => 'Upcoming Events',
+    'events.results'       => 'results',
+    'events.clear_filters' => 'Clear filters',
     'events.details'  => 'Details',
     'events.previous' => 'Previous',
     'events.next'     => 'Next',
@@ -172,6 +175,8 @@ return [
     'evadmin.crud.create'   => 'Create Event',
     'evadmin.crud.update'   => 'Update Event',
     'evadmin.crud.cancel'   => 'Cancel',
+    'evadmin.crud.select_category' => '— Select a category —',
+    'evadmin.crud.select_venue'    => '— Select a venue —',
 
     // Create and Edit Category
     'catadmin.crud.header'   => 'Categories',
@@ -284,6 +289,11 @@ return [
     'flash.expired_sub'     => 'Your tickets have been released — add them again to continue.',
     'flash.browse_events'   => 'Browse events',
 
+    // Mobile drawer section labels
+    'nav.section.navigate' => 'Navigate',
+    'nav.section.account'  => 'Account',
+    'nav.section.language' => 'Language',
+
     // Footer
     'footer.rights' => 'All rights reserved.',
 
@@ -386,7 +396,7 @@ return [
     'dashboard.tab_overview'     => 'Overview',
     'dashboard.tab_my_events'    => 'My Events',
     'dashboard.tab_create'       => 'Create Event',
-    'dashboard.tab_admins'       => 'Manage Admins',
+    'dashboard.tab_users'        => 'Manage Users',
     'dashboard.stat_revenue'     => 'Total Revenue',
     'dashboard.stat_tickets'     => 'Tickets Sold',
     'dashboard.stat_events'      => 'Active Events',
@@ -525,6 +535,15 @@ return [
     'editprofile.danger.submessage' => 'Permanently delete your account and all data',
     'editprofile.danger.button' => 'Delete Account',
 
+    // Category names (used in event cards & filters)
+    'categories.concert' => 'Concert',
+    'categories.movies'  => 'Movies',
+    'categories.sports'  => 'Sports',
+    'categories.theater' => 'Theater',
+    'categories.raffle'  => 'Raffle',
+    'categories.festival' => 'Festival',
+    'categories.comedy'  => 'Comedy',
+
     // Admin
     'admin.header'   => 'Manage your events and track performance',
     'admin.overview'   => 'Overview',
@@ -540,4 +559,32 @@ return [
     'admin.manage_admins.name'   => 'Name',
     'admin.manage_admins.email'   => 'Email',
     'admin.manage_admins.action'   => 'Actions',
+
+    // Placeholders
+    'ph.email'         => 'john@example.com',
+    'ph.password'      => '••••••••',
+    'ph.full_name'     => 'John Doe',
+    'ph.event_title'   => 'e.g. Summer Music Festival',
+    'ph.event_image'   => 'https://...',
+    'ph.event_desc'    => 'Describe your event...',
+    'ph.event_desc_full' => 'Provide a detailed description of the event...',
+    'ph.category_name' => 'e.g. Music Festivals',
+    'ph.ticket_row'    => 'e.g. A, Premium, Row 12',
+    'ph.ticket_seat'   => 'e.g. 101, B22',
+    'ph.ticket_price'  => '0.00',
+    'ph.venue_name'    => 'e.g. Madison Square Garden',
+    'ph.venue_desc'    => 'Brief details about the venue...',
+    'ph.venue_address' => '123 Event St, City, Country',
+    'ph.venue_capacity' => '5000',
+    'ph.venue_image'   => 'https://example.com/venue-photo.jpg',
+    'ph.password_keep' => 'Leave blank to keep current',
+    'checkout.payment_method' => 'Payment Method',
+    'checkout.card_number'    => 'Card Number',
+    'checkout.expiry_date'    => 'Expiry Date',
+    'checkout.cvv'            => 'CVV',
+    'checkout.place_order'    => 'Place Order',
+    'ph.checkout_payment' => 'Visa, Mastercard, etc.',
+    'ph.checkout_card'    => '0000 0000 0000 0000',
+    'ph.checkout_expiry'  => 'MM/YY',
+    'ph.checkout_cvv'     => '000',
 ];

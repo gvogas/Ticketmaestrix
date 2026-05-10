@@ -5,10 +5,16 @@
             {{ trans('app.title') }}
         </a>
 
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
+        {# Custom animated hamburger — three bars morph into an × when the drawer is open #}
+        <button class="drawer-toggle navbar-toggler border-0 p-0" type="button"
+                data-bs-toggle="offcanvas" data-bs-target="#mobileNav"
+                aria-controls="mobileNav" aria-label="Toggle navigation">
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
         </button>
 
+        {# Desktop #}
         <div class="collapse navbar-collapse" id="mainNavbar">
             <ul class="navbar-nav ms-auto mb-2 mb-md-0 align-items-center">
                 <li class="nav-item px-2">
@@ -31,7 +37,6 @@
                 <li class="nav-item px-2">
                     <a class="nav-link d-flex align-items-center gap-2 position-relative {% if current_route == 'cart' %}active{% endif %}" href="{{ base_path }}/cart">
                         <i class="bi bi-cart3"></i>
-                        <span class="d-md-none">{{ trans('app.cart') }}</span>
                         {% if cart_count and cart_count > 0 %}
                             <span id="cart-badge" class="badge bg-danger rounded-pill" style="font-size: 0.6rem; transition: opacity 0.4s ease;">{{ cart_count }}</span>
                         {% endif %}
@@ -97,30 +102,368 @@
     </div>
 </nav>
 
+{# Mobile right-side drawer  #}
+<div class="offcanvas offcanvas-end" tabindex="-1" id="mobileNav" aria-labelledby="mobileNavLabel">
+
+    <div class="offcanvas-header drawer-header">
+        <div class="d-flex align-items-center gap-2">
+            <span class="drawer-brand-icon"><i class="bi bi-ticket-perforated-fill"></i></span>
+            <span class="drawer-brand-name" id="mobileNavLabel">{{ trans('app.title') }}</span>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close" style="opacity: 0.6;"></button>
+    </div>
+
+    <div class="offcanvas-body drawer-body">
+
+        <p class="drawer-section-label">{{ trans('nav.section.navigate') }}</p>
+        <ul class="drawer-nav-list">
+            <li style="--delay: 0.04s">
+                <a class="drawer-link {% if current_route == 'home' %}active{% endif %}" href="{{ base_path }}/">
+                    <span class="drawer-link-icon"><i class="bi bi-house-door-fill"></i></span>
+                    <span>{{ trans('app.home') }}</span>
+                </a>
+            </li>
+            <li style="--delay: 0.09s">
+                <a class="drawer-link {% if current_route == 'events' %}active{% endif %}" href="{{ base_path }}/events">
+                    <span class="drawer-link-icon"><i class="bi bi-ticket-perforated-fill"></i></span>
+                    <span>{{ trans('app.events') }}</span>
+                </a>
+            </li>
+            <li style="--delay: 0.14s">
+                <a class="drawer-link {% if current_route == 'map' %}active{% endif %}" href="{{ base_path }}/map">
+                    <span class="drawer-link-icon"><i class="bi bi-geo-alt-fill"></i></span>
+                    <span>{{ trans('app.map') }}</span>
+                </a>
+            </li>
+            <li style="--delay: 0.19s">
+                <a class="drawer-link {% if current_route == 'cart' %}active{% endif %}" href="{{ base_path }}/cart">
+                    <span class="drawer-link-icon"><i class="bi bi-cart3"></i></span>
+                    <span>{{ trans('app.cart') }}</span>
+                    {% if cart_count and cart_count > 0 %}
+                        <span class="drawer-cart-badge">{{ cart_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+        </ul>
+
+        <p class="drawer-section-label mt-3">{{ trans('nav.section.account') }}</p>
+        <ul class="drawer-nav-list">
+            {% if current_user %}
+                <li style="--delay: 0.24s">
+                    <a class="drawer-link {% if current_route == 'profile' %}active{% endif %}" href="{{ base_path }}/profile">
+                        {# Avatar shows user's first initial instead of a generic icon #}
+                        <span class="drawer-link-icon drawer-avatar">{{ current_user.first_name|slice(0,1)|upper }}</span>
+                        <span>{{ current_user.first_name }}</span>
+                    </a>
+                </li>
+                {% if is_admin %}
+                    <li style="--delay: 0.29s">
+                        <a class="drawer-link {% if current_route == 'admin' %}active{% endif %}" href="{{ base_path }}/admin">
+                            <span class="drawer-link-icon"><i class="bi bi-shield-fill"></i></span>
+                            <span>{{ trans('app.admin') }}</span>
+                        </a>
+                    </li>
+                {% endif %}
+                <li style="--delay: 0.34s">
+                    {# Logout is a POST so it can't be triggered by a stray GET / link prefetch. #}
+                    <form method="POST" action="{{ base_path }}/logout" class="m-0">
+                        <button type="submit" class="drawer-link drawer-logout">
+                            <span class="drawer-link-icon"><i class="bi bi-box-arrow-right"></i></span>
+                            <span>{{ trans('app.logout') }}</span>
+                        </button>
+                    </form>
+                </li>
+            {% else %}
+                <li style="--delay: 0.24s">
+                    <a class="drawer-link {% if current_route == 'login' %}active{% endif %}" href="{{ base_path }}/login">
+                        <span class="drawer-link-icon"><i class="bi bi-box-arrow-in-right"></i></span>
+                        <span>{{ trans('app.login') }}</span>
+                    </a>
+                </li>
+                <li style="--delay: 0.29s">
+                    <a class="drawer-link" href="{{ base_path }}/signup">
+                        <span class="drawer-link-icon"><i class="bi bi-person-plus-fill"></i></span>
+                        <span>{{ trans('app.signup') }}</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+
+        <div class="drawer-footer">
+            <p class="drawer-section-label mb-2">{{ trans('nav.section.language') }}</p>
+            <div class="lang-toggle">
+                <a href="{{ base_path }}/lang/en" class="lang-pill {% if current_locale == 'en' %}active{% endif %}">
+                    <i class="bi bi-globe2"></i> EN
+                </a>
+                <a href="{{ base_path }}/lang/fr" class="lang-pill {% if current_locale == 'fr' %}active{% endif %}">
+                    <i class="bi bi-globe2"></i> FR
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
 {% include 'partials/cart_expiry_flash.html.twig' %}
 
 <style>
-    .navbar-brand {
-        margin-right: 0;
-    }
+    /* Desktop nav  */
+    .navbar-brand { margin-right: 0; }
 
     .nav-link {
         color: rgba(255, 255, 255, 0.7) !important;
         font-weight: 400;
         transition: all 0.2s ease-in-out;
     }
+    .nav-link.active  { color: #fff !important; font-weight: 700 !important; }
+    .nav-link:hover   { color: #fff !important; }
+    .dropdown-item:active { background-color: #5E246E; }
 
-    /* Homepage Bold Logic */
-    .nav-link.active {
-        color: #fff !important;
-        font-weight: 700 !important;
+    /*  Animated hamburger button  */
+    .drawer-toggle {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        width: 38px;
+        height: 38px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px !important;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+    .drawer-toggle:hover { background: rgba(255, 255, 255, 0.18); }
+
+    .hamburger-bar {
+        display: block;
+        width: 18px;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 2px;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 0.3s ease,
+                    width 0.3s ease;
+        transform-origin: center;
+    }
+    /* Morph bars into × when drawer is open */
+    .drawer-toggle.is-open .hamburger-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .drawer-toggle.is-open .hamburger-bar:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .drawer-toggle.is-open .hamburger-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /*  Offcanvas drawer shell  */
+    #mobileNav {
+        width: min(82vw, 300px);
+        background: linear-gradient(160deg, #26073A 0%, #42156A 55%, #5E246E 100%);
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    .nav-link:hover {
-        color: #fff !important;
+    /* Backdrop gets a soft blur instead of the default dark overlay */
+    .offcanvas-backdrop { backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+
+    /*  Drawer header  */
+    .drawer-header {
+        padding: 18px 20px 16px;
+        background: rgba(0, 0, 0, 0.18);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    }
+    .drawer-brand-icon {
+        width: 34px;
+        height: 34px;
+        background: rgba(255, 255, 255, 0.13);
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: #fff;
+        flex-shrink: 0;
+    }
+    .drawer-brand-name {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -0.01em;
     }
 
-    .dropdown-item:active {
-        background-color: #5E246E;
+    /*  Drawer body  */
+    .drawer-body {
+        display: flex !important;
+        flex-direction: column;
+        padding: 20px 12px 20px !important;
+        overflow-y: auto;
     }
+
+    .drawer-section-label {
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.35);
+        padding: 0 14px;
+        margin: 0 0 4px;
+    }
+
+    /*  Nav item list  */
+    .drawer-nav-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    /* Items start invisible/shifted; animation runs only after drawer opens (JS adds .drawer-open) */
+    .drawer-nav-list li {
+        opacity: 0;
+        transform: translateX(14px);
+        animation: drawerItemIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation-delay: var(--delay, 0s);
+        animation-play-state: paused;
+    }
+    #mobileNav.drawer-open .drawer-nav-list li {
+        animation-play-state: running;
+    }
+
+    @keyframes drawerItemIn {
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    /*  Individual link rows  */
+    .drawer-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 14px;
+        border-radius: 10px;
+        color: rgba(255, 255, 255, 0.72);
+        text-decoration: none;
+        font-size: 0.93rem;
+        font-weight: 500;
+        position: relative;
+        width: 100%;
+        transition: background 0.16s ease, color 0.16s ease;
+    }
+    .drawer-link:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+    .drawer-link.active {
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        font-weight: 600;
+    }
+    /* Left accent bar for the active route */
+    .drawer-link.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 22%;
+        bottom: 22%;
+        width: 3px;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 0 3px 3px 0;
+    }
+
+    /* Square icon tile beside each label */
+    .drawer-link-icon {
+        width: 32px;
+        height: 32px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.93rem;
+        flex-shrink: 0;
+        transition: background 0.16s ease;
+    }
+    .drawer-link:hover .drawer-link-icon,
+    .drawer-link.active .drawer-link-icon {
+        background: rgba(255, 255, 255, 0.18);
+    }
+
+    /* Avatar tile: user's initial with a violet-to-pink gradient */
+    .drawer-avatar {
+        font-size: 0.82rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #9f5ef8 0%, #f06292 100%);
+        color: #fff;
+    }
+
+    /* Cart item count badge — pushes to the far right */
+    .drawer-cart-badge {
+        margin-left: auto;
+        background: #ef4444;
+        color: #fff;
+        font-size: 0.62rem;
+        font-weight: 700;
+        min-width: 20px;
+        height: 20px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 5px;
+    }
+
+    /* Logout button: inherits drawer-link but resets browser button styles */
+    .drawer-logout {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        text-align: left;
+    }
+
+    /*  Footer: language pills  */
+    .drawer-footer {
+        margin-top: auto;
+        padding-top: 18px;
+        border-top: 1px solid rgba(255, 255, 255, 0.09);
+    }
+    .lang-toggle {
+        display: flex;
+        gap: 8px;
+        padding: 0 14px;
+    }
+    .lang-pill {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 7px 16px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.55);
+        background: rgba(255, 255, 255, 0.07);
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        transition: all 0.18s ease;
+    }
+    .lang-pill:hover { color: #fff; background: rgba(255, 255, 255, 0.13); }
+    .lang-pill.active { background: #fff; color: #5E246E; border-color: #fff; font-weight: 700; }
 </style>
+
+<script>
+    (function () {
+        const nav     = document.getElementById('mobileNav');
+        const toggler = document.querySelector('.drawer-toggle');
+        if (!nav || !toggler) return;
+
+        nav.addEventListener('show.bs.offcanvas', function () {
+            toggler.classList.add('is-open');
+
+            // Force animation to replay: remove, reflow, restore
+            nav.querySelectorAll('.drawer-nav-list li').forEach(function (li) {
+                li.style.animation = 'none';
+                li.offsetHeight;          // trigger reflow so the reset takes effect
+                li.style.animation = '';
+            });
+
+            nav.classList.add('drawer-open');
+        });
+
+        nav.addEventListener('hide.bs.offcanvas', function () {
+            toggler.classList.remove('is-open');
+            nav.classList.remove('drawer-open');
+        });
+    })();
+</script>

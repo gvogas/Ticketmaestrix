@@ -1,58 +1,63 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TicketMaestrix - Checkout</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        body {
-            background: linear-gradient(135deg, #a060a8 0%, #4a215d 100%);
-            min-height: 100vh;
-        }
-        .checkout-container {
-            max-width: 500px;
-            width: 100%;
-        }
-        .logo-circle {
-            width: 60px;
-            height: 60px;
-            background-color: white;
-            color: #7b2cbf;
-            font-size: 30px;
-        }
-        .btn-stripe {
-            background-color: #635BFF;
-            color: white !important;
-            border: none;
-            padding: 0.8rem;
-            font-size: 1.05rem;
-            font-weight: 600;
-            border-radius: 0.5rem;
-            transition: background-color 0.25s ease;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            cursor: pointer;
-        }
-        .btn-stripe:hover {
-            background-color: #4B44CC;
-            color: white !important;
-        }
-        .alert-error-tm {
-            background: #fdecea;
-            border: 1px solid #ef9a9a;
-            color: #c62828;
-            border-radius: 0.5rem;
-            padding: 0.75rem 1rem;
-            font-size: 0.9rem;
-        }
-    </style>
-</head>
-<body class="d-flex flex-column align-items-center justify-content-center p-3">
+{% extends "layout.html.twig" %}
+{% block title %}{{ trans('app.title') }} - Checkout{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block head %}
+<style>
+    body {
+        background: linear-gradient(135deg, #a060a8 0%, #4a215d 100%);
+        min-height: 100vh;
+    }
+    /* Center content vertically within the flex-grow-1 main */
+    main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+    }
+    .checkout-container {
+        max-width: 500px;
+        width: 100%;
+    }
+    .logo-circle {
+        width: 60px;
+        height: 60px;
+        background-color: white;
+        color: #7b2cbf;
+        font-size: 30px;
+    }
+    .btn-stripe {
+        background-color: #635BFF;
+        color: white !important;
+        border: none;
+        padding: 0.8rem;
+        font-size: 1.05rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        transition: background-color 0.25s ease;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+    .btn-stripe:hover {
+        background-color: #4B44CC;
+        color: white !important;
+    }
+    .alert-error-tm {
+        background: #fdecea;
+        border: 1px solid #ef9a9a;
+        color: #c62828;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+{% block content %}
 
     <div class="text-center text-white mb-4">
         <div class="logo-circle rounded-circle d-inline-flex justify-content-center align-items-center mb-3 shadow">
@@ -91,7 +96,7 @@
         <form action="{{ base_path }}/checkout" method="POST">
             <input type="hidden" name="points_to_use" value="{{ points_to_use }}">
             <button type="submit" class="btn-stripe">
-                {# Stripe wordmark "S" logo #}
+                {# Stripe "S" wordmark #}
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 28 28" fill="white" aria-hidden="true">
                     <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305
                              2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0
@@ -116,5 +121,4 @@
         Your payment is processed securely by Stripe. TicketMaestrix never sees your card details.
     </div>
 
-</body>
-</html>
+{% endblock %}

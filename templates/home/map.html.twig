@@ -1,22 +1,17 @@
-<!DOCTYPE html>
-<html lang="{{ current_locale }}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ trans('app.title') }} - {{ trans('map.header') }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        body, html { height: 100%; margin: 0; overflow: hidden; }
-        .main-wrapper { display: flex; flex-direction: column; height: 100vh; }
-        .content-area { display: flex; flex: 1; overflow: hidden; }
+﻿{% extends "layout.html.twig" %}
+{% block title %}{{ trans('app.title') }} - {{ trans('map.header') }}{% endblock %}
+{% block head %}
+<style>
+    body, html { height: 100%; margin: 0; overflow: hidden; }
+    .main-wrapper { display: flex; flex-direction: column; height: 100vh; }
+    .content-area { display: flex; flex: 1; overflow: hidden; }
 
         .map-sidebar { width: 350px; background: white; border-right: 1px solid #dee2e6; overflow-y: auto; padding: 1.5rem; flex-shrink: 0; }
         .search-box { position: relative; margin-bottom: 1rem; }
         .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #adb5bd; z-index: 3; }
         .search-box input { padding-left: 35px; border-radius: 8px; border: 1px solid #ddd; }
 
-        .btn-location { background-color: #9b51e0; color: white; border: none; border-radius: 8px; width: 100%; padding: 10px; font-weight: 600; margin-bottom: 1.5rem; }
+    .btn-location { background-color: #9b51e0; color: white; border: none; border-radius: 8px; width: 100%; padding: 10px; font-weight: 600; margin-bottom: 1.5rem; }
         .btn-location:hover { background-color: #8139c4; }
 
         .event-card-mini { border: 1px solid #eee; border-radius: 12px; padding: 12px; margin-bottom: 12px; display: flex; gap: 12px; transition: all 0.2s; cursor: pointer; }
@@ -27,10 +22,10 @@
         .map-container { flex: 1; position: relative; }
         .map-container #map { width: 100%; height: 100%; }
 
-        .legend-box { position: absolute; bottom: 20px; left: 20px; background: white; padding: 12px 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 5; }
-        .legend-item { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; margin-bottom: 5px; }
+    .legend-box { position: absolute; bottom: 20px; left: 20px; background: white; padding: 12px 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 5; }
+    .legend-item { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; margin-bottom: 5px; }
         .legend-item:last-child { margin-bottom: 0; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
 
         .map-placeholder { flex: 1; background-color: #e9ecef; display: flex; align-items: center; justify-content: center; }
         .map-placeholder-box { background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; max-width: 400px; }
@@ -41,12 +36,37 @@
         .info-window-content img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
         .info-window-content h6 { font-weight: 700; margin-bottom: 4px; }
         .info-window-content small { color: #6c757d; }
-    </style>
-</head>
-<body>
+
+    /* Sidebar loading skeleton */
+    @keyframes shimmer { from { background-position:-300px 0; } to { background-position:300px 0; } }
+    .skeleton-block { background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%); background-size:600px 100%; animation:shimmer 1.2s infinite linear; border-radius:4px; }
+    /* Sidebar card fade-in */
+    @keyframes card-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+    .card-in { animation:card-in 0.2s ease both; }
+
+    /* Mobile */
+    @media (max-width: 767.98px) {
+        .content-area { flex-direction: column; }
+        .map-sidebar {
+            width: 100% !important;
+            border-right: none;
+            border-bottom: 1px solid #dee2e6;
+            padding: 0.875rem 1rem;
+            max-height: 42vh;
+            flex-shrink: 0;
+        }
+        .map-container { min-height: 0; }
+        .map-placeholder-box { max-width: calc(100% - 2rem); padding: 1.25rem; }
+        .legend-box { bottom: 10px; left: 10px; padding: 10px; font-size: 0.8rem; }
+        .zoom-controls { top: 10px; right: 10px; }
+        .zoom-btn { width: 40px; height: 40px; } 
+    }
+</style>
+{% endblock %}
+{% block content %}
 
     <div class="main-wrapper">
-        {% include 'partials/navbar.html.twig' %}
+      
 
         <div class="content-area">
             <!-- Sidebar -->
@@ -55,12 +75,13 @@
 
                 <div class="search-box">
                     <i class="bi bi-search"></i>
-                    <input type="text" id="map-search" class="form-control" placeholder="{{ trans('map.search_placeholder') }}">
+                    <input type="text" id="map-search" id="mapSearch" class="form-control" placeholder="{{ trans('map.search_placeholder') }}" autocomplete="off">
                 </div>
 
                 <button class="btn-location" id="use-location-btn"><i class="bi bi-send-fill me-2"></i> {{ trans('map.use_location') }}</button>
 
                 <div id="event-list">
+                <div id="mapEventsList">
                 {% for event in events %}
                 <div class="event-card-mini" data-event-index="{{ loop.index0 }}">
                     {% if event.event_image %}
@@ -80,6 +101,7 @@
                 {% else %}
                     <div class="text-muted text-center py-4">{{ trans('map.no_events') }}</div>
                 {% endfor %}
+                </div>
                 </div>
             </div>
 
@@ -277,3 +299,128 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+% endblock %}
+{% block scripts %}
+    <script>
+    (function () {
+        // Sidebar event card — uses DOM methods; no innerHTML with untrusted data.
+        // Image src blocks javascript: URIs while allowing relative paths and https:// URLs.
+        function buildSidebarCard(ev) {
+            var url = (typeof ev.url === 'string' && ev.url.startsWith('/')) ? ev.url : '#';
+            var a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.className = 'text-decoration-none text-reset';
+
+            var card = document.createElement('div');
+            card.className = 'event-card-mini';
+
+            var imgSrc = (typeof ev.image === 'string' && ev.image && !/^javascript:/i.test(ev.image)) ? ev.image : '';
+            if (imgSrc) {
+                var img = document.createElement('img');
+                img.setAttribute('src', imgSrc);
+                img.setAttribute('alt', ev.title || '');
+                img.className = 'event-img';
+                card.appendChild(img);
+            } else {
+                var placeholder = document.createElement('div');
+                placeholder.className = 'event-img';
+                card.appendChild(placeholder);
+            }
+
+            var info = document.createElement('div');
+
+            var h6 = document.createElement('h6');
+            h6.className = 'fw-bold mb-0';
+            h6.style.fontSize = '0.95rem';
+            h6.textContent = ev.title || '';
+
+            var venue = document.createElement('small');
+            venue.className = 'text-muted d-block';
+            venue.textContent = ev.venue_name || '';
+
+            var priceEl = document.createElement('small');
+            priceEl.className = 'fw-bold text-primary';
+            // null/undefined means price is not yet set — show TBA rather than Free.
+            priceEl.textContent = (ev.min_price === null || ev.min_price === undefined)
+                ? '{{ trans('home.tba')|e('js') }}'
+                : (ev.min_price > 0 ? '$' + parseFloat(ev.min_price).toFixed(2) : 'Free');
+
+            var dateEl = document.createElement('small');
+            dateEl.className = 'text-muted';
+            dateEl.textContent = ' · ' + (ev.date || '');
+
+            info.appendChild(h6);
+            info.appendChild(venue);
+            info.appendChild(priceEl);
+            info.appendChild(dateEl);
+            card.appendChild(info);
+            a.appendChild(card);
+            return a;
+        }
+
+        function buildSkeletons() {
+            for (var i = 0; i < 3; i++) {
+                var s = document.createElement('div');
+                s.className = 'event-card-mini';
+                var imgS = document.createElement('div');
+                imgS.className = 'event-img skeleton-block';
+                var info = document.createElement('div');
+                info.style.flex = '1';
+                ['80%', '60%', '40%'].forEach(function (w) {
+                    var line = document.createElement('div');
+                    line.className = 'skeleton-block';
+                    line.style.cssText = 'height:12px;margin-bottom:7px;width:' + w + ';';
+                    info.appendChild(line);
+                });
+                s.appendChild(imgS);
+                s.appendChild(info);
+                eventsList.appendChild(s);
+            }
+        }
+
+        var input = document.getElementById('mapSearch');
+        var eventsList = document.getElementById('mapEventsList');
+        // Safe to restore via innerHTML — source is server-rendered Twig, not user input.
+        var originalHTML = eventsList.innerHTML;
+        var timer, controller;
+
+        input.addEventListener('input', function () {
+            var q = input.value.trim();
+            clearTimeout(timer);
+            if (controller) controller.abort();
+            if (!q) {
+                eventsList.innerHTML = originalHTML;
+                return;
+            }
+
+            timer = setTimeout(function () {
+                // Show skeleton placeholders while the request is in flight.
+                while (eventsList.firstChild) eventsList.removeChild(eventsList.firstChild);
+                buildSkeletons();
+
+                controller = new AbortController();
+                fetch('{{ base_path }}/api/search?q=' + encodeURIComponent(q), { signal: controller.signal })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        while (eventsList.firstChild) eventsList.removeChild(eventsList.firstChild);
+                        if (!data.length) {
+                            var empty = document.createElement('div');
+                            empty.className = 'text-muted text-center py-4';
+                            empty.textContent = '{{ trans('map.no_events')|e('js') }}';
+                            eventsList.appendChild(empty);
+                        } else {
+                            data.forEach(function (ev, i) {
+                                var card = buildSidebarCard(ev);
+                                // Stagger cards by 40ms each so they cascade in.
+                                card.classList.add('card-in');
+                                card.style.animationDelay = (i * 40) + 'ms';
+                                eventsList.appendChild(card);
+                            });
+                        }
+                    })
+                    .catch(function (e) { if (e.name !== 'AbortError') eventsList.innerHTML = originalHTML; });
+            }, 300);
+        });
+    })();
+    </script>
+{% endblock %}
