@@ -134,13 +134,15 @@ class EventModel
     }
 
 
-public function getPaginated($limit, $offset) {
-    return R::findAll('events', ' LIMIT ? OFFSET ? ', [$limit, $offset]);
-}
+    public function getPaginated(int $limit, int $offset): array
+    {
+        return R::findAll('events', ' LIMIT ? OFFSET ? ', [$limit, $offset]);
+    }
 
-public function countAll() {
-    return R::count('events');
-}
+    public function countAll(): int
+    {
+        return (int) R::count('events');
+    }
 
 /**
  * Search and filter events by query string, category, and venue.

@@ -1,5 +1,5 @@
 {% extends "layout.html.twig" %}
-{% block title %}{{ trans('app.title') }} - Checkout{% endblock %}
+{% block title %}{{ trans('app.title') }} - {{ trans('checkout.page_title') }}{% endblock %}
 {% block navbar %}{% endblock %}
 {% block footer %}{% endblock %}
 {% block head %}
@@ -63,8 +63,8 @@
         <div class="logo-circle rounded-circle d-inline-flex justify-content-center align-items-center mb-3 shadow">
             <i class="bi bi-ticket-perforated-fill"></i>
         </div>
-        <h1 class="fw-bold display-5">Checkout</h1>
-        <p class="fs-5 opacity-75">Secure payment via Stripe</p>
+        <h1 class="fw-bold display-5">{{ trans('checkout.page_title') }}</h1>
+        <p class="fs-5 opacity-75">{{ trans('checkout.subtitle') }}</p>
     </div>
 
     <div class="card checkout-container shadow-lg border-0 rounded-4 p-4 p-sm-5">
@@ -77,19 +77,19 @@
 
         {# Order summary — amounts calculated server-side before redirect #}
         <div class="mb-3 p-3 bg-light rounded-3 border text-center">
-            <label class="form-label d-block text-muted small text-uppercase fw-bold">Subtotal</label>
+            <label class="form-label d-block text-muted small text-uppercase fw-bold">{{ trans('checkout.subtotal') }}</label>
             <span class="fs-5 text-dark">${{ subtotal|number_format(2) }}</span>
         </div>
 
         {% if discount > 0 %}
         <div class="mb-3 p-3 bg-light rounded-3 border text-center">
-            <label class="form-label d-block text-muted small text-uppercase fw-bold">Points Discount</label>
+            <label class="form-label d-block text-muted small text-uppercase fw-bold">{{ trans('checkout.points_discount') }}</label>
             <span class="fs-5 text-success">-${{ discount|number_format(2) }}</span>
         </div>
         {% endif %}
 
         <div class="mb-4 p-3 bg-light rounded-3 border text-center">
-            <label class="form-label d-block text-muted small text-uppercase fw-bold">Total to Pay</label>
+            <label class="form-label d-block text-muted small text-uppercase fw-bold">{{ trans('checkout.total') }}</label>
             <span class="display-6 fw-bold text-dark">${{ total|number_format(2) }}</span>
         </div>
 
@@ -106,19 +106,19 @@
                              C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813
                              1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z"/>
                 </svg>
-                Pay with Stripe
+                {{ trans('checkout.pay_button') }}
             </button>
         </form>
 
         <div class="text-center mt-3">
             <a href="{{ base_path }}/cart" class="text-muted small">
-                <i class="bi bi-arrow-left"></i> Back to cart
+                <i class="bi bi-arrow-left"></i> {{ trans('checkout.back_to_cart') }}
             </a>
         </div>
     </div>
 
     <div class="text-center mt-4 text-white-50 px-4" style="font-size: 0.85rem; max-width: 500px;">
-        Your payment is processed securely by Stripe. TicketMaestrix never sees your card details.
+        {{ trans('checkout.secure_notice') }}
     </div>
 
 {% endblock %}

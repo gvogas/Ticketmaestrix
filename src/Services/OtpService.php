@@ -24,7 +24,7 @@ class OtpService
 
     public function __construct(private UserModel $userModel)
     {
-        $this->tfa = new TwoFactorAuth(new QRServerProvider(), 'Ticketmaestrix');
+        $this->tfa = new TwoFactorAuth(new QRServerProvider(), $_ENV['APP_NAME'] ?? 'Ticketmaestrix');
     }
 
     /**
@@ -38,15 +38,12 @@ class OtpService
     }
 
     /**
-     * Generate a new TOTP secret for a brand-new user, persist it to the database,
-     * and return the QR code as a base64 data URI for the <img> tag.
-     * Only call this when hasSecret() returned false.
+     * Generate a new TOTP secret and return the QR data URI and raw secret.
+     * Does NOT write to the database — caller must persist after verification.
      */
-    public function generate(string $label, array $userData): array
+    public function generate(string $label): array
     {
         $secret = $this->tfa->createSecret();
-        $userData['totp_secret'] = $secret;
-        $this->userModel->create($userData);
         return [
             'qr_code' => $this->tfa->getQRCodeImageAsDataUri($label, $secret),
             'secret'  => $secret,
@@ -54,20 +51,24 @@ class OtpService
     }
 
     /**
-     * Generate a TOTP secret for an existing user, update their record,
-     * and return the QR code and secret.
+     * Generate a replacement TOTP secret for an existing user.
      */
-    public function generateForExisting(int $userId, string $label): array
+    public function generateForExisting(string $label): array
     {
         $secret = $this->tfa->createSecret();
-        $user = $this->userModel->load($userId);
-        $user->totp_secret = $secret;
-        $this->userModel->save($user);
         return [
             'qr_code' => $this->tfa->getQRCodeImageAsDataUri($label, $secret),
             'secret'  => $secret,
         ];
     }
+    /**
+     * Verify a TOTP code against a raw secret (e.g. one held in session before being persisted).
+     */
+    public function verifyCode(string $secret, string $code): bool
+    {
+        return $this->tfa->verifyCode($secret, $code);
+    }
+
     /**
      * Verify a user-supplied code against the secret stored in the database.
      */
