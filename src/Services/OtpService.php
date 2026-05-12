@@ -39,7 +39,6 @@ class OtpService
 
     /**
      * Generate a new TOTP secret and return the QR data URI and raw secret.
-     * Does NOT write to the database — caller must persist after verification.
      */
     public function generate(string $label): array
     {
