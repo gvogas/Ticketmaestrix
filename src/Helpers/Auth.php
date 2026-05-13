@@ -129,6 +129,85 @@ class Auth
         self::expireRememberCookie();
     }
 
+    // ──────────────────────────────────────────────
+    //  2FA device-trust token (skip 2FA for same account on same browser)
+    // ──────────────────────────────────────────────
+
+    private const TFA_TRUST_COOKIE = 'tfa_token';
+    private const TFA_TRUST_TTL    = 2592000; // 30 days
+
+    /**
+     * Generate a per-user 2FA trust token, store its hash in tfatoken,
+     * and set a 30-day cookie. Future logins on this browser for the same
+     * account will skip the 2FA step.
+     */
+    public static function set2faTrustToken(int $userId): void
+    {
+        $token = bin2hex(random_bytes(32));
+        $hash  = hash('sha256', $token);
+
+        $old = R::find('tfatoken', 'user_id = ?', [$userId]);
+        R::trashAll($old);
+
+        $bean = R::dispense('tfatoken');
+        $bean->user_id    = $userId;
+        $bean->token_hash = $hash;
+        $bean->expires_at = date('Y-m-d H:i:s', time() + self::TFA_TRUST_TTL);
+        R::store($bean);
+
+        setcookie(self::TFA_TRUST_COOKIE, $token, [
+            'expires'  => time() + self::TFA_TRUST_TTL,
+            'path'     => '/',
+            'httponly' => true,
+            'samesite' => 'Lax',
+            'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        ]);
+    }
+
+    /**
+     * Return true only if the tfa_token cookie is present, unexpired,
+     * and belongs to the given user. Account-specific — will not bypass
+     * 2FA if the user logs in with a different account on the same browser.
+     */
+    public static function check2faTrust(int $userId): bool
+    {
+        $token = $_COOKIE[self::TFA_TRUST_COOKIE] ?? '';
+        if ($token === '') {
+            return false;
+        }
+
+        $hash = hash('sha256', $token);
+        $bean = R::findOne(
+            'tfatoken',
+            'token_hash = ? AND user_id = ? AND expires_at > NOW()',
+            [$hash, $userId]
+        );
+
+        return BeanHelper::isValidBean($bean);
+    }
+
+    /**
+     * Delete the tfa_token record from the database and expire the cookie.
+     */
+    public static function clear2faTrustToken(): void
+    {
+        $token = $_COOKIE[self::TFA_TRUST_COOKIE] ?? '';
+        if ($token !== '') {
+            $hash = hash('sha256', $token);
+            $bean = R::findOne('tfatoken', 'token_hash = ?', [$hash]);
+            if (BeanHelper::isValidBean($bean)) {
+                R::trash($bean);
+            }
+        }
+        setcookie(self::TFA_TRUST_COOKIE, '', [
+            'expires'  => time() - 42000,
+            'path'     => '/',
+            'httponly' => true,
+            'samesite' => 'Lax',
+            'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        ]);
+    }
+
     private static function writeRememberCookie(string $token, int $expires): void
     {
         setcookie('auth_token', $token, [
