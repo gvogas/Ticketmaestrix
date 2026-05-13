@@ -1,16 +1,11 @@
-﻿{% extends "layout.html.twig" %}
+{% extends "layout.html.twig" %}
 {% block title %}{{ trans('events.header') }} | {{ trans('app.title') }}{% endblock %}
 {% block head %}
 <style>
-    :root {
-        --brand-purple: #5E246E;
-        --brand-deep:   #371840;
-        --brand-bg:     #f8fafc;
-    }
 
-    body { background: var(--brand-bg); font-family: 'Inter', sans-serif; color: #1a202c; }
+    body { background: var(--brand-bg); color: #1a202c; }
 
-    /* ── Hero ─────────────────────────────────────── */
+    /* -- Hero --------------------------------------- */
     .events-hero {
         background: linear-gradient(135deg, var(--brand-deep), var(--brand-purple));
         color: white;
@@ -20,7 +15,7 @@
     .events-hero h1 { font-weight: 800; font-size: clamp(1.6rem, 5vw, 2.8rem); margin-bottom: 0.4rem; }
     .events-hero p  { opacity: 0.75; font-size: 1.05rem; }
 
-    /* ── Filter card ──────────────────────────────── */
+    /* -- Filter card -------------------------------- */
     .filter-wrapper { margin-top: -3.5rem; position: relative; z-index: 10; }
     .filter-card {
         background: white;
@@ -216,7 +211,7 @@
 
             <div class="filter-divider"></div>
 
-            {# ── Row 2: category pills + active summary ── #}
+            {# -- Row 2: category pills + active summary -- #}
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div class="cat-pills" id="catPills">
                     <button class="cat-pill {{ query_params.category is empty ? 'active' : '' }}" data-cat="">

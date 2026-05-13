@@ -1,0 +1,93 @@
+/*
+ * Shared TicketMaestrix UI tokens and utilities.
+ * Page templates keep page-specific layout styles in their own Twig head blocks.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+:root {
+    --brand-purple: #5E246E;
+    --brand-dark: #371840;
+    --brand-deep: #371840;
+    --brand-hover: #4a1d56;
+    --brand-accent: #9b51e0;
+    --accent-purple: #9b51e0;
+    --bg-light: #f8fafc;
+    --brand-bg: #f8fafc;
+    --border-color: #e2e8f0;
+}
+
+body {
+    font-family: "Inter", sans-serif;
+}
+
+.fw-800 {
+    font-weight: 800;
+}
+
+.text-purple {
+    color: var(--brand-purple) !important;
+}
+
+.bg-purple-soft {
+    background: #f3e8ff !important;
+    color: var(--brand-purple) !important;
+}
+
+.btn-purple {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 12px 24px;
+    border: none !important;
+    border-radius: 10px;
+    background-color: var(--brand-purple) !important;
+    color: #fff !important;
+    font-weight: 700;
+    text-decoration: none !important;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.btn-purple:hover {
+    background-color: var(--brand-hover) !important;
+    box-shadow: 0 8px 20px rgba(94, 36, 110, 0.25);
+    color: #fff !important;
+    transform: translateY(-2px);
+}
+
+.btn-mgmt {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 10px 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: #fff;
+    color: #4a5568;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-mgmt:hover {
+    border-color: var(--brand-purple);
+    background: #fdfaff;
+    color: var(--brand-purple);
+}
+
+.admin-header {
+    padding: 3rem 0 2rem;
+    margin-bottom: 3rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tm-page {
+    background-color: #fff;
+    color: #1a202c;
+    font-family: "Inter", sans-serif;
+}
+
+.tm-gradient {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-purple) 100%);
+}

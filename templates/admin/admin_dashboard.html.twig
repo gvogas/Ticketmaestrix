@@ -1,13 +1,7 @@
-﻿{% extends "layout.html.twig" %}
+{% extends "layout.html.twig" %}
 {% block title %}{{ trans('dashboard.tab_overview') }} - {{ trans('app.title') }}{% endblock %}
 {% block head %}
 <style>
-    :root {
-        --brand-purple: #5E246E;
-        --brand-dark: #371840;
-        --accent-purple: #9b51e0;
-        --bg-light: #F8F9FA;
-    }
     body { background-color: var(--bg-light); font-family: 'Inter', sans-serif; }
 
     /* Header & Banner */
@@ -255,7 +249,7 @@
                                             <td><a href="{{ base_path }}/events/{{ event.id }}" class="fw-bold text-decoration-none">{{ event.title }}</a></td>
                                             <td>{{ event.date }}</td>
                                             <td>{{ event.venue_name }}</td>
-                                            <td>{% if event.min_price is not null %}${{ event.min_price|number_format(2) }}{% else %}—{% endif %}</td>
+                                            <td>{% if event.min_price is not null %}${{ event.min_price|number_format(2) }}{% else %}�{% endif %}</td>
                                             <td class="text-end">
                                                 <a href="{{ base_path }}/events/{{ event.id }}/edit" class="btn btn-sm btn-outline-secondary me-1">{{ trans('dashboard.edit') }}</a>
                                                 <form method="POST" action="{{ base_path }}/events/{{ event.id }}/delete" class="d-inline"

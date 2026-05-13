@@ -1,8 +1,7 @@
-﻿{% extends "layout.html.twig" %}
+{% extends "layout.html.twig" %}
 {% block title %}{{ user.first_name }} {{ user.last_name }} - {{ trans('app.title') }}{% endblock %}
 {% block head %}
 <style>
-    :root { --brand-purple: #5E246E; --brand-dark: #371840; }
     body { background-color: #F8F9FA; }
     .avatar { width: 80px; height: 80px; background: var(--brand-purple); color: white; font-size: 2rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     .badge-role { background-color: var(--brand-purple); }

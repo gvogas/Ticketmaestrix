@@ -1,7 +1,7 @@
 {% set home_url = base_path ~ '/' %}
 {% set logo_src = base_path ~ '/assets/img/ticketmaestrix-logo.png' %}
 
-<nav class="navbar navbar-expand-md navbar-dark sticky-top shadow-sm" style="background-color: #5E246E;">
+<nav class="site-navbar navbar navbar-expand-md navbar-dark sticky-top shadow-sm">
     <div class="container-fluid px-4">
 
         <a class="navbar-brand d-inline-flex align-items-center gap-2 fw-bold fs-4 tracking-tight m-0"
@@ -44,7 +44,7 @@
                     <a class="nav-link d-flex align-items-center gap-2 position-relative {% if current_route == 'cart' %}active{% endif %}" href="{{ base_path }}/cart">
                         <i class="bi bi-cart3"></i>
                         {% if cart_count and cart_count > 0 %}
-                            <span id="cart-badge" class="badge bg-danger rounded-pill" style="font-size: 0.6rem; transition: opacity 0.4s ease;">{{ cart_count }}</span>
+                            <span id="cart-badge" class="cart-badge badge bg-danger rounded-pill">{{ cart_count }}</span>
                         {% endif %}
                     </a>
                 </li>
@@ -86,8 +86,7 @@
 
                 <li class="nav-item dropdown ms-md-3">
                     <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 border rounded-pill px-3 mt-2 mt-md-0"
-                       href="#" id="langDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"
-                       style="border-color: rgba(255,255,255,0.2) !important;">
+                       href="#" id="langDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-globe"></i> {{ current_locale|upper }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="langDropdown">
@@ -116,32 +115,32 @@
             <span class="drawer-brand-name" id="mobileNavLabel">{{ trans('app.title') }}</span>
             <img class="drawer-brand-logo" src="{{ logo_src }}" alt="" aria-hidden="true">
         </a>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close" style="opacity: 0.6;"></button>
+        <button type="button" class="drawer-close btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
 
     <div class="offcanvas-body drawer-body">
 
         <p class="drawer-section-label">{{ trans('nav.section.navigate') }}</p>
         <ul class="drawer-nav-list">
-            <li style="--delay: 0.04s">
+            <li class="drawer-delay-1">
                 <a class="drawer-link {% if current_route == 'home' %}active{% endif %}" href="{{ home_url }}">
                     <span class="drawer-link-icon"><i class="bi bi-house-door-fill"></i></span>
                     <span>{{ trans('app.home') }}</span>
                 </a>
             </li>
-            <li style="--delay: 0.09s">
+            <li class="drawer-delay-2">
                 <a class="drawer-link {% if current_route == 'events' %}active{% endif %}" href="{{ base_path }}/events">
                     <span class="drawer-link-icon"><i class="bi bi-ticket-perforated-fill"></i></span>
                     <span>{{ trans('app.events') }}</span>
                 </a>
             </li>
-            <li style="--delay: 0.14s">
+            <li class="drawer-delay-3">
                 <a class="drawer-link {% if current_route == 'map' %}active{% endif %}" href="{{ base_path }}/map">
                     <span class="drawer-link-icon"><i class="bi bi-geo-alt-fill"></i></span>
                     <span>{{ trans('app.map') }}</span>
                 </a>
             </li>
-            <li style="--delay: 0.19s">
+            <li class="drawer-delay-4">
                 <a class="drawer-link {% if current_route == 'cart' %}active{% endif %}" href="{{ base_path }}/cart">
                     <span class="drawer-link-icon"><i class="bi bi-cart3"></i></span>
                     <span>{{ trans('app.cart') }}</span>
@@ -155,7 +154,7 @@
         <p class="drawer-section-label mt-3">{{ trans('nav.section.account') }}</p>
         <ul class="drawer-nav-list">
             {% if current_user %}
-                <li style="--delay: 0.24s">
+                <li class="drawer-delay-5">
                     <a class="drawer-link {% if current_route == 'profile' %}active{% endif %}" href="{{ base_path }}/profile">
                         {# Avatar shows user's first initial instead of a generic icon #}
                         <span class="drawer-link-icon drawer-avatar">{{ current_user.first_name|slice(0,1)|upper }}</span>
@@ -163,14 +162,14 @@
                     </a>
                 </li>
                 {% if is_admin %}
-                    <li style="--delay: 0.29s">
+                    <li class="drawer-delay-6">
                         <a class="drawer-link {% if current_route == 'admin' %}active{% endif %}" href="{{ base_path }}/admin">
                             <span class="drawer-link-icon"><i class="bi bi-shield-fill"></i></span>
                             <span>{{ trans('app.admin') }}</span>
                         </a>
                     </li>
                 {% endif %}
-                <li style="--delay: 0.34s">
+                <li class="drawer-delay-7">
                     {# Logout is a POST so it can't be triggered by a stray GET / link prefetch. #}
                     <form method="POST" action="{{ base_path }}/logout" class="m-0">
                         <button type="submit" class="drawer-link drawer-logout">
@@ -180,13 +179,13 @@
                     </form>
                 </li>
             {% else %}
-                <li style="--delay: 0.24s">
+                <li class="drawer-delay-5">
                     <a class="drawer-link {% if current_route == 'login' %}active{% endif %}" href="{{ base_path }}/login">
                         <span class="drawer-link-icon"><i class="bi bi-box-arrow-in-right"></i></span>
                         <span>{{ trans('app.login') }}</span>
                     </a>
                 </li>
-                <li style="--delay: 0.29s">
+                <li class="drawer-delay-6">
                     <a class="drawer-link" href="{{ base_path }}/signup">
                         <span class="drawer-link-icon"><i class="bi bi-person-plus-fill"></i></span>
                         <span>{{ trans('app.signup') }}</span>
@@ -214,6 +213,9 @@
 
 <style>
     /* Desktop nav  */
+    .site-navbar {
+        background-color: #5E246E;
+    }
     .navbar-brand {
         margin-right: 0;
         color: #fff !important;
@@ -236,6 +238,13 @@
     .nav-link.active  { color: #fff !important; font-weight: 700 !important; }
     .nav-link:hover   { color: #fff !important; }
     .dropdown-item:active { background-color: #5E246E; }
+    .cart-badge {
+        font-size: 0.6rem;
+        transition: opacity 0.4s ease;
+    }
+    #langDropdown {
+        border-color: rgba(255, 255, 255, 0.2) !important;
+    }
 
     /*  Animated hamburger button  */
     .drawer-toggle {
@@ -285,6 +294,9 @@
         background: rgba(0, 0, 0, 0.18);
         border-bottom: 1px solid rgba(255, 255, 255, 0.09);
     }
+    .drawer-close {
+        opacity: 0.6;
+    }
     .drawer-brand-link {
         color: #fff;
         text-decoration: none;
@@ -327,6 +339,13 @@
         padding: 0;
         margin: 0;
     }
+    .drawer-delay-1 { --delay: 0.04s; }
+    .drawer-delay-2 { --delay: 0.09s; }
+    .drawer-delay-3 { --delay: 0.14s; }
+    .drawer-delay-4 { --delay: 0.19s; }
+    .drawer-delay-5 { --delay: 0.24s; }
+    .drawer-delay-6 { --delay: 0.29s; }
+    .drawer-delay-7 { --delay: 0.34s; }
 
     /* Items start invisible/shifted; animation runs only after drawer opens (JS adds .drawer-open) */
     .drawer-nav-list li {

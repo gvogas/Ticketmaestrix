@@ -1,12 +1,7 @@
-﻿{% extends "layout.html.twig" %}
+{% extends "layout.html.twig" %}
 {% block title %}{{ user.first_name }} - {{ trans('app.title') }}{% endblock %}
 {% block head %}
 <style>
-    :root {
-        --brand-purple: #5E246E;
-        --brand-dark: #371840;
-        --bg-light: #F8F9FA;
-    }
     body { background-color: var(--bg-light); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
     .profile-header {
