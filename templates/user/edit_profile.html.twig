@@ -25,17 +25,33 @@
             </a>
         </div>
 
-        <form action="{{ base_path }}/editprofile" method="POST">
+        <form action="{{ base_path }}/editprofile" method="POST" enctype="multipart/form-data">
             <div class="card edit-card p-4 p-md-5 mb-4">
                 <div class="d-flex align-items-center gap-4 mb-5">
-                    <div class="avatar-circle">
-                        {{ user.first_name|first|upper }}
+                    <div class="avatar-circle" id="avatar-preview-wrap">
+                        {% if user.avatar %}
+                            <img src="{{ base_path }}{{ user.avatar }}" id="avatar-preview"
+                                 alt="{{ user.first_name }}"
+                                 style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                        {% else %}
+                            <span id="avatar-initial">{{ user.first_name|first|upper }}</span>
+                            <img src="" id="avatar-preview" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                        {% endif %}
                         <div class="camera-icon"><i class="bi bi-camera-fill"></i></div>
                     </div>
                     <div>
                         <h6 class="fw-bold mb-1">{{ trans('editprofile.photo_heading') }}</h6>
                         <p class="text-muted small mb-2">{{ trans('editprofile.photo_desc') }}</p>
-                        <button type="button" class="btn px-3 py-2 text-white" style="background: #9b51e0; border-radius: 6px; font-size: 0.875rem;">{{ trans('editprofile.upload_btn') }}</button>
+                        <input type="file" name="avatar" id="avatar-input"
+                               accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;">
+                        <button type="button" class="btn px-3 py-2 text-white"
+                                style="background: #9b51e0; border-radius: 6px; font-size: 0.875rem;"
+                                onclick="document.getElementById('avatar-input').click()">
+                            {{ trans('editprofile.upload_btn') }}
+                        </button>
+                        {% if errors.avatar is defined %}
+                            <div class="text-danger small mt-2">{{ errors.avatar | first }}</div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -69,50 +85,37 @@
                         <label class="form-label">{{ trans('editprofile.birthday_label') }}</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-calendar3"></i></span>
-                            <input type="date" name="user[birthday]" class="form-control">
+                            <input type="date" name="user[birthday]" class="form-control"
+                                   value="{{ input.birthday ?? user.birthday }}">
                         </div>
                     </div>
                     <div class="col-12">
                         <label class="form-label">{{ trans('editprofile.location_label') }}</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
-                            <input type="text" name="user[location]" class="form-control" placeholder="{{ trans('editprofile.location_ph') }}">
+                            <input type="text" id="location-input" name="user[location]" class="form-control"
+                                   placeholder="{{ trans('editprofile.location_ph') }}"
+                                   value="{{ input.location ?? user.location }}"
+                                   autocomplete="off">
                         </div>
                     </div>
                     <div class="col-12">
                         <label class="form-label">{{ trans('editprofile.bio_label') }}</label>
-                        <textarea class="form-control" rows="4" placeholder="{{ trans('editprofile.bio_ph') }}"></textarea>
-                        <div class="text-end text-muted small mt-1">0/500 characters</div>
+                        <textarea name="user[bio]" class="form-control" rows="4" maxlength="500"
+                                  placeholder="{{ trans('editprofile.bio_ph') }}">{{ input.bio ?? user.bio }}</textarea>
+                        <div class="text-end text-muted small mt-1">{{ (input.bio ?? user.bio)|length }}/500 characters</div>
                     </div>
                     <div class="col-12">
                         <label class="form-label">{{ trans('editprofile.password') }}</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white"><i class="bi bi-shield-lock"></i></span>
-                            <input type="password" name="user[password]" class="form-control" placeholder="{{ trans('editprofile.password.message') }}">
+                            <input type="password" name="user[password]" class="form-control"
+                                   placeholder="{{ trans('editprofile.password.message') }}">
                         </div>
+                        {% if errors.password is defined %}
+                            <div class="text-danger small mt-1">{{ errors.password | first }}</div>
+                        {% endif %}
                     </div>
-                </div>
-
-                <h6 class="fw-bold mb-3">{{ trans('editprofile.prefs_heading') }}</h6>
-                <div class="list-group list-group-flush border rounded-3 mb-4">
-                    <label class="list-group-item p-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="fw-bold small">{{ trans('editprofile.email_notif') }}</div>
-                                <div class="text-muted extra-small" style="font-size: 0.8rem;">{{ trans('editprofile.email_notif_desc') }}</div>
-                            </div>
-                            <input class="form-check-input" type="checkbox" checked>
-                        </div>
-                    </label>
-                    <label class="list-group-item p-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="fw-bold small">{{ trans('editprofile.marketing') }}</div>
-                                <div class="text-muted extra-small" style="font-size: 0.8rem;">{{ trans('editprofile.marketing_desc') }}</div>
-                            </div>
-                            <input class="form-check-input" type="checkbox">
-                        </div>
-                    </label>
                 </div>
 
                 <div class="d-flex gap-3">
@@ -129,10 +132,47 @@
                     <div class="fw-bold mb-0">{{ trans('editprofile.delete_label') }}</div>
                     <p class="text-muted small mb-0">{{ trans('editprofile.delete_desc') }}</p>
                 </div>
-                <button class="btn btn-danger px-4 py-2 flex-shrink-0"
-                        onclick="return confirm('{{ trans('confirm.delete_account')|e('js') }}')">{{ trans('editprofile.delete_btn') }}</button>
+                <form action="{{ base_path }}/profile/delete" method="POST" class="m-0"
+                      onsubmit="return confirm('{{ trans('confirm.delete_account')|e('js') }}')">
+                    <button type="submit" class="btn btn-danger px-4 py-2 flex-shrink-0">{{ trans('editprofile.delete_btn') }}</button>
+                </form>
             </div>
         </div>
     </div>
 
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('avatar-input').addEventListener('change', function () {
+    var file = this.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+        var preview = document.getElementById('avatar-preview');
+        var initial = document.getElementById('avatar-initial');
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        if (initial) initial.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+});
+</script>
+{% if google_maps_api_key is not empty %}
+<script>
+function initPlaces() {
+    var input = document.getElementById('location-input');
+    var ac = new google.maps.places.Autocomplete(input, {
+        types: ['(cities)'],
+        fields: ['name']
+    });
+    ac.addListener('place_changed', function () {
+        var place = ac.getPlace();
+        if (place && place.name) {
+            input.value = place.name;
+        }
+    });
+}
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&callback=initPlaces" async defer></script>
+{% endif %}
 {% endblock %}

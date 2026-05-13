@@ -47,12 +47,26 @@ class TicketController
 
         $data = (array) ($request->getParsedBody() ?? []);
 
-        $errors = [];
-        if (empty($data['price']))    $errors['price']    = ['Price is required.'];
-        elseif (!is_numeric($data['price']) || (float)$data['price'] <= 0) $errors['price'] = ['Price must be a positive number.'];
+        $errors     = [];
+        $saleType   = $data['sale_type']   ?? '';
+        $saleAmount = $data['sale_amount'] ?? '';
+        $saleStart  = $data['sale_start']  ?? '';
+        $saleEnd    = $data['sale_end']    ?? '';
+
+        if (!isset($data['price']) || $data['price'] === '') $errors['price'] = ['Price is required.'];
+        elseif (!is_numeric($data['price']) || (float)$data['price'] < 0) $errors['price'] = ['Price must be 0 or greater.'];
         if (empty($data['seat']))     $errors['seat']     = ['Seat is required.'];
         if (empty($data['row']))      $errors['row']      = ['Row is required.'];
         if (empty($data['event_id'])) $errors['event_id'] = ['Please select an event.'];
+
+        if ($saleType !== '') {
+            if (!in_array($saleType, ['percent', 'fixed'], true))    $errors['sale_type']   = ['Invalid sale type.'];
+            if ($saleAmount === '' || !is_numeric($saleAmount) || (float)$saleAmount <= 0) $errors['sale_amount'] = ['Sale amount must be a positive number.'];
+            elseif ($saleType === 'percent' && (float)$saleAmount > 100)                   $errors['sale_amount'] = ['Percentage cannot exceed 100.'];
+            if (empty($saleStart)) $errors['sale_start'] = ['Sale start date is required.'];
+            if (empty($saleEnd))   $errors['sale_end']   = ['Sale end date is required.'];
+            elseif (!empty($saleStart) && $saleEnd <= $saleStart) $errors['sale_end'] = ['End date must be after start date.'];
+        }
 
         if ($errors) {
             $html = $this->twig->render('ticket/create.html.twig', [
@@ -71,6 +85,10 @@ class TicketController
             (string) ($data['seat'] ?? ''),
             (string) ($data['row'] ?? ''),
             $eventId,
+            $saleType   !== '' ? $saleType   : null,
+            $saleAmount !== '' ? (float) $saleAmount : null,
+            $saleStart  !== '' ? $saleStart  : null,
+            $saleEnd    !== '' ? $saleEnd    : null,
         );
 
         $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.ticket_created'];
@@ -100,12 +118,26 @@ class TicketController
         $id   = (int) $args['id'];
         $data = (array) ($request->getParsedBody() ?? []);
 
-        $errors = [];
-        if (empty($data['price']))    $errors['price']    = ['Price is required.'];
-        elseif (!is_numeric($data['price']) || (float)$data['price'] <= 0) $errors['price'] = ['Price must be a positive number.'];
+        $errors     = [];
+        $saleType   = $data['sale_type']   ?? '';
+        $saleAmount = $data['sale_amount'] ?? '';
+        $saleStart  = $data['sale_start']  ?? '';
+        $saleEnd    = $data['sale_end']    ?? '';
+
+        if (!isset($data['price']) || $data['price'] === '') $errors['price'] = ['Price is required.'];
+        elseif (!is_numeric($data['price']) || (float)$data['price'] < 0) $errors['price'] = ['Price must be 0 or greater.'];
         if (empty($data['seat']))     $errors['seat']     = ['Seat is required.'];
         if (empty($data['row']))      $errors['row']      = ['Row is required.'];
         if (empty($data['event_id'])) $errors['event_id'] = ['Please select an event.'];
+
+        if ($saleType !== '') {
+            if (!in_array($saleType, ['percent', 'fixed'], true))    $errors['sale_type']   = ['Invalid sale type.'];
+            if ($saleAmount === '' || !is_numeric($saleAmount) || (float)$saleAmount <= 0) $errors['sale_amount'] = ['Sale amount must be a positive number.'];
+            elseif ($saleType === 'percent' && (float)$saleAmount > 100)                   $errors['sale_amount'] = ['Percentage cannot exceed 100.'];
+            if (empty($saleStart)) $errors['sale_start'] = ['Sale start date is required.'];
+            if (empty($saleEnd))   $errors['sale_end']   = ['Sale end date is required.'];
+            elseif (!empty($saleStart) && $saleEnd <= $saleStart) $errors['sale_end'] = ['End date must be after start date.'];
+        }
 
         if ($errors) {
             $ticket = $this->ticketModel->getById($id);
@@ -123,10 +155,14 @@ class TicketController
         $ticket = $this->ticketModel->load($id);
 
         if ($ticket->id) {
-            $ticket->price    = (float) ($data['price'] ?? $ticket->price);
-            $ticket->seat     = (string) ($data['seat'] ?? $ticket->seat);
-            $ticket->row      = (string) ($data['row'] ?? $ticket->row);
-            $ticket->event_id = (int) ($data['event_id'] ?? $ticket->event_id);
+            $ticket->price       = (float) ($data['price'] ?? $ticket->price);
+            $ticket->seat        = (string) ($data['seat'] ?? $ticket->seat);
+            $ticket->row         = (string) ($data['row'] ?? $ticket->row);
+            $ticket->event_id    = (int) ($data['event_id'] ?? $ticket->event_id);
+            $ticket->sale_type   = $saleType   !== '' ? $saleType   : null;
+            $ticket->sale_amount = $saleAmount !== '' ? (float) $saleAmount : null;
+            $ticket->sale_start  = $saleStart  !== '' ? $saleStart  : null;
+            $ticket->sale_end    = $saleEnd    !== '' ? $saleEnd    : null;
             $this->ticketModel->save($ticket);
         }
 
@@ -176,7 +212,11 @@ class TicketController
         }
 
         $eventId = (int) $args['id'];
-        $tickets = $this->ticketModel->findByEvent($eventId);
+        $tickets = array_map(function ($ticket) {
+            $ticket->on_sale        = $this->ticketModel->isOnSale($ticket);
+            $ticket->effective_price = $this->ticketModel->effectivePrice($ticket);
+            return $ticket;
+        }, $this->ticketModel->findByEvent($eventId));
         $event   = $this->eventModel->getById($eventId);
 
         if ($event) {

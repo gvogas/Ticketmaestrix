@@ -166,7 +166,12 @@
                     <article class="ticket-card">
                         <div class="ticket-visual">
                             <i class="bi bi-ticket-perforated-fill ticket-icon"></i>
-                            <span class="price-badge">${{ ticket.price }}</span>
+                            {% if ticket.on_sale %}
+                                <span class="price-badge" style="background:#e53e3e;">${{ ticket.effective_price|number_format(2) }}</span>
+                                <span class="text-decoration-line-through text-white-50 small ms-1">${{ ticket.price|number_format(2) }}</span>
+                            {% else %}
+                                <span class="price-badge">${{ ticket.price|number_format(2) }}</span>
+                            {% endif %}
                         </div>
 
                         <div class="card-content">

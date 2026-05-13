@@ -175,8 +175,7 @@ class UserController
     }
 
     /**
-     * POST /editprofile — save the logged-in user's edits. Validates name
-     * and email in-controller (nested user[*] keys can't use middleware).
+     * POST /editprofile — save the logged-in user's edits.
      */
     public function updateProfile(Request $request, Response $response): Response
     {
@@ -185,10 +184,69 @@ class UserController
         $data = (array) ($request->getParsedBody() ?? []);
         $form = (array) ($data['user'] ?? []);
 
+        $name        = trim((string) ($form['name']     ?? ''));
+        $email       = trim((string) ($form['email']    ?? ''));
+        $birthday    = trim((string) ($form['birthday'] ?? ''));
+        $location    = trim((string) ($form['location'] ?? ''));
+        $bio         = trim((string) ($form['bio']      ?? ''));
+        $newPassword = (string) ($form['password'] ?? '');
+
         $errors = [];
-        if (empty($form['name']))  $errors['name']  = ['Full name is required.'];
-        if (empty($form['email'])) $errors['email'] = ['Email is required.'];
-        elseif (!filter_var($form['email'], FILTER_VALIDATE_EMAIL)) $errors['email'] = ['Enter a valid email address.'];
+
+        // Avatar upload
+        $newAvatarPath = null;
+        $avatarFile = ($request->getUploadedFiles()['avatar'] ?? null);
+        if ($avatarFile !== null && $avatarFile->getError() !== UPLOAD_ERR_NO_FILE) {
+            if ($avatarFile->getError() !== UPLOAD_ERR_OK) {
+                $errors['avatar'] = ['Upload failed. Please try again.'];
+            } else {
+                $allowedExts  = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                $clientName   = $avatarFile->getClientFilename() ?? '';
+                $ext          = strtolower(pathinfo($clientName, PATHINFO_EXTENSION));
+                $tmpPath      = $avatarFile->getStream()->getMetadata('uri');
+                $mime         = (new \finfo(FILEINFO_MIME_TYPE))->file($tmpPath);
+
+                if (!in_array($ext, $allowedExts, true) || !in_array($mime, $allowedMimes, true)) {
+                    $errors['avatar'] = ['Only JPG, PNG, GIF, and WebP images are allowed.'];
+                } elseif ($avatarFile->getSize() > 5 * 1024 * 1024) {
+                    $errors['avatar'] = ['Image must be under 5 MB.'];
+                } else {
+                    $uploadDir = __DIR__ . '/../../uploads/avatars/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
+                    $filename = $id . '_' . time() . '.' . $ext;
+                    $avatarFile->moveTo($uploadDir . $filename);
+                    $newAvatarPath = '/uploads/avatars/' . $filename;
+
+                    $currentAvatar = (string) (Auth::user()->avatar ?? '');
+                    if ($currentAvatar !== '') {
+                        $old = __DIR__ . '/../../' . ltrim($currentAvatar, '/');
+                        if (file_exists($old)) {
+                            @unlink($old);
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($name === '') {
+            $errors['name'] = ['Full name is required.'];
+        }
+        if ($email === '') {
+            $errors['email'] = ['Email is required.'];
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = ['Enter a valid email address.'];
+        } else {
+            $existing = $this->userModel->findByEmail($email);
+            if ($existing !== null && $existing->id && (int) $existing->id !== $id) {
+                $errors['email'] = ['This email is already in use by another account.'];
+            }
+        }
+        if ($newPassword !== '' && strlen($newPassword) < 8) {
+            $errors['password'] = ['New password must be at least 8 characters.'];
+        }
 
         if ($errors) {
             $html = $this->twig->render('user/edit_profile.html.twig', [
@@ -202,23 +260,43 @@ class UserController
             return $response->withStatus(422);
         }
 
-        $name  = trim((string) ($form['name'] ?? ''));
-        $email = trim((string) ($form['email'] ?? ''));
-
-        // Split "First Last" into first_name + last_name.
         $parts     = explode(' ', $name, 2);
         $firstName = $parts[0] ?? '';
         $lastName  = $parts[1] ?? '';
 
-        $this->userModel->update($id, [
-            'first_name'   => $firstName,
-            'last_name'    => $lastName,
-            'email'        => $email,
-        ]);
+        $updateData = [
+            'first_name' => $firstName,
+            'last_name'  => $lastName,
+            'email'      => $email,
+            'birthday'   => $birthday !== '' ? $birthday : null,
+            'location'   => $location,
+            'bio'        => $bio,
+            'password'   => $newPassword !== '' ? $newPassword : null,
+        ];
+        if ($newAvatarPath !== null) {
+            $updateData['avatar'] = $newAvatarPath;
+        }
+        $this->userModel->update($id, $updateData);
 
         $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.profile_updated'];
         return $response
             ->withHeader('Location', $this->basePath . '/profile')
+            ->withStatus(302);
+    }
+
+    /** POST /profile/delete — permanently delete the logged-in user's account. */
+    public function deleteAccount(Request $request, Response $response): Response
+    {
+        if ($redirect = Auth::requireLogin($response, $this->basePath)) {
+            return $redirect;
+        }
+
+        $id = (int) Auth::userId();
+        Auth::logout();
+        $this->userModel->deleteById($id);
+
+        return $response
+            ->withHeader('Location', $this->basePath . '/')
             ->withStatus(302);
     }
 }

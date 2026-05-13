@@ -77,7 +77,12 @@
                                 <h5 class="mb-1 fw-bold">{{ item.name }}</h5>
                                 <div class="text-muted small">{{ item.date }}</div>
                                 <div class="mt-1">
-                                    <span class="text-primary fw-bold">${{ item.price|number_format(2) }} � {{ item.quantity }}</span>
+                                    {% if item.on_sale %}
+                                        <span class="text-decoration-line-through text-muted small me-1">${{ item.original_price|number_format(2) }}</span>
+                                        <span class="text-danger fw-bold">${{ item.price|number_format(2) }} Ã {{ item.quantity }}</span>
+                                    {% else %}
+                                        <span class="text-primary fw-bold">${{ item.price|number_format(2) }} Ã {{ item.quantity }}</span>
+                                    {% endif %}
                                     <span class="ms-2 fw-bold">${{ item.total|number_format(2) }}</span>
                                 </div>
                             </div>

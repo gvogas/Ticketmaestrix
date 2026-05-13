@@ -124,22 +124,25 @@ class Cart
         $rows = [];
         foreach (self::items() as $ticketId => $qty) {
             $ticket = $tickets->getById((int) $ticketId);
-            if ($ticket === null) {
+            if ($ticket === null || !empty($ticket->sold)) {
                 continue;
             }
             $event = $events->getById((int) $ticket->event_id);
             if ($event === null) {
                 continue;
             }
-            $price = (float) $ticket->price;
+            $onSale        = $tickets->isOnSale($ticket);
+            $effectivePrice = $tickets->effectivePrice($ticket);
             $rows[] = [
-                'ticket_id' => (int) $ticket->id,
-                'name'      => (string) $event->title,
-                'image'     => (string) $event->event_image,
-                'date'      => (string) $event->date,
-                'price'     => $price,
-                'quantity'  => (int) $qty,
-                'total'     => $price * (int) $qty,
+                'ticket_id'      => (int) $ticket->id,
+                'name'           => (string) $event->title,
+                'image'          => (string) $event->event_image,
+                'date'           => (string) $event->date,
+                'price'          => $effectivePrice,
+                'original_price' => $onSale ? (float) $ticket->price : null,
+                'on_sale'        => $onSale,
+                'quantity'       => (int) $qty,
+                'total'          => $effectivePrice * (int) $qty,
             ];
         }
         return $rows;

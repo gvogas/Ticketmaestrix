@@ -174,6 +174,7 @@ $container->set(StripeWebhookController::class, fn() => new StripeWebhookControl
     new OrderModel(),
     new OrderItemModel(),
     new PointsHistoryModel(),
+    new TicketModel(),
     $_ENV['STRIPE_WEBHOOK_SECRET'] ?? '',
 ));
 
