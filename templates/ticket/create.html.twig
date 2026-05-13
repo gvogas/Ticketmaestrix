@@ -182,13 +182,52 @@
                             <span class="input-group-text">$</span>
                             <input type="number" id="price" name="price" required
                                    class="form-control{{ errors.price is defined ? ' is-invalid' : '' }}"
-                                    min="0.01" step="0.01" placeholder="{{ trans('ph.ticket_price') }}"
+                                    min="0" step="0.01" placeholder="{{ trans('ph.ticket_price') }}"
                                    value="{{ input.price ?? '' }}">
                         </div>
                         {% if errors.price is defined %}
                             <div class="invalid-feedback">{{ errors.price | first }}</div>
                         {% endif %}
                         <div class="form-text text-muted">{{ trans('tadmin.crud.message') }}</div>
+                    </div>
+
+                    <!-- Sale -->
+                    <div class="col-12">
+                        <hr class="my-2">
+                        <p class="fw-600 mb-3">Sale (optional)</p>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="sale_type" class="form-label">Discount type</label>
+                                <select id="sale_type" name="sale_type" class="form-select{{ errors.sale_type is defined ? ' is-invalid' : '' }}">
+                                    <option value="">— No sale —</option>
+                                    <option value="percent" {{ (input.sale_type ?? '') == 'percent' ? 'selected' : '' }}>% Off</option>
+                                    <option value="fixed"   {{ (input.sale_type ?? '') == 'fixed'   ? 'selected' : '' }}>$ Off</option>
+                                </select>
+                                {% if errors.sale_type is defined %}<div class="invalid-feedback">{{ errors.sale_type|first }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="sale_amount" class="form-label">Amount</label>
+                                <input type="number" id="sale_amount" name="sale_amount" min="0.01" step="0.01"
+                                       class="form-control{{ errors.sale_amount is defined ? ' is-invalid' : '' }}"
+                                       placeholder="e.g. 10" value="{{ input.sale_amount ?? '' }}">
+                                {% if errors.sale_amount is defined %}<div class="invalid-feedback">{{ errors.sale_amount|first }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-4"></div>
+                            <div class="col-md-6">
+                                <label for="sale_start" class="form-label">Sale starts</label>
+                                <input type="datetime-local" id="sale_start" name="sale_start"
+                                       class="form-control{{ errors.sale_start is defined ? ' is-invalid' : '' }}"
+                                       value="{{ input.sale_start ?? '' }}">
+                                {% if errors.sale_start is defined %}<div class="invalid-feedback">{{ errors.sale_start|first }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="sale_end" class="form-label">Sale ends</label>
+                                <input type="datetime-local" id="sale_end" name="sale_end"
+                                       class="form-control{{ errors.sale_end is defined ? ' is-invalid' : '' }}"
+                                       value="{{ input.sale_end ?? '' }}">
+                                {% if errors.sale_end is defined %}<div class="invalid-feedback">{{ errors.sale_end|first }}</div>{% endif %}
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Actions -->
