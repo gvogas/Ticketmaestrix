@@ -45,7 +45,120 @@ class AuthController
 
     public function showNewPassword(Request $request, Response $response): Response
     {
+        if (!isset($_SESSION['reset_email']) || !isset($_SESSION['reset_code_verified'])) {
+            return $response
+                ->withHeader('Location', $this->basePath . '/forgotpassword')
+                ->withStatus(302);
+        }
         return $this->render($response, 'auth/forgot_password_p3.html.twig');
+    }
+
+    public function forgotPassword(Request $request, Response $response): Response
+    {
+        $data  = (array) ($request->getParsedBody() ?? []);
+        $email = trim((string) ($data['email'] ?? ''));
+
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $html = $this->twig->render('auth/forgot_password_p1.html.twig', [
+                'base_path' => $this->basePath,
+                'error'     => 'Please enter a valid email address.',
+            ]);
+            $response->getBody()->write($html);
+            return $response->withStatus(422);
+        }
+
+        $user = $this->users->findByEmail($email);
+        if (!$user) {
+            $html = $this->twig->render('auth/forgot_password_p1.html.twig', [
+                'base_path' => $this->basePath,
+                'error'     => 'No account found with that email address.',
+            ]);
+            $response->getBody()->write($html);
+            return $response->withStatus(404);
+        }
+
+        $_SESSION['reset_email'] = $email;
+        $_SESSION['reset_code']  = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        unset($_SESSION['reset_code_verified']);
+
+        return $response
+            ->withHeader('Location', $this->basePath . '/verificationcode')
+            ->withStatus(302);
+    }
+
+    public function verifyCode(Request $request, Response $response): Response
+    {
+        if (!isset($_SESSION['reset_email'])) {
+            return $response
+                ->withHeader('Location', $this->basePath . '/forgotpassword')
+                ->withStatus(302);
+        }
+
+        $data = (array) ($request->getParsedBody() ?? []);
+        $code = str_replace(' ', '', trim((string) ($data['code'] ?? '')));
+
+        if (empty($code) || $code !== ($_SESSION['reset_code'] ?? null)) {
+            $html = $this->twig->render('auth/forgot_password_p2.html.twig', [
+                'base_path' => $this->basePath,
+                'error'     => 'Invalid verification code. Please try again.',
+            ]);
+            $response->getBody()->write($html);
+            return $response->withStatus(422);
+        }
+
+        $_SESSION['reset_code_verified'] = true;
+        unset($_SESSION['reset_code']);
+
+        return $response
+            ->withHeader('Location', $this->basePath . '/newpassword')
+            ->withStatus(302);
+    }
+
+    public function resetPassword(Request $request, Response $response): Response
+    {
+        if (!isset($_SESSION['reset_email']) || !isset($_SESSION['reset_code_verified'])) {
+            return $response
+                ->withHeader('Location', $this->basePath . '/forgotpassword')
+                ->withStatus(302);
+        }
+
+        $data     = (array) ($request->getParsedBody() ?? []);
+        $password = (string) ($data['password'] ?? '');
+        $password2 = (string) ($data['password2'] ?? '');
+        $errors   = [];
+
+        if (empty($password)) {
+            $errors['password'] = ['Password is required.'];
+        } elseif (strlen($password) < 8) {
+            $errors['password'] = ['Password must be at least 8 characters.'];
+        }
+        if (empty($password2)) {
+            $errors['password2'] = ['Please confirm your password.'];
+        } elseif ($password !== $password2) {
+            $errors['password2'] = ['Passwords do not match.'];
+        }
+
+        if ($errors) {
+            $html = $this->twig->render('auth/forgot_password_p3.html.twig', [
+                'base_path' => $this->basePath,
+                'errors'    => $errors,
+            ]);
+            $response->getBody()->write($html);
+            return $response->withStatus(422);
+        }
+
+        $email = $_SESSION['reset_email'];
+        $user  = $this->users->findByEmail($email);
+
+        if ($user && $user->id) {
+            $this->users->update((int) $user->id, ['password' => password_hash($password, PASSWORD_DEFAULT)]);
+        }
+
+        unset($_SESSION['reset_email'], $_SESSION['reset_code'], $_SESSION['reset_code_verified']);
+
+        return $response
+            ->withHeader('Location', $this->basePath . '/login')
+            ->withStatus(302);
     }
 
     public function login(Request $request, Response $response): Response
