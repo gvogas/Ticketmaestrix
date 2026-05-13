@@ -1,8 +1,14 @@
+{% set home_url = base_path ~ '/' %}
+{% set logo_src = base_path ~ '/assets/img/ticketmaestrix-logo.png' %}
+
 <nav class="navbar navbar-expand-md navbar-dark sticky-top shadow-sm" style="background-color: #5E246E;">
     <div class="container-fluid px-4">
 
-        <a class="navbar-brand fw-bold fs-4 tracking-tight m-0">
-            {{ trans('app.title') }}
+        <a class="navbar-brand d-inline-flex align-items-center gap-2 fw-bold fs-4 tracking-tight m-0"
+           href="{{ home_url }}"
+           aria-label="{{ trans('app.title') }} home">
+            <span>{{ trans('app.title') }}</span>
+            <img class="brand-logo" src="{{ logo_src }}" alt="" aria-hidden="true">
         </a>
 
         {# Custom animated hamburger — three bars morph into an × when the drawer is open #}
@@ -18,7 +24,7 @@
         <div class="collapse navbar-collapse" id="mainNavbar">
             <ul class="navbar-nav ms-auto mb-2 mb-md-0 align-items-center">
                 <li class="nav-item px-2">
-                    <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'home' %}active{% endif %}" href="{{ base_path }}/">
+                    <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'home' %}active{% endif %}" href="{{ home_url }}">
                         <i class="bi bi-house-door"></i> {{ trans('app.home') }}
                     </a>
                 </li>
@@ -106,10 +112,10 @@
 <div class="offcanvas offcanvas-end" tabindex="-1" id="mobileNav" aria-labelledby="mobileNavLabel">
 
     <div class="offcanvas-header drawer-header">
-        <div class="d-flex align-items-center gap-2">
-            <span class="drawer-brand-icon"><i class="bi bi-ticket-perforated-fill"></i></span>
+        <a class="drawer-brand-link d-flex align-items-center gap-2" href="{{ home_url }}">
             <span class="drawer-brand-name" id="mobileNavLabel">{{ trans('app.title') }}</span>
-        </div>
+            <img class="drawer-brand-logo" src="{{ logo_src }}" alt="" aria-hidden="true">
+        </a>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close" style="opacity: 0.6;"></button>
     </div>
 
@@ -118,7 +124,7 @@
         <p class="drawer-section-label">{{ trans('nav.section.navigate') }}</p>
         <ul class="drawer-nav-list">
             <li style="--delay: 0.04s">
-                <a class="drawer-link {% if current_route == 'home' %}active{% endif %}" href="{{ base_path }}/">
+                <a class="drawer-link {% if current_route == 'home' %}active{% endif %}" href="{{ home_url }}">
                     <span class="drawer-link-icon"><i class="bi bi-house-door-fill"></i></span>
                     <span>{{ trans('app.home') }}</span>
                 </a>
@@ -208,7 +214,19 @@
 
 <style>
     /* Desktop nav  */
-    .navbar-brand { margin-right: 0; }
+    .navbar-brand {
+        margin-right: 0;
+        color: #fff !important;
+        text-decoration: none;
+        line-height: 1;
+    }
+    .brand-logo {
+        width: 58px;
+        height: 38px;
+        object-fit: contain;
+        flex-shrink: 0;
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.24));
+    }
 
     .nav-link {
         color: rgba(255, 255, 255, 0.7) !important;
@@ -267,23 +285,22 @@
         background: rgba(0, 0, 0, 0.18);
         border-bottom: 1px solid rgba(255, 255, 255, 0.09);
     }
-    .drawer-brand-icon {
-        width: 34px;
-        height: 34px;
-        background: rgba(255, 255, 255, 0.13);
-        border-radius: 9px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1rem;
+    .drawer-brand-link {
         color: #fff;
-        flex-shrink: 0;
+        text-decoration: none;
+        min-width: 0;
     }
     .drawer-brand-name {
         font-size: 1rem;
         font-weight: 700;
         color: #fff;
         letter-spacing: -0.01em;
+    }
+    .drawer-brand-logo {
+        width: 52px;
+        height: 34px;
+        object-fit: contain;
+        flex-shrink: 0;
     }
 
     /*  Drawer body  */
