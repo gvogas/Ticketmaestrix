@@ -34,9 +34,6 @@ class TicketController
 
     public function create(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $html = $this->twig->render('ticket/create.html.twig', [
             'base_path' => $this->basePath,
             'events'    => $this->eventModel->getAll(),
@@ -47,9 +44,6 @@ class TicketController
 
     public function store(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
 
         $data = (array) ($request->getParsedBody() ?? []);
 
@@ -85,9 +79,6 @@ class TicketController
 
     public function edit(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $ticket = $this->ticketModel->getById((int) $args['id']);
 
         if (!$ticket) {
@@ -105,9 +96,6 @@ class TicketController
 
     public function update(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
 
         $id   = (int) $args['id'];
         $data = (array) ($request->getParsedBody() ?? []);
@@ -148,9 +136,6 @@ class TicketController
 
     public function destroy(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $ticket = $this->ticketModel->load((int) $args['id']);
         if ($ticket->id) {
             $this->ticketModel->delete($ticket);

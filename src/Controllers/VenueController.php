@@ -30,9 +30,6 @@ class VenueController
 
     public function create(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $html = $this->twig->render('venue/create.html.twig', [
             'base_path' => $this->basePath,
         ]);
@@ -42,9 +39,6 @@ class VenueController
 
     public function store(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
 
         $data = (array) ($request->getParsedBody() ?? []);
 
@@ -81,9 +75,6 @@ class VenueController
 
     public function edit(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
 
         $venue = $this->venueModel->getById((int) $args['id']);
         if (!$venue) {
@@ -100,9 +91,6 @@ class VenueController
 
     public function update(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
 
         $venue = $this->venueModel->load((int) $args['id']);
         if (!$venue->id) {
@@ -144,9 +132,6 @@ class VenueController
 
     public function destroy(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $venue = $this->venueModel->load((int) $args['id']);
         if ($venue->id) {
             $this->venueModel->delete($venue);

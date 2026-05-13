@@ -63,9 +63,6 @@ class UserController
     /** POST /users/{id}/role — toggle admin/user role. Admin-only. */
     public function roleToggle(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $user = $this->userModel->load((int) ($args['id'] ?? 0));
 
         if ($user->id && $user->id !== Auth::userId()) {
@@ -82,9 +79,6 @@ class UserController
     /** POST /users/{id} — admin updates a user's details. */
     public function update(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $id   = (int) ($args['id'] ?? 0);
         $data = $request->getParsedBody();
         $this->userModel->update($id, $data);
@@ -98,9 +92,6 @@ class UserController
     /** POST /users/{id}/delete — admin deletes a user. */
     public function delete(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $userId = (int) ($args['id'] ?? 0);
 
         if ($userId === Auth::userId()) {
@@ -116,9 +107,6 @@ class UserController
     /** GET /users/{id} — admin views one user's detail page. */
     public function viewDetails(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $user = $this->userModel->load((int) ($args['id'] ?? 0));
 
         if (!$user->id) {
@@ -140,9 +128,6 @@ class UserController
     /** GET /users — admin-only listing of all users. */
     public function index(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $users = $this->userModel->findAll();
 
         $html = $this->twig->render('user/index.html.twig', [
@@ -158,9 +143,6 @@ class UserController
     /** GET /profile — the logged-in user's own profile page with stats. */
     public function showProfile(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireLogin($response, $this->basePath)) {
-            return $redirect;
-        }
         $user = Auth::user();
         $id   = (int) $user->id;
 
@@ -181,9 +163,6 @@ class UserController
     /** GET /editprofile — show the form for editing the logged-in user. */
     public function editProfile(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireLogin($response, $this->basePath)) {
-            return $redirect;
-        }
 
         $html = $this->twig->render('user/edit_profile.html.twig', [
             'base_path'     => $this->basePath,
@@ -201,9 +180,6 @@ class UserController
      */
     public function updateProfile(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireLogin($response, $this->basePath)) {
-            return $redirect;
-        }
 
         $id   = (int) Auth::userId();
         $data = (array) ($request->getParsedBody() ?? []);

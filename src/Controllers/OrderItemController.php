@@ -18,9 +18,6 @@ class OrderItemController {
     ) {}
 
      public function store(Request $request, Response $response): Response {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
        $data = $request->getParsedBody();
 
         $this->orderItemModel->create(
@@ -36,9 +33,6 @@ class OrderItemController {
      }
 
      public function update(Request $request, Response $response, array $args): Response {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $id = (int) $args['id'];
         $data = $request->getParsedBody();
 
@@ -60,9 +54,6 @@ class OrderItemController {
 
      // Hard-delete one order_item by id.
      public function delete(Request $request, Response $response, array $args): Response {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $orderItem = $this->orderItemModel->load((int) ($args['id'] ?? 0));
 
         if ($orderItem->id) {
@@ -77,9 +68,6 @@ class OrderItemController {
 
      // Show one order_item's detail page.
      public function viewDetails(Request $request, Response $response, array $args): Response {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $orderItem = $this->orderItemModel->load((int) ($args['id'] ?? 0));
 
         if (!$orderItem->id) {
@@ -99,9 +87,6 @@ class OrderItemController {
 
      // List all line items belonging to a given order id.
      public function byOrder(Request $request, Response $response, array $args): Response {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $orderId    = (int) ($args['id'] ?? 0);
         $orderItems = $this->orderItemModel->findByOrder($orderId);
 

@@ -40,11 +40,6 @@ class AdminController
      */
     public function showAdminDashboard(Request $request, Response $response): Response
     {
-        // Hard guard: non-admins get bounced.
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
-
         // 1. Aggregate site-wide stats
         $stats = [
             'revenue'       => $this->orderModel->getTotalRevenue(),

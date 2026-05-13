@@ -30,9 +30,6 @@ class CategoryController
 
     public function create(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $html = $this->twig->render('category/create.html.twig', [
             'base_path' => $this->basePath,
         ]);
@@ -42,9 +39,6 @@ class CategoryController
 
     public function store(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
 
         $data = (array) ($request->getParsedBody() ?? []);
 
@@ -69,9 +63,6 @@ class CategoryController
 
     public function edit(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $category = $this->categoryModel->getById((int) $args['id']);
 
         if (!$category) {
@@ -88,9 +79,6 @@ class CategoryController
 
     public function update(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
 
         $id   = (int) $args['id'];
         $data = (array) ($request->getParsedBody() ?? []);
@@ -123,9 +111,6 @@ class CategoryController
 
     public function destroy(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $category = $this->categoryModel->load((int) $args['id']);
         if ($category->id) {
             $this->categoryModel->delete($category);

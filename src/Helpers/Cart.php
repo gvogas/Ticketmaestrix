@@ -41,10 +41,17 @@ class Cart
     /** Remove a single ticket id entirely (regardless of quantity). */
     public static function remove(int $ticketId): void
     {
+        self::checkExpiry();
+
         if (!isset($_SESSION['cart'])) {
             return;
         }
+
         unset($_SESSION['cart'][$ticketId]);
+
+        if (empty($_SESSION['cart'])) {
+            self::clear();
+        }
     }
 
     /** Empty the cart and its expiry timestamp completely. */

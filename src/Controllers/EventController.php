@@ -84,10 +84,6 @@ class EventController
 
     public function create(Request $request, Response $response): Response
     {
-        // Admin-only: anyone else gets bounced to /login or /.
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $html = $this->twig->render('event/create.html.twig', [
             'base_path'  => $this->basePath,
             'categories' => $this->categoryModel->getAll(),
@@ -99,9 +95,6 @@ class EventController
 
     public function store(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
 
         $data = (array) ($request->getParsedBody() ?? []);
 
@@ -139,9 +132,6 @@ class EventController
 
     public function edit(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $event = $this->eventModel->getById((int) $args['id']);
 
         if (!$event) {
@@ -160,9 +150,6 @@ class EventController
 
     public function update(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
 
         $id   = (int) $args['id'];
         $data = (array) ($request->getParsedBody() ?? []);
@@ -206,9 +193,6 @@ class EventController
 
     public function destroy(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $event = $this->eventModel->load((int) $args['id']);
         if ($event->id) {
             $this->eventModel->delete($event);

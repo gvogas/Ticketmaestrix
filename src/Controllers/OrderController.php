@@ -18,9 +18,6 @@ class OrderController {
     ) {}
 
      public function store(Request $request, Response $response): Response {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
        $data = $request->getParsedBody();
 
        $this->orderModel->create(
@@ -35,9 +32,6 @@ class OrderController {
      }
 
      public function update(Request $request, Response $response, array $args): Response {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $id = (int) $args['id'];
         $data = $request->getParsedBody();
 
@@ -60,9 +54,6 @@ class OrderController {
 
      // Hard-delete an order by id.
      public function delete(Request $request, Response $response, array $args): Response {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $order = $this->orderModel->load((int) ($args['id'] ?? 0));
 
         if ($order->id) {
@@ -77,9 +68,6 @@ class OrderController {
 
      // Show one order's detail page; bounce to /orders if id is unknown.
      public function viewDetails(Request $request, Response $response, array $args): Response {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $order = $this->orderModel->load((int) ($args['id'] ?? 0));
 
         if (!$order->id) {
@@ -99,9 +87,6 @@ class OrderController {
 
      // List all orders belonging to a given user id.
      public function byUser(Request $request, Response $response, array $args): Response {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $userId = (int) ($args['id'] ?? 0);
         $orders = $this->orderModel->findByUser($userId);
 

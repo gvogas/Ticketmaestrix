@@ -42,10 +42,6 @@ class CartController
     /** GET /checkout — display the order summary and "Pay with Stripe" button. */
     public function showCheckout(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireLogin($response, $this->basePath)) {
-            return $redirect;
-        }
-
         // Admins should manage the system, not use the checkout flow
         if (Auth::isAdmin()) {
             return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
@@ -145,10 +141,6 @@ class CartController
      */
     public function checkout(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireLogin($response, $this->basePath)) {
-            return $redirect;
-        }
-
         if (Auth::isAdmin()) {
             return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
         }
