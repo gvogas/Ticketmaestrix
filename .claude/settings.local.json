@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"X:\\\\Wampoon\\\\htdocs\\\\Ticketmaestrix\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)"
+    ]
+  }
+}

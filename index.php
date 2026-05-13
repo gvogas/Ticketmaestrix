@@ -321,9 +321,10 @@ $app->group('/users', function ($group) {
     $group->post('/{id}/role',   [UserController::class, 'roleToggle']);
     $group->post('/{id}/delete', [UserController::class, 'delete']);
 });
-$app->get('/profile',    [UserController::class, 'showProfile']);
-$app->get('/editprofile',[UserController::class, 'editProfile']);
-$app->post('/editprofile',[UserController::class, 'updateProfile']);
+$app->get('/profile',       [UserController::class, 'showProfile']);
+$app->get('/editprofile',  [UserController::class, 'editProfile']);
+$app->post('/editprofile', [UserController::class, 'updateProfile']);
+$app->post('/profile/delete', [UserController::class, 'deleteAccount']);
 
 // --- Categories ---
 $app->group('/categories', function ($group) {

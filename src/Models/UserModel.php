@@ -70,11 +70,20 @@ class UserModel
         if (array_key_exists('email', $data)) {
             $user->email = (string) $data['email'];
         }
-        
-        
-        // ADDED: Handle password updates specifically for the Admin Edit form
+        if (array_key_exists('birthday', $data)) {
+            $user->birthday = $data['birthday'] !== '' ? (string) $data['birthday'] : null;
+        }
+        if (array_key_exists('location', $data)) {
+            $user->location = (string) $data['location'];
+        }
+        if (array_key_exists('bio', $data)) {
+            $user->bio = (string) $data['bio'];
+        }
+        if (array_key_exists('avatar', $data)) {
+            $user->avatar = $data['avatar'] !== '' ? (string) $data['avatar'] : null;
+        }
         if (!empty($data['password'])) {
-            $user->password = password_hash($data['password'], PASSWORD_DEFAULT);
+            $user->password = password_hash((string) $data['password'], PASSWORD_DEFAULT);
         }
 
         R::store($user);
