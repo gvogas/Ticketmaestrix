@@ -1,23 +1,13 @@
-﻿{% extends "layout.html.twig" %}
+{% extends "layout.html.twig" %}
 {% block title %}{{ trans('evtickets.tickets') }} - {{ trans('app.title') }}{% endblock %}
 {% block head %}
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-
-    :root {
-        --brand-purple: #5E246E;
-        --brand-deep: #371840;
-        --brand-hover: #4a1d56;
-        --bg-light: #f8fafc;
-        --border-color: #e2e8f0;
-    }
 
     /* 1. Reset & Global Styles */
     * { border-radius: 0 !important; }
 
     body {
         background-color: var(--bg-light);
-        font-family: 'Inter', sans-serif;
         color: #1a202c;
         display: flex;
         flex-direction: column;

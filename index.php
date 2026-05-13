@@ -23,6 +23,8 @@ use App\Controllers\VenueController;
 use App\Services\StripeService;
 use App\Helpers\Auth;
 use App\Helpers\Cart;
+use App\Middleware\AdminMiddleware;
+use App\Middleware\AuthMiddleware;
 use App\Middleware\MaintenanceMiddleware;
 use App\Middleware\SecurityHeadersMiddleware;
 use App\Models\CategoryModel;
@@ -64,6 +66,9 @@ $dotenv->load();
 ini_set('session.cookie_lifetime', '0');
 session_start();
 
+// Consume flash message set by a previous redirect — available in templates as {{ flash_message }}
+$flashMessage = $_SESSION['flash'] ?? null;
+unset($_SESSION['flash']);
 
 
 // ============== DATABASE ==============
@@ -90,13 +95,14 @@ $twig   = new Environment($loader, [
 
 // Twig globals — exposed to every template so the navbar (and any other
 // partial) can render auth-aware UI without each controller passing them.
-$twig->addGlobal('current_user',        Auth::user());
-$twig->addGlobal('is_admin',            Auth::isAdmin());
-$twig->addGlobal('cart_count',          Cart::count());
-// Unix timestamp so the JS can compute seconds-remaining without server drift.
-$twig->addGlobal('cart_expires_at',     (int) ($_SESSION['cart_expires_at'] ?? 0));
+$twig->addGlobal('current_user', Auth::user());
+$twig->addGlobal('is_admin', Auth::isAdmin());
+$twig->addGlobal('cart_count', Cart::count());
+
 $twig->addGlobal('google_maps_api_key', $_ENV['GOOGLE_MAPS_API_KEY'] ?? '');
 
+$twig->addGlobal('cart_expires_at', (int) ($_SESSION['cart_expires_at'] ?? 0));
+$twig->addGlobal('flash_message', $flashMessage);
 
 
 // ============== I18N — symfony/translation ================
@@ -136,6 +142,11 @@ $basePath = $_ENV['APP_BASE_PATH'] ?? '';
 
 $container = new \DI\Container();
 $container->set(Environment::class, $twig);
+
+
+$responseFactory = new \Slim\Psr7\Factory\ResponseFactory();
+$container->set(AuthMiddleware::class,  fn() => new AuthMiddleware($responseFactory, $basePath));
+$container->set(AdminMiddleware::class, fn() => new AdminMiddleware($responseFactory, $basePath));
 
 $container->set(HomeController::class, fn() => new HomeController(
     $twig,
@@ -247,8 +258,6 @@ $app->setBasePath($basePath);
 $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
 
-// Add error middleware so you get useful error pages instead of blank screens
-// $app->addErrorMiddleware(true, true, true);
 
 $app->addErrorMiddleware($debug, true, true);
 
@@ -310,7 +319,8 @@ $app->group('', function ($group) {
 });
 
 // --- Admin ---
-$app->get('/admin', [AdminController::class, 'showAdminDashboard']);
+
+$app->get('/admin', [AdminController::class, 'showAdminDashboard'])->add(AdminMiddleware::class);
 
 
 // --- Users ---
@@ -321,11 +331,11 @@ $app->group('/users', function ($group) {
     $group->post('/{id}',        [UserController::class, 'update']);
     $group->post('/{id}/role',   [UserController::class, 'roleToggle']);
     $group->post('/{id}/delete', [UserController::class, 'delete']);
-});
-$app->get('/profile',       [UserController::class, 'showProfile']);
-$app->get('/editprofile',  [UserController::class, 'editProfile']);
-$app->post('/editprofile', [UserController::class, 'updateProfile']);
-$app->post('/profile/delete', [UserController::class, 'deleteAccount']);
+})->add(AdminMiddleware::class);
+
+$app->get('/profile',     [UserController::class, 'showProfile'])->add(AuthMiddleware::class);
+$app->get('/editprofile', [UserController::class, 'editProfile'])->add(AuthMiddleware::class);
+$app->post('/editprofile',[UserController::class, 'updateProfile'])->add(AuthMiddleware::class);
 
 // --- Categories ---
 $app->group('/categories', function ($group) {
@@ -336,18 +346,19 @@ $app->group('/categories', function ($group) {
     $group->get('/{id}/edit',    [CategoryController::class, 'edit']);
     $group->post('/{id}/update', [CategoryController::class, 'update']);
     $group->post('/{id}/delete', [CategoryController::class, 'destroy']);
-});
+})->add(AdminMiddleware::class);
 
 // --- Events ---
 $app->group('/events', function ($group) {
     $group->get('',                   [EventController::class, 'index']);
-    $group->get('/create',            [EventController::class, 'create']);
-    $group->post('',                  [EventController::class, 'store']);
+    $group->post('',                  [EventController::class, 'store'])->add(AdminMiddleware::class);
+    $group->get('/create',            [EventController::class, 'create'])->add(AdminMiddleware::class);
     $group->get('/category/{id}',     [EventController::class, 'byCategory']);
+
     $group->get('/{id}',              [EventController::class, 'viewDetails']);
-    $group->get('/{id}/edit',         [EventController::class, 'edit']);
-    $group->post('/{id}/update',      [EventController::class, 'update']);
-    $group->post('/{id}/delete',      [EventController::class, 'destroy']);
+    $group->get('/{id}/edit',         [EventController::class, 'edit'])->add(AdminMiddleware::class);
+    $group->post('/{id}/update',      [EventController::class, 'update'])->add(AdminMiddleware::class);
+    $group->post('/{id}/delete',      [EventController::class, 'destroy'])->add(AdminMiddleware::class);
 });
 
 // --- Venues ---
@@ -359,18 +370,20 @@ $app->group('/venues', function ($group) {
     $group->get('/{id}/edit',    [VenueController::class, 'edit']);
     $group->post('/{id}/update', [VenueController::class, 'update']);
     $group->post('/{id}/delete', [VenueController::class, 'destroy']);
-});
+})->add(AdminMiddleware::class);
 
 // --- Tickets ---
 $app->group('/tickets', function ($group) {
+    // Static segments before /{id} — FastRoute won't accept the reverse order.
     $group->get('',               [TicketController::class, 'index']);
-    $group->get('/create',        [TicketController::class, 'create']);
-    $group->post('',              [TicketController::class, 'store']);
-    $group->get('/event/{id}',   [TicketController::class, 'byEvent']);
-    $group->get('/{id}',         [TicketController::class, 'viewDetails']);
-    $group->get('/{id}/edit',    [TicketController::class, 'edit']);
-    $group->post('/{id}/update', [TicketController::class, 'update']);
-    $group->post('/{id}/delete', [TicketController::class, 'destroy']);
+    $group->post('',              [TicketController::class, 'store'])->add(AdminMiddleware::class);
+    $group->get('/create',        [TicketController::class, 'create'])->add(AdminMiddleware::class);
+    $group->get('/event/{id}',    [TicketController::class, 'byEvent']);
+
+    $group->get('/{id}',          [TicketController::class, 'viewDetails']);
+    $group->get('/{id}/edit',     [TicketController::class, 'edit'])->add(AdminMiddleware::class);
+    $group->post('/{id}/update',  [TicketController::class, 'update'])->add(AdminMiddleware::class);
+    $group->post('/{id}/delete',  [TicketController::class, 'destroy'])->add(AdminMiddleware::class);
 });
 
 // --- Orders ---
@@ -380,7 +393,7 @@ $app->group('/orders', function ($group) {
     $group->get('/{id}',         [OrderController::class, 'viewDetails']);
     $group->post('/{id}',        [OrderController::class, 'update']);
     $group->post('/{id}/delete', [OrderController::class, 'delete']);
-});
+})->add(AdminMiddleware::class);
 
 // --- Order Items ---
 $app->group('/order-items', function ($group) {
@@ -389,7 +402,7 @@ $app->group('/order-items', function ($group) {
     $group->get('/{id}',         [OrderItemController::class, 'viewDetails']);
     $group->post('/{id}',        [OrderItemController::class, 'update']);
     $group->post('/{id}/delete', [OrderItemController::class, 'delete']);
-});
+})->add(AdminMiddleware::class);
 
 // --- API ---
 $app->get('/api/search', [EventController::class, 'searchJson']);
@@ -402,12 +415,15 @@ $app->group('/cart', function ($group) {
     $group->post('/expire',               [CartController::class, 'expire']);
 });
 
-$app->get('/checkout',         [CartController::class, 'showCheckout']);
-$app->post('/checkout',        [CartController::class, 'checkout']);
-$app->get('/checkout/success', [CartController::class, 'checkoutSuccess']);
-$app->get('/checkout/cancel',  [CartController::class, 'checkoutCancel']);
 
-// Stripe webhooks — no auth middleware; signature verified inside the controller
+$app->group('/checkout', function ($group) {
+    $group->get('',         [CartController::class, 'showCheckout'])->add(AuthMiddleware::class);
+    $group->post('',        [CartController::class, 'checkout'])->add(AuthMiddleware::class);
+    $group->get('/success', [CartController::class, 'checkoutSuccess']);
+    $group->get('/cancel',  [CartController::class, 'checkoutCancel']);
+});
+
+
 $app->post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
 
 
@@ -418,6 +434,8 @@ $app->get('/lang/{locale}', function (Request $request, Response $response, arra
     if (in_array($args['locale'], $allowed, true)) {
         $_SESSION['lang'] = $args['locale'];
     }
+
+
     $referer = $request->getHeaderLine('Referer');
     $dest = $basePath . '/';
     if ($referer) {

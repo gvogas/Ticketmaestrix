@@ -1,17 +1,10 @@
-﻿{% extends "layout.html.twig" %}
+{% extends "layout.html.twig" %}
 {% block title %}{{ trans_cat(category.name ?? '')|default(trans('events.header')) }} - {{ trans('app.title') }}{% endblock %}
 {% block head %}
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-
-    :root {
-        --brand-purple: #5E246E;
-        --brand-hover: #4a1d56;
-    }
 
     body {
         background-color: #ffffff;
-        font-family: 'Inter', sans-serif;
         color: #1a202c;
     }
 

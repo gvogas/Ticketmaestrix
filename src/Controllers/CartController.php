@@ -42,10 +42,6 @@ class CartController
     /** GET /checkout — display the order summary and "Pay with Stripe" button. */
     public function showCheckout(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireLogin($response, $this->basePath)) {
-            return $redirect;
-        }
-
         // Admins should manage the system, not use the checkout flow
         if (Auth::isAdmin()) {
             return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
@@ -99,6 +95,7 @@ class CartController
 
         Cart::add($ticketId, max(1, $qty));
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.cart_added'];
         return $response->withHeader('Location', $this->basePath . '/cart')->withStatus(302);
     }
 
@@ -107,6 +104,7 @@ class CartController
     {
         Cart::remove((int) ($args['ticket_id'] ?? 0));
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.cart_removed'];
         return $response
             ->withHeader('Location', $this->basePath . '/cart')
             ->withStatus(302);
@@ -117,6 +115,7 @@ class CartController
     {
         Cart::clear();
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.cart_cleared'];
         return $response
             ->withHeader('Location', $this->basePath . '/cart')
             ->withStatus(302);
@@ -147,10 +146,6 @@ class CartController
      */
     public function checkout(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireLogin($response, $this->basePath)) {
-            return $redirect;
-        }
-
         if (Auth::isAdmin()) {
             return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
         }

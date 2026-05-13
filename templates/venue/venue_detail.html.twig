@@ -1,48 +1,7 @@
-﻿{% extends "layout.html.twig" %}
+{% extends "layout.html.twig" %}
 {% block title %}{{ venue.name }} - {{ trans('app.title') }}{% endblock %}
 {% block head %}
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-
-    :root {
-        --brand-purple: #5E246E;
-        --brand-hover: #4a1d56;
-        --bg-light: #f8fafc;
-        --border-color: #e2e8f0;
-    }
-
-    body {
-        background-color: #ffffff;
-        font-family: 'Inter', sans-serif;
-        color: #1a202c;
-    }
-
-    /* Admin Header Section */
-    .admin-header {
-        padding: 3rem 0 2rem 0;
-        border-bottom: 1px solid var(--border-color);
-        margin-bottom: 3rem;
-    }
-
-    .btn-mgmt {
-        background: white;
-        border: 1px solid var(--border-color);
-        color: #4a5568;
-        font-weight: 600;
-        border-radius: 10px;
-        padding: 10px 20px;
-        transition: all 0.2s;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-    }
-
-    .btn-mgmt:hover {
-        border-color: var(--brand-purple);
-        color: var(--brand-purple);
-        background: #fdfaff;
-    }
-
     /* Venue Detail Card */
     .detail-container {
         max-width: 900px;
@@ -166,7 +125,7 @@
                         <div class="info-pill">
                             <span class="label-text">{{ trans('vadmin.max_capacity') }}</span>
                             <div class="value-text">
-                                <i class="bi bi-people-fill me-2 text-muted"></i>{{ venue.capacity|number_format ?: '—' }} {{ trans('vadmin.seats') }}
+                                <i class="bi bi-people-fill me-2 text-muted"></i>{{ venue.capacity|number_format ?: '�' }} {{ trans('vadmin.seats') }}
                             </div>
                         </div>
                     </div>

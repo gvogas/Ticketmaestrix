@@ -1,17 +1,10 @@
-﻿{% extends "layout.html.twig" %}
+{% extends "layout.html.twig" %}
 {% block title %}{{ trans('app.title') }} - {{ trans('cart.checkout') }}{% endblock %}
 {% block head %}
 <style>
-    :root {
-        --brand-purple: #5E246E;
-        --brand-dark: #371840;
-    }
     body { background-color: #ffffff; }
 
     /* Layout Styling */
-    .btn-purple { background-color: var(--brand-purple); color: white; border: none; }
-    .btn-purple:hover { background-color: var(--brand-dark); color: white; }
-
     .timer-banner {
         background-color: #FFF4E6;
         border: 1px solid #FFD8A8;
@@ -86,9 +79,9 @@
                                 <div class="mt-1">
                                     {% if item.on_sale %}
                                         <span class="text-decoration-line-through text-muted small me-1">${{ item.original_price|number_format(2) }}</span>
-                                        <span class="text-danger fw-bold">${{ item.price|number_format(2) }} × {{ item.quantity }}</span>
+                                        <span class="text-danger fw-bold">${{ item.price|number_format(2) }} Ã {{ item.quantity }}</span>
                                     {% else %}
-                                        <span class="text-primary fw-bold">${{ item.price|number_format(2) }} × {{ item.quantity }}</span>
+                                        <span class="text-primary fw-bold">${{ item.price|number_format(2) }} Ã {{ item.quantity }}</span>
                                     {% endif %}
                                     <span class="ms-2 fw-bold">${{ item.total|number_format(2) }}</span>
                                 </div>

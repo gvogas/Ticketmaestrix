@@ -30,9 +30,6 @@ class VenueController
 
     public function create(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $html = $this->twig->render('venue/create.html.twig', [
             'base_path' => $this->basePath,
         ]);
@@ -42,9 +39,6 @@ class VenueController
 
     public function store(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
 
         $data = (array) ($request->getParsedBody() ?? []);
 
@@ -75,14 +69,12 @@ class VenueController
             lng:         !empty($data['lng']) ? (float) $data['lng'] : null,
         );
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.venue_created'];
         return $response->withHeader('Location', $this->basePath . '/venues')->withStatus(302);
     }
 
     public function edit(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
 
         $venue = $this->venueModel->getById((int) $args['id']);
         if (!$venue) {
@@ -99,9 +91,6 @@ class VenueController
 
     public function update(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
 
         $venue = $this->venueModel->load((int) $args['id']);
         if (!$venue->id) {
@@ -137,18 +126,17 @@ class VenueController
         $venue->lng         = !empty($data['lng']) ? (float) $data['lng'] : null;
         $this->venueModel->save($venue);
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.venue_updated'];
         return $response->withHeader('Location', $this->basePath . '/venues')->withStatus(302);
     }
 
     public function destroy(Request $request, Response $response, array $args): Response
     {
-        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
-            return $redirect;
-        }
         $venue = $this->venueModel->load((int) $args['id']);
         if ($venue->id) {
             $this->venueModel->delete($venue);
         }
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.venue_deleted'];
         return $response->withHeader('Location', $this->basePath . '/venues')->withStatus(302);
     }
 

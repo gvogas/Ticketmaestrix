@@ -1,68 +1,7 @@
-ï»¿{% extends "layout.html.twig" %}
+{% extends "layout.html.twig" %}
 {% block title %}{{ trans('tadmin.crud.new') }} - {{ trans('app.title') }}{% endblock %}
 {% block head %}
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-
-    :root {
-        --brand-purple: #5E246E;
-        --brand-hover: #4a1d56;
-        --bg-light: #f8fafc;
-        --border-color: #e2e8f0;
-    }
-
-    body {
-        background-color: #ffffff;
-        font-family: 'Inter', sans-serif;
-        color: #1a202c;
-    }
-
-    /* Admin Header Section */
-    .admin-header {
-        padding: 3rem 0 2rem 0;
-        border-bottom: 1px solid var(--border-color);
-        margin-bottom: 3rem;
-    }
-
-    /* Management Buttons */
-    .btn-purple {
-        background-color: var(--brand-purple) !important;
-        color: white !important;
-        border-radius: 10px;
-        font-weight: 700;
-        padding: 12px 24px;
-        border: none !important;
-        transition: all 0.3s ease;
-        text-decoration: none !important;
-        display: inline-flex;
-        align-items: center;
-    }
-
-    .btn-purple:hover {
-        background-color: var(--brand-hover) !important;
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(94, 36, 110, 0.25);
-    }
-
-    .btn-mgmt {
-        background: white;
-        border: 1px solid var(--border-color);
-        color: #4a5568;
-        font-weight: 600;
-        border-radius: 10px;
-        padding: 10px 20px;
-        transition: all 0.2s;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-    }
-
-    .btn-mgmt:hover {
-        border-color: var(--brand-purple);
-        color: var(--brand-purple);
-        background: #fdfaff;
-    }
-
     /* Form Styling */
     .form-container {
         max-width: 800px;
@@ -135,7 +74,7 @@
                         <label for="event_id" class="form-label">{{ trans('tadmin.cud.event') }}</label>
                         <select id="event_id" name="event_id" required
                                 class="form-select{{ errors.event_id is defined ? ' is-invalid' : '' }}">
-                            <option value="">â€” Choose an event â€”</option>
+                            <option value="">— Choose an event —</option>
                             {% for event in events %}
                             <option value="{{ event.id }}">{{ event.title }} ({{ event.date }})</option>
                             {% endfor %}
