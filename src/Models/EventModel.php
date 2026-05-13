@@ -114,6 +114,8 @@ class EventModel
             $venue = $venues->getById((int) ($hydrated->venue_id ?? 0));
             $hydrated->venue_name    = $venue ? (string) $venue->name : '';
             $hydrated->venue_address = $venue ? (string) $venue->address : '';
+            $hydrated->venue_lat     = $venue && isset($venue->lat) ? (float) $venue->lat : null;
+            $hydrated->venue_lng     = $venue && isset($venue->lng) ? (float) $venue->lng : null;
             
             // Add ticket pricing
             $hydrated->min_price = $tickets->minPriceForEvent((int) ($hydrated->id ?? 0));
@@ -132,13 +134,15 @@ class EventModel
     }
 
 
-public function getPaginated($limit, $offset) {
-    return R::findAll('events', ' LIMIT ? OFFSET ? ', [$limit, $offset]);
-}
+    public function getPaginated(int $limit, int $offset): array
+    {
+        return R::findAll('events', ' LIMIT ? OFFSET ? ', [$limit, $offset]);
+    }
 
-public function countAll() {
-    return R::count('events');
-}
+    public function countAll(): int
+    {
+        return (int) R::count('events');
+    }
 
 /**
  * Search and filter events by query string, category, and venue.

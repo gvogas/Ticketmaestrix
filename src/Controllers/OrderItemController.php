@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controllers;
 
-use App\Models\OrderItemModel as OrderItemModel;
+use App\Helpers\Auth;
+use App\Models\OrderItemModel;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Twig\Environment;
@@ -12,13 +15,12 @@ class OrderItemController {
         private Environment $twig,
         private OrderItemModel $orderItemModel,
         private string $basePath,
-    ) {
-        $this->twig = $twig;
-        $this->orderItemModel = $orderItemModel;
-        $this->basePath = $basePath;
-    }
+    ) {}
 
      public function store(Request $request, Response $response): Response {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
        $data = $request->getParsedBody();
 
         $this->orderItemModel->create(
@@ -34,6 +36,9 @@ class OrderItemController {
      }
 
      public function update(Request $request, Response $response, array $args): Response {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
         $id = (int) $args['id'];
         $data = $request->getParsedBody();
 
@@ -55,6 +60,9 @@ class OrderItemController {
 
      // Hard-delete one order_item by id.
      public function delete(Request $request, Response $response, array $args): Response {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
         $orderItem = $this->orderItemModel->load((int) ($args['id'] ?? 0));
 
         if ($orderItem->id) {
@@ -69,6 +77,9 @@ class OrderItemController {
 
      // Show one order_item's detail page.
      public function viewDetails(Request $request, Response $response, array $args): Response {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
         $orderItem = $this->orderItemModel->load((int) ($args['id'] ?? 0));
 
         if (!$orderItem->id) {
@@ -88,6 +99,9 @@ class OrderItemController {
 
      // List all line items belonging to a given order id.
      public function byOrder(Request $request, Response $response, array $args): Response {
+        if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
+            return $redirect;
+        }
         $orderId    = (int) ($args['id'] ?? 0);
         $orderItems = $this->orderItemModel->findByOrder($orderId);
 

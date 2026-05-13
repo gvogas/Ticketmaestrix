@@ -68,13 +68,21 @@ class AuthController
 
         if ($user && $user->id && password_verify($password, $user->password)) {
             unset($_SESSION['login_attempts'], $_SESSION['login_lockout_until']);
-            $_SESSION['pending_user_id'] = (int) $user->id;
 
             if (empty($user->totp_secret)) {
-                $_SESSION['2fa_setup_pending_user_id'] = (int) $user->id;
+                $_SESSION['pending_user_id']            = (int) $user->id;
+                $_SESSION['2fa_setup_pending_user_id']  = (int) $user->id;
                 return $response->withHeader('Location', $this->basePath . '/2fa/setup')->withStatus(302);
             }
 
+            // This browser already passed 2FA for this account — skip it.
+            if (Auth::check2faTrust((int) $user->id)) {
+                Auth::login((int) $user->id);
+                Auth::setRememberToken((int) $user->id);
+                return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
+            }
+
+            $_SESSION['pending_user_id'] = (int) $user->id;
             return $response
                 ->withHeader('Location', $this->basePath . '/2fa/login')
                 ->withStatus(302);
@@ -173,8 +181,8 @@ public function show2faSetup(Request $request, Response $response): Response
                 : $signupData['email'];
 
             $cached = $pendingUserId
-                ? $this->otpService->generateForExisting($pendingUserId, $email)
-                : $this->otpService->generate($email, $signupData);
+                ? $this->otpService->generateForExisting($email)
+                : $this->otpService->generate($email);
 
             $_SESSION['2fa_setup_data'] = $cached;
         }
@@ -203,33 +211,54 @@ public function show2faSetup(Request $request, Response $response): Response
                 ->withStatus(302);
         }
 
-        $otp = (string) ($request->getParsedBody()['otp'] ?? '');
-
-        if ($pendingUserId) {
-            if (!$this->otpService->verify($pendingUserId, $otp)) {
-                $_SESSION['2fa_setup_error'] = 'Invalid code. Please try again.';
-                return $response
-                    ->withHeader('Location', $this->basePath . '/2fa/setup')
-                    ->withStatus(302);
-            }
-            unset($_SESSION['2fa_setup_pending_user_id']);
+        // Session may have expired between QR display and code entry.
+        $setupData = $_SESSION['2fa_setup_data'] ?? null;
+        if (!$setupData || empty($setupData['secret'])) {
+            // Existing user who just set up their first TOTP — log them in now
+            Auth::login((int) $pendingUserId);
+            Auth::setRememberToken((int) $pendingUserId);
             return $response
-                ->withHeader('Location', $this->basePath . '/2fa/login')
+                ->withHeader('Location', $this->basePath . '/')
                 ->withStatus(302);
         }
 
-        $user = $this->users->findByEmail($signupData['email']);
-        if (!$user || !$this->otpService->verify((int) $user->id, $otp)) {
+        $otp    = (string) ($request->getParsedBody()['otp'] ?? '');
+        $secret = $setupData['secret'];
+
+        if (!$this->otpService->verifyCode($secret, $otp)) {
             $_SESSION['2fa_setup_error'] = 'Invalid code. Please try again.';
             return $response
                 ->withHeader('Location', $this->basePath . '/2fa/setup')
                 ->withStatus(302);
         }
 
-        unset($_SESSION['signup_user_data']);
+        // Code verified — now safe to persist.
+        if ($pendingUserId) {
+            // Existing user completing 2FA setup for the first time.
+            $user = $this->users->load((int) $pendingUserId);
+            if (!\App\Helpers\BeanHelper::isValidBean($user)) {
+                // User was deleted between login and 2FA completion — restart.
+                unset($_SESSION['2fa_setup_pending_user_id'], $_SESSION['2fa_setup_data']);
+                return $response->withHeader('Location', $this->basePath . '/login')->withStatus(302);
+            }
+            $user->totp_secret = $secret;
+            $this->users->save($user);
+            unset($_SESSION['2fa_setup_pending_user_id'], $_SESSION['2fa_setup_data']);
+            return $response
+                ->withHeader('Location', $this->basePath . '/2fa/login')
+                ->withStatus(302);
+        }
+
+        // New signup — create the account now that setup is confirmed.
+        $signupData['totp_secret'] = $secret;
+        $newUser = $this->users->create($signupData);
+        unset($_SESSION['signup_user_data'], $_SESSION['2fa_setup_data']);
+        Auth::login((int) $newUser->id);
+        Auth::setRememberToken((int) $newUser->id);
+        Auth::set2faTrustToken((int) $newUser->id);
 
         return $response
-            ->withHeader('Location', $this->basePath . '/login')
+            ->withHeader('Location', $this->basePath . '/')
             ->withStatus(302);
     }
 
@@ -265,6 +294,8 @@ public function show2faSetup(Request $request, Response $response): Response
         }
 
         Auth::login((int) $pendingId);
+        Auth::setRememberToken((int) $pendingId);
+        Auth::set2faTrustToken((int) $pendingId);
         unset($_SESSION['pending_user_id']);
 
         return $response
