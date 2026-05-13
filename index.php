@@ -76,6 +76,10 @@ R::setup(
 $debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
 R::freeze(!$debug);
 
+// If no session but a valid auth_token cookie exists, restore the session
+// so the user stays logged in without re-entering credentials.
+Auth::checkRememberToken();
+
 
 // ============== TEMPLATE ENGINE ==============
 $loader = new FilesystemLoader(__DIR__ . '/templates');

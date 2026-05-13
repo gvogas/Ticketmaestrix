@@ -213,8 +213,11 @@ public function show2faSetup(Request $request, Response $response): Response
                     ->withStatus(302);
             }
             unset($_SESSION['2fa_setup_pending_user_id']);
+            // Existing user who just set up their first TOTP — log them in now
+            Auth::login((int) $pendingUserId);
+            Auth::setRememberToken((int) $pendingUserId);
             return $response
-                ->withHeader('Location', $this->basePath . '/2fa/login')
+                ->withHeader('Location', $this->basePath . '/')
                 ->withStatus(302);
         }
 
@@ -228,8 +231,11 @@ public function show2faSetup(Request $request, Response $response): Response
 
         unset($_SESSION['signup_user_data']);
 
+        Auth::login((int) $user->id);
+        Auth::setRememberToken((int) $user->id);
+
         return $response
-            ->withHeader('Location', $this->basePath . '/login')
+            ->withHeader('Location', $this->basePath . '/')
             ->withStatus(302);
     }
 
@@ -265,6 +271,7 @@ public function show2faSetup(Request $request, Response $response): Response
         }
 
         Auth::login((int) $pendingId);
+        Auth::setRememberToken((int) $pendingId);
         unset($_SESSION['pending_user_id']);
 
         return $response

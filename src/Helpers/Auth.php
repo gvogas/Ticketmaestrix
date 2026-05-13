@@ -35,6 +35,8 @@ class Auth
     /** Wipe all session data and the cookie, ending the login. */
     public static function logout(): void
     {
+        self::clearRememberToken();
+
         $_SESSION = [];
         if (ini_get('session.use_cookies')) {
             $params = session_get_cookie_params();
@@ -51,6 +53,102 @@ class Auth
         }
         session_destroy();
         self::$cachedUser = null;
+    }
+
+    // ──────────────────────────────────────────────
+    //  Remember-me token (persistent cookie after 2FA)
+    // ──────────────────────────────────────────────
+
+    /**
+     * Generate a random token, store a SHA-256 hash in the authtoken table,
+     * and set a cookie valid for 2 hours.
+     */
+    public static function setRememberToken(int $userId): void
+    {
+        $token = bin2hex(random_bytes(32));
+        $hash  = hash('sha256', $token);
+
+        // Purge any existing tokens for this user so only one device is active.
+        $old = R::find('authtoken', 'user_id = ?', [$userId]);
+        R::trashAll($old);
+
+        $bean = R::dispense('authtoken');
+        $bean->user_id    = $userId;
+        $bean->token_hash = $hash;
+        $bean->expires_at = date('Y-m-d H:i:s', time() + 7200);
+        R::store($bean);
+
+        self::writeRememberCookie($token, time() + 7200);
+    }
+
+    /**
+     * If no session exists but a valid auth_token cookie is present,
+     * log the user in via the stored token silently.
+     *
+     * Should be called once per request, right after the database is ready
+     * and before any auth-dependent code runs.
+     */
+    public static function checkRememberToken(): void
+    {
+        if (self::userId() !== null) {
+            return; // already authenticated via session
+        }
+
+        $token = $_COOKIE['auth_token'] ?? '';
+        if ($token === '') {
+            return;
+        }
+
+        $hash = hash('sha256', $token);
+        $bean = R::findOne('authtoken', 'token_hash = ? AND expires_at > NOW()', [$hash]);
+
+        if (!BeanHelper::isValidBean($bean)) {
+            self::expireRememberCookie();
+            return;
+        }
+
+        // Token is valid — restore the session.
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = (int) $bean->user_id;
+        self::$cachedUser    = null;
+    }
+
+    /**
+     * Delete the current auth_token from the database and expire the cookie.
+     */
+    public static function clearRememberToken(): void
+    {
+        $token = $_COOKIE['auth_token'] ?? '';
+        if ($token !== '') {
+            $hash = hash('sha256', $token);
+            $bean = R::findOne('authtoken', 'token_hash = ?', [$hash]);
+            if (BeanHelper::isValidBean($bean)) {
+                R::trash($bean);
+            }
+        }
+        self::expireRememberCookie();
+    }
+
+    private static function writeRememberCookie(string $token, int $expires): void
+    {
+        setcookie('auth_token', $token, [
+            'expires'  => $expires,
+            'path'     => '/',
+            'httponly' => true,
+            'samesite' => 'Lax',
+            'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        ]);
+    }
+
+    private static function expireRememberCookie(): void
+    {
+        setcookie('auth_token', '', [
+            'expires'  => time() - 42000,
+            'path'     => '/',
+            'httponly' => true,
+            'samesite' => 'Lax',
+            'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        ]);
     }
 
     /** Return the current user's id from session, or null when logged out. */

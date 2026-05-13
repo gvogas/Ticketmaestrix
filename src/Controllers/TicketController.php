@@ -79,7 +79,7 @@ class TicketController
             $eventId,
         );
 
-        return $response->withHeader('Location', $this->basePath . '/events/' . $eventId . '/tickets')->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/events/' . $eventId)->withStatus(302);
     }
 
     public function edit(Request $request, Response $response, array $args): Response
