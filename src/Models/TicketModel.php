@@ -22,7 +22,14 @@ class TicketModel
 
     public function findByEvent(int $eventId): array
     {
-        return BeanHelper::castBeanArray(R::find('ticket', 'event_id = ? ORDER BY `row`, seat', [$eventId]));
+        return BeanHelper::castBeanArray(
+            R::find('ticket', 'event_id = ? AND (sold IS NULL OR sold = 0) ORDER BY `row`, seat', [$eventId])
+        );
+    }
+
+    public function markSold(int $ticketId): void
+    {
+        R::exec('UPDATE ticket SET sold = 1 WHERE id = ?', [$ticketId]);
     }
 
     public function load(int $id): mixed
@@ -104,7 +111,7 @@ class TicketModel
                     THEN GREATEST(0, price - sale_amount)
                     ELSE price
                 END
-            ) FROM ticket WHERE event_id = ?",
+            ) FROM ticket WHERE event_id = ? AND (sold IS NULL OR sold = 0)",
             [$eventId]
         );
         return $value === null ? null : (float) $value;

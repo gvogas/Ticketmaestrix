@@ -92,6 +92,11 @@ class CartController
         $ticketId = (int) ($data['ticket_id'] ?? 0);
         $qty      = (int) ($data['quantity']  ?? 1);
 
+        $ticket = $this->ticketModel->getById($ticketId);
+        if ($ticket === null || !empty($ticket->sold)) {
+            return $response->withHeader('Location', $this->basePath . '/cart')->withStatus(302);
+        }
+
         Cart::add($ticketId, max(1, $qty));
 
         return $response->withHeader('Location', $this->basePath . '/cart')->withStatus(302);
@@ -301,6 +306,7 @@ class CartController
                 $item->order_id  = $orderId;
                 $item->ticket_id = (int) $row['ticket_id'];
                 R::store($item);
+                $this->ticketModel->markSold((int) $row['ticket_id']);
             }
 
             $user = R::load('users', $userId);

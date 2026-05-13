@@ -117,7 +117,7 @@ class Cart
         $rows = [];
         foreach (self::items() as $ticketId => $qty) {
             $ticket = $tickets->getById((int) $ticketId);
-            if ($ticket === null) {
+            if ($ticket === null || !empty($ticket->sold)) {
                 continue;
             }
             $event = $events->getById((int) $ticket->event_id);

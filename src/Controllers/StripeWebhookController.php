@@ -8,6 +8,7 @@ use App\Helpers\BeanHelper;
 use App\Models\OrderItemModel;
 use App\Models\OrderModel;
 use App\Models\PointsHistoryModel;
+use App\Models\TicketModel;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use RedBeanPHP\R;
@@ -29,6 +30,7 @@ class StripeWebhookController
         private OrderModel         $orderModel,
         private OrderItemModel     $orderItemModel,
         private PointsHistoryModel $pointsHistoryModel,
+        private TicketModel        $ticketModel,
         private string             $webhookSecret,
     ) {}
 
@@ -100,6 +102,7 @@ class StripeWebhookController
                     $item->order_id  = $orderId;
                     $item->ticket_id = (int) $row['ticket_id'];
                     R::store($item);
+                    $this->ticketModel->markSold((int) $row['ticket_id']);
                 }
 
                 $user = R::load('users', $userId);
