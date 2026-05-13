@@ -64,6 +64,9 @@ $dotenv->load();
 ini_set('session.cookie_lifetime', '0');
 session_start();
 
+// Consume flash message set by a previous redirect — available in templates as {{ flash_message }}
+$flashMessage = $_SESSION['flash'] ?? null;
+unset($_SESSION['flash']);
 
 
 // ============== DATABASE ==============
@@ -91,7 +94,7 @@ $twig->addGlobal('is_admin',        Auth::isAdmin());
 $twig->addGlobal('cart_count',      Cart::count());
 // Unix timestamp so the JS can compute seconds-remaining without server drift.
 $twig->addGlobal('cart_expires_at', (int) ($_SESSION['cart_expires_at'] ?? 0));
-
+$twig->addGlobal('flash_message', $flashMessage);
 
 
 // ============== I18N — symfony/translation ================

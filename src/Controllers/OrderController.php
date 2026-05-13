@@ -26,6 +26,7 @@ class OrderController {
            (int) ($data['user_id'] ?? 0)
        );
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.order_created'];
         return $response
             ->withHeader('Location', $this->basePath . '/orders')
             ->withStatus(302);
@@ -45,6 +46,7 @@ class OrderController {
             $this->orderModel->save($order);
         }
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.order_updated'];
         return $response
             ->withHeader('Location', $this->basePath . '/orders')
             ->withStatus(302);
@@ -59,6 +61,7 @@ class OrderController {
             $this->orderModel->delete($order);
         }
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.order_deleted'];
         return $response
             ->withHeader('Location', $this->basePath . '/orders')
             ->withStatus(302);

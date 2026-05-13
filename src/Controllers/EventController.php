@@ -132,6 +132,7 @@ class EventController
             (string) ($data['event_image'] ?? ''),
         );
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.event_created'];
         return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
     }
 
@@ -198,6 +199,7 @@ class EventController
             $this->eventModel->save($event);
         }
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.event_updated'];
         return $response->withHeader('Location', $this->basePath . '/events/' . $id . '/edit')->withStatus(302);
     }
 
@@ -210,6 +212,7 @@ class EventController
         if ($event->id) {
             $this->eventModel->delete($event);
         }
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.event_deleted'];
         return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
     }
 

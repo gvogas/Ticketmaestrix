@@ -72,6 +72,7 @@ class VenueController
             (int) ($data['capacity'] ?? 0),
         );
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.venue_created'];
         return $response->withHeader('Location', $this->basePath . '/venues')->withStatus(302);
     }
 
@@ -132,6 +133,7 @@ class VenueController
             $this->venueModel->save($venue);
         }
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.venue_updated'];
         return $response->withHeader('Location', $this->basePath . '/venues')->withStatus(302);
     }
 
@@ -144,6 +146,7 @@ class VenueController
         if ($venue->id) {
             $this->venueModel->delete($venue);
         }
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.venue_deleted'];
         return $response->withHeader('Location', $this->basePath . '/venues')->withStatus(302);
     }
 
