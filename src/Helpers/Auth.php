@@ -183,7 +183,7 @@ class Auth
             [$hash, $userId]
         );
 
-        return BeanHelper::isValidBean($bean);
+        return $bean !== null && BeanHelper::isValidBean($bean);
     }
 
     /**
@@ -195,7 +195,7 @@ class Auth
         if ($token !== '') {
             $hash = hash('sha256', $token);
             $bean = R::findOne('tfatoken', 'token_hash = ?', [$hash]);
-            if (BeanHelper::isValidBean($bean)) {
+            if ($bean !== null && BeanHelper::isValidBean($bean)) {
                 R::trash($bean);
             }
         }
