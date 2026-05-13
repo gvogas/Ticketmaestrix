@@ -53,7 +53,8 @@ class VenueController
         if (empty($data['address']))  $errors['address']  = ['Address is required.'];
         if (empty($data['capacity'])) $errors['capacity'] = ['Capacity is required.'];
         elseif (!is_numeric($data['capacity']) || (int)$data['capacity'] <= 0) $errors['capacity'] = ['Capacity must be a positive number.'];
-
+        if (!empty($data['lat']) && !is_numeric($data['lat'])) $errors['lat'] = ['Latitude must be a numeric value.'];
+        if (!empty($data['lng']) && !is_numeric($data['lng'])) $errors['lng'] = ['Longitude must be a numeric value.'];
         if ($errors) {
             $html = $this->twig->render('venue/create.html.twig', [
                 'base_path' => $this->basePath,
@@ -65,11 +66,13 @@ class VenueController
         }
 
         $this->venueModel->create(
-            (string) ($data['name'] ?? ''),
-            (string) ($data['description'] ?? ''),
-            (string) ($data['image_url'] ?? ''),
-            (string) ($data['address'] ?? ''),
-            (int) ($data['capacity'] ?? 0),
+            name:        (string) ($data['name'] ?? ''),
+            description: (string) ($data['description'] ?? ''),
+            imageUrl:    (string) ($data['image_url'] ?? ''),
+            address:     (string) ($data['address'] ?? ''),
+            capacity:    (int) ($data['capacity'] ?? 0),
+            lat:         !empty($data['lat']) ? (float) $data['lat'] : null,
+            lng:         !empty($data['lng']) ? (float) $data['lng'] : null,
         );
 
         $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.venue_created'];
@@ -81,8 +84,8 @@ class VenueController
         if ($redirect = Auth::requireAdmin($response, $this->basePath)) {
             return $redirect;
         }
-        $venue = $this->venueModel->getById((int) $args['id']);
 
+        $venue = $this->venueModel->getById((int) $args['id']);
         if (!$venue) {
             return $response->withHeader('Location', $this->basePath . '/venues')->withStatus(302);
         }
@@ -101,7 +104,11 @@ class VenueController
             return $redirect;
         }
 
-        $id   = (int) $args['id'];
+        $venue = $this->venueModel->load((int) $args['id']);
+        if (!$venue->id) {
+            return $response->withHeader('Location', $this->basePath . '/venues')->withStatus(302);
+        }
+
         $data = (array) ($request->getParsedBody() ?? []);
 
         $errors = [];
@@ -109,10 +116,10 @@ class VenueController
         if (empty($data['address']))  $errors['address']  = ['Address is required.'];
         if (empty($data['capacity'])) $errors['capacity'] = ['Capacity is required.'];
         elseif (!is_numeric($data['capacity']) || (int)$data['capacity'] <= 0) $errors['capacity'] = ['Capacity must be a positive number.'];
-
+        if (!empty($data['lat']) && !is_numeric($data['lat'])) $errors['lat'] = ['Latitude must be a numeric value.'];
+        if (!empty($data['lng']) && !is_numeric($data['lng'])) $errors['lng'] = ['Longitude must be a numeric value.'];
         if ($errors) {
-            $venue = $this->venueModel->getById($id);
-            $html  = $this->twig->render('venue/edit.html.twig', [
+            $html = $this->twig->render('venue/edit.html.twig', [
                 'base_path' => $this->basePath,
                 'venue'     => $venue,
                 'errors'    => $errors,
@@ -122,16 +129,14 @@ class VenueController
             return $response->withStatus(422);
         }
 
-        $venue = $this->venueModel->load($id);
-
-        if ($venue->id) {
-            $venue->name        = (string) ($data['name'] ?? $venue->name);
-            $venue->description = (string) ($data['description'] ?? $venue->description);
-            $venue->image_url   = (string) ($data['image_url'] ?? $venue->image_url);
-            $venue->address     = (string) ($data['address'] ?? $venue->address);
-            $venue->capacity    = (int) ($data['capacity'] ?? $venue->capacity);
-            $this->venueModel->save($venue);
-        }
+        $venue->name        = (string) ($data['name'] ?? $venue->name);
+        $venue->description = (string) ($data['description'] ?? $venue->description);
+        $venue->image_url   = (string) ($data['image_url'] ?? $venue->image_url);
+        $venue->address     = (string) ($data['address'] ?? $venue->address);
+        $venue->capacity    = (int) ($data['capacity'] ?? $venue->capacity);
+        $venue->lat         = !empty($data['lat']) ? (float) $data['lat'] : null;
+        $venue->lng         = !empty($data['lng']) ? (float) $data['lng'] : null;
+        $this->venueModel->save($venue);
 
         $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.venue_updated'];
         return $response->withHeader('Location', $this->basePath . '/venues')->withStatus(302);

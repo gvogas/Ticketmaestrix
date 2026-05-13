@@ -101,8 +101,12 @@ class HomeController
     }
 
     /**
-     * Map page: shows upcoming events in the sidebar list with their
+     * Map page: shows upcoming events on the map with their
      * venue + cheapest ticket price.
+     *
+     * For venues without stored lat/lng coordinates, the address is
+     * geocoded server-side (via Google Geocoding API) and cached back
+     * to the venue record so subsequent loads are instant.
      */
     public function showMap(Request $request, Response $response): Response
     {
@@ -112,13 +116,88 @@ class HomeController
             $this->ticketModel
         );
 
+        $apiKey = $_ENV['GOOGLE_MAPS_API_KEY'] ?? '';
+
+        // Server-side geocoding: for venues without coordinates, geocode
+        // the address and cache the result back to the venue record so
+        // subsequent page loads have instant markers.
+        if (!empty($apiKey)) {
+            foreach ($events as $event) {
+                if (
+                    ($event->venue_lat === null || $event->venue_lng === null)
+                    && !empty($event->venue_address)
+                ) {
+                    $coords = $this->geocodeAddress($event->venue_address, $apiKey);
+                    if ($coords !== null) {
+                        $event->venue_lat = $coords['lat'];
+                        $event->venue_lng = $coords['lng'];
+
+                        // Cache coordinates back to the venue record
+                        $venue = $this->venueModel->getById((int) ($event->venue_id ?? 0));
+                        if ($venue) {
+                            $venue->lat = $coords['lat'];
+                            $venue->lng = $coords['lng'];
+                            $this->venueModel->save($venue);
+                        }
+                    }
+                }
+            }
+        }
+
+        $mapEvents = array_map(function ($event) {
+            return [
+                'id'            => $event->id ?? 0,
+                'title'         => $event->title ?? '',
+                'venue_name'    => $event->venue_name ?? '',
+                'venue_address' => $event->venue_address ?? '',
+                'venue_lat'     => $event->venue_lat ?? null,
+                'venue_lng'     => $event->venue_lng ?? null,
+                'min_price'     => $event->min_price ?? null,
+                'date'          => $event->date ?? '',
+                'event_image'   => $event->event_image ?? '',
+                'category'      => $event->category ?? '',
+            ];
+        }, $events);
+
         $html = $this->twig->render('home/map.html.twig', [
             'base_path'     => $this->basePath,
             'current_route' => 'map',
             'events'        => $events,
+            'events_json'   => json_encode($mapEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT),
         ]);
 
         $response->getBody()->write($html);
         return $response;
+    }
+
+    /**
+     * Geocode an address string via the Google Geocoding API.
+     *
+     * Returns ['lat' => float, 'lng' => float] on success, or null on failure.
+     */
+    private function geocodeAddress(string $address, string $apiKey): ?array
+    {
+        $url = 'https://maps.googleapis.com/maps/api/geocode/json?address='
+             . urlencode($address) . '&key=' . $apiKey;
+
+        $context  = stream_context_create(['http' => ['timeout' => 3]]);
+        $response = file_get_contents($url, false, $context);
+        if ($response === false) {
+            error_log('Geocoding request failed for address: ' . $address);
+            return null;
+        }
+
+        $data = json_decode($response, true);
+        if (
+            ($data['status'] ?? '') !== 'OK'
+            || empty($data['results'][0]['geometry']['location'])
+        ) {
+            return null;
+        }
+
+        return [
+            'lat' => (float) $data['results'][0]['geometry']['location']['lat'],
+            'lng' => (float) $data['results'][0]['geometry']['location']['lng'],
+        ];
     }
 }

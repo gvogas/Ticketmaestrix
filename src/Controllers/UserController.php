@@ -107,7 +107,7 @@ class UserController
             return $response->withHeader('Location', $this->basePath . '/admin#users')->withStatus(302);
         }
 
-        $this->userModel->delete($userId);
+        $this->userModel->deleteById($userId);
 
         $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.user_deleted'];
         return $response->withHeader('Location', $this->basePath . '/admin#users')->withStatus(302);

@@ -43,11 +43,10 @@ class UserModel
         R::store($bean);
     }
 
-    // --- UPDATED FOR CONVENIENCE ---
     public function deleteById(int $id): void
     {
         $user = R::load('users', $id);
-        if ($user->id) {
+        if (BeanHelper::isValidBean($user)) {
             R::trash($user);
         }
     }
@@ -81,17 +80,6 @@ class UserModel
         R::store($user);
         return BeanHelper::castBeanProperties($user);
     }
-
-    public function delete(int $id): void
-{
-    // R::load finds the 'user' bean by its primary key ID
-    $user = R::load('users', $id);
-    
-    // If the user exists (id > 0), delete it from the database
-    if ($user->id) {
-        R::trash($user);
-    }
-}
 
     public function customerCount(): int
     {

@@ -79,6 +79,10 @@ R::setup(
 $debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
 R::freeze(!$debug);
 
+// If no session but a valid auth_token cookie exists, restore the session
+// so the user stays logged in without re-entering credentials.
+Auth::checkRememberToken();
+
 
 // ============== TEMPLATE ENGINE ==============
 $loader = new FilesystemLoader(__DIR__ . '/templates');
@@ -89,10 +93,13 @@ $twig   = new Environment($loader, [
 
 // Twig globals — exposed to every template so the navbar (and any other
 // partial) can render auth-aware UI without each controller passing them.
-$twig->addGlobal('current_user',    Auth::user());
-$twig->addGlobal('is_admin',        Auth::isAdmin());
-$twig->addGlobal('cart_count',      Cart::count());
+$twig->addGlobal('current_user',        Auth::user());
+$twig->addGlobal('is_admin',            Auth::isAdmin());
+$twig->addGlobal('cart_count',          Cart::count());
 // Unix timestamp so the JS can compute seconds-remaining without server drift.
+$twig->addGlobal('cart_expires_at',     (int) ($_SESSION['cart_expires_at'] ?? 0));
+$twig->addGlobal('google_maps_api_key', $_ENV['GOOGLE_MAPS_API_KEY'] ?? '');
+
 $twig->addGlobal('cart_expires_at', (int) ($_SESSION['cart_expires_at'] ?? 0));
 $twig->addGlobal('flash_message', $flashMessage);
 
@@ -203,6 +210,7 @@ $container->set(EventController::class, fn() => new EventController(
     new EventModel(),
     new CategoryModel(),
     new VenueModel(),
+    new TicketModel(),
     $basePath,
 ));
 
