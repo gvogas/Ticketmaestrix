@@ -205,6 +205,7 @@ $container->set(EventController::class, fn() => new EventController(
     new EventModel(),
     new CategoryModel(),
     new VenueModel(),
+    new TicketModel(),
     $basePath,
 ));
 

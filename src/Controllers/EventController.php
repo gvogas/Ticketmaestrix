@@ -20,6 +20,7 @@ class EventController
         private EventModel $eventModel,
         private CategoryModel $categoryModel,
         private VenueModel $venueModel,
+        private TicketModel $ticketModel,
         private string $basePath,
     ) {}
 
@@ -64,7 +65,7 @@ class EventController
         } else {
             // Regular users see a clean events listing page
             // Hydrate events with venue, category, and ticket information for the user view
-            $events = $this->eventModel->hydrate($events, $this->venueModel, new \App\Models\TicketModel(), $this->categoryModel);
+            $events = $this->eventModel->hydrate($events, $this->venueModel, $this->ticketModel, $this->categoryModel);
 
             $html = $this->twig->render('event/user_index.html.twig', [
                 'base_path'    => $this->basePath,
@@ -227,7 +228,7 @@ class EventController
         // For admin view, show basic event info (admin can manage from index page)
         // For user view, hydrate with venue, category, and ticket information
         if (!$isAdmin) {
-            $event = $this->eventModel->hydrate([$event], $this->venueModel, new \App\Models\TicketModel(), $this->categoryModel)[0];
+            $event = $this->eventModel->hydrate([$event], $this->venueModel, $this->ticketModel, $this->categoryModel)[0];
         }
 
         $html = $this->twig->render('event/event_detail.html.twig', [
@@ -267,7 +268,7 @@ class EventController
         if ($qLen >= 1 && $qLen <= 100) {
             $filters = ['q' => $q, 'category' => '', 'venue' => ''];
             $events  = $this->eventModel->search($filters, 10, 0);
-            $events  = $this->eventModel->hydrate($events, $this->venueModel, new TicketModel(), $this->categoryModel);
+            $events  = $this->eventModel->hydrate($events, $this->venueModel, $this->ticketModel, $this->categoryModel);
         }
 
         $data = array_map(function ($e) {

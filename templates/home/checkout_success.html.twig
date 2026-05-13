@@ -1,5 +1,5 @@
 {% extends "layout.html.twig" %}
-{% block title %}{{ trans('app.title') }} - Payment Successful{% endblock %}
+{% block title %}{{ trans('app.title') }} - {{ trans('checkout.success_title') }}{% endblock %}
 {% block navbar %}{% endblock %}
 {% block footer %}{% endblock %}
 {% block head %}
@@ -46,20 +46,19 @@
              style="width:60px;height:60px;background:white;color:#2e7d32;font-size:30px;">
             <i class="bi bi-check-lg"></i>
         </div>
-        <h1 class="fw-bold display-5">Payment Received!</h1>
-        <p class="fs-5 opacity-75">Thank you for your purchase.</p>
+        <h1 class="fw-bold display-5">{{ trans('checkout.success_header') }}</h1>
+        <p class="fs-5 opacity-75">{{ trans('checkout.success_subtitle') }}</p>
     </div>
 
     <div class="card success-container shadow-lg border-0 rounded-4 p-4 p-sm-5 text-center">
         <p class="text-muted mb-4">
-            Your payment was successful. Your order and tickets will appear in your
-            profile within a few moments.
+            {{ trans('checkout.success_body') }}
         </p>
         <a href="{{ base_path }}/profile" class="btn-primary-tm mb-3">
-            <i class="bi bi-person-circle me-2"></i>View My Profile
+            <i class="bi bi-person-circle me-2"></i>{{ trans('checkout.view_profile') }}
         </a>
         <div class="mt-2">
-            <a href="{{ base_path }}/events" class="text-muted small">Browse more events</a>
+            <a href="{{ base_path }}/events" class="text-muted small">{{ trans('checkout.browse_events') }}</a>
         </div>
     </div>
 

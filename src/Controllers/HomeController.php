@@ -163,7 +163,7 @@ class HomeController
             'base_path'     => $this->basePath,
             'current_route' => 'map',
             'events'        => $events,
-            'events_json'   => json_encode($mapEvents),
+            'events_json'   => json_encode($mapEvents, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT),
         ]);
 
         $response->getBody()->write($html);
@@ -180,8 +180,10 @@ class HomeController
         $url = 'https://maps.googleapis.com/maps/api/geocode/json?address='
              . urlencode($address) . '&key=' . $apiKey;
 
-        $response = @file_get_contents($url);
+        $context  = stream_context_create(['http' => ['timeout' => 3]]);
+        $response = file_get_contents($url, false, $context);
         if ($response === false) {
+            error_log('Geocoding request failed for address: ' . $address);
             return null;
         }
 
