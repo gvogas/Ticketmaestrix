@@ -271,7 +271,7 @@ return [
     '2fa.copied'            => 'Copié dans le presse-papiers !',
     '2fa.code_label'        => 'Code de vérification',
     '2fa.code_placeholder'  => '000000',
-    '2fa.verify_button'     => 'Vérifier &amp; Se connecter',
+    '2fa.verify_button'     => 'Vérifier & Se connecter',
     '2fa.setup_button'      => 'Activer l\'auth. à deux facteurs',
     '2fa.safety_note'       => 'L\'authentification à deux facteurs protège votre compte même si votre mot de passe est compromis.',
     '2fa.back'              => 'Retour à la connexion',

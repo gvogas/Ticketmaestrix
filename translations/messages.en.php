@@ -264,7 +264,7 @@ return [
     '2fa.copied'            => 'Copied to clipboard!',
     '2fa.code_label'        => 'Verification Code',
     '2fa.code_placeholder'  => '000000',
-    '2fa.verify_button'     => 'Verify &amp; Sign In',
+    '2fa.verify_button'     => 'Verify & Sign In',
     '2fa.setup_button'      => 'Enable Two-Factor Auth',
     '2fa.safety_note'       => 'Two-factor authentication keeps your account safe even if your password is compromised.',
     '2fa.back'              => 'Back to Login',
