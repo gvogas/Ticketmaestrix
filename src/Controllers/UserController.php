@@ -54,6 +54,7 @@ class UserController
             'role'         => $data['role'] ?? 'user',
         ]);
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.user_created'];
         return $response
             ->withHeader('Location', $this->basePath . '/admin#users')
             ->withStatus(302);
@@ -72,6 +73,7 @@ class UserController
             $this->userModel->save($user);
         }
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.role_updated'];
         return $response
             ->withHeader('Location', $this->basePath . '/admin#users')
             ->withStatus(302);
@@ -87,6 +89,7 @@ class UserController
         $data = $request->getParsedBody();
         $this->userModel->update($id, $data);
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.user_updated'];
         return $response
             ->withHeader('Location', $this->basePath . '/admin#users')
             ->withStatus(302);
@@ -106,6 +109,7 @@ class UserController
 
         $this->userModel->deleteById($userId);
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.user_deleted'];
         return $response->withHeader('Location', $this->basePath . '/admin#users')->withStatus(302);
     }
 
@@ -236,6 +240,7 @@ class UserController
             'email'        => $email,
         ]);
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.profile_updated'];
         return $response
             ->withHeader('Location', $this->basePath . '/profile')
             ->withStatus(302);

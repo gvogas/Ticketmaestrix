@@ -63,6 +63,7 @@ class CategoryController
 
         $this->categoryModel->create((string) ($data['name'] ?? ''));
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.category_created'];
         return $response->withHeader('Location', $this->basePath . '/categories')->withStatus(302);
     }
 
@@ -116,6 +117,7 @@ class CategoryController
             $this->categoryModel->save($category);
         }
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.category_updated'];
         return $response->withHeader('Location', $this->basePath . '/categories')->withStatus(302);
     }
 
@@ -128,6 +130,7 @@ class CategoryController
         if ($category->id) {
             $this->categoryModel->delete($category);
         }
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.category_deleted'];
         return $response->withHeader('Location', $this->basePath . '/categories')->withStatus(302);
     }
 

@@ -79,7 +79,8 @@ class TicketController
             $eventId,
         );
 
-        return $response->withHeader('Location', $this->basePath . '/events/' . $eventId)->withStatus(302);
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.ticket_created'];
+        return $response->withHeader('Location', $this->basePath . '/events/' . $eventId . '/tickets')->withStatus(302);
     }
 
     public function edit(Request $request, Response $response, array $args): Response
@@ -141,6 +142,7 @@ class TicketController
             $this->ticketModel->save($ticket);
         }
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.ticket_updated'];
         return $response->withHeader('Location', $this->basePath . '/tickets/' . $id . '/edit')->withStatus(302);
     }
 
@@ -153,6 +155,7 @@ class TicketController
         if ($ticket->id) {
             $this->ticketModel->delete($ticket);
         }
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.ticket_deleted'];
         return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
     }
 

@@ -23,12 +23,13 @@ class OrderItemController {
         }
        $data = $request->getParsedBody();
 
-       $this->orderItemModel->create(
-           (int) ($data['quantity'] ?? 0),
-           (int) ($data['order_id'] ?? 0),
-           (int) ($data['ticket_id'] ?? 0)
-       );
+        $this->orderItemModel->create(
+            (int) ($data['quantity'] ?? 0),
+            (int) ($data['order_id'] ?? 0),
+            (int) ($data['ticket_id'] ?? 0)
+        );
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.order_item_created'];
         return $response
             ->withHeader('Location', $this->basePath . '/order-items')
             ->withStatus(302);
@@ -50,6 +51,7 @@ class OrderItemController {
             $this->orderItemModel->save($orderItem);
         }
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.order_item_updated'];
         return $response
             ->withHeader('Location', $this->basePath . '/order-items')
             ->withStatus(302);
@@ -67,6 +69,7 @@ class OrderItemController {
             $this->orderItemModel->delete($orderItem);
         }
 
+        $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.order_item_deleted'];
         return $response
             ->withHeader('Location', $this->basePath . '/order-items')
             ->withStatus(302);
