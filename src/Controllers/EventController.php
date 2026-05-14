@@ -231,7 +231,11 @@ class EventController
     public function byCategory(Request $request, Response $response, array $args): Response
     {
         $categoryId = (int) $args['id'];
-        $events     = $this->eventModel->findByCategory($categoryId);
+        $events     = $this->eventModel->hydrate(
+            $this->eventModel->findByCategory($categoryId),
+            $this->venueModel,
+            $this->ticketModel
+        );
         $category   = $this->categoryModel->getById($categoryId);
 
         $html = $this->twig->render('event/events_by_category.html.twig', [
