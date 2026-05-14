@@ -39,8 +39,7 @@
 
     <div class="container py-5">
 
-        {# Check if cart is empty #}
-        {% if cart is empty %}
+{% if cart is empty %}
 
             <div class="text-center py-5">
                 <div class="mb-4">
@@ -87,8 +86,9 @@
                                 </div>
                             </div>
                         </div>
-                        {# Each remove icon is its own POST form so it can mutate session state. #}
+                        
                         <form method="POST" action="{{ base_path }}/cart/remove/{{ item.ticket_id }}" class="m-0">
+                            {{ csrf_field() }}
                             <button type="submit" class="btn text-danger fs-5"><i class="bi bi-trash"></i></button>
                         </form>
                     </div>
@@ -133,8 +133,7 @@
                         </div>
                         {% endif %}
 
-                        {# Change method to GET to redirect to the checkout page instead of processing #}
-                        <form method="GET" action="{{ base_path }}/checkout" class="m-0" id="checkout-form">
+                            <form method="GET" action="{{ base_path }}/checkout" class="m-0" id="checkout-form">
                             {% if user_points > 0 and cart is not empty %}
                             <input type="hidden" id="points-hidden" name="points_to_use" value="0">
                             {% endif %}
@@ -143,6 +142,7 @@
                             </button>
                         </form>
                         <form method="POST" action="{{ base_path }}/cart/clear" class="m-0">
+                            {{ csrf_field() }}
                             <button type="submit" class="btn btn-light w-100 py-2 fw-bold text-muted border-0">{{ trans('cart.clear') }}</button>
                         </form>
 
@@ -154,8 +154,7 @@
                 </div>
             </div>
 
-        {# Submitted programmatically by the countdown script when the timer hits zero. #}
-        <form id="cart-expire-form" method="POST" action="{{ base_path }}/cart/expire"></form>
+            <form id="cart-expire-form" method="POST" action="{{ base_path }}/cart/expire">{{ csrf_field() }}</form>
 
         {% endif %}
     </div>

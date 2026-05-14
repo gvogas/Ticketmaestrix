@@ -14,10 +14,6 @@ class OrderModel
         return BeanHelper::castBeanArray(R::find('orders', 'user_id = ? ORDER BY order_time DESC', [$userId]));
     }
 
-    /**
-     * Paginated variant of findByUser for the admin /orders/user/{id} page.
-     * Newest-first ordering matches findByUser; LIMIT ? OFFSET ? appended.
-     */
     public function findByUserPaginated(int $userId, int $limit, int $offset): array
     {
         return BeanHelper::castBeanArray(
@@ -25,26 +21,12 @@ class OrderModel
         );
     }
 
-    /**
-     * Count of orders for a user. Shared between findByUserPaginated and
-     * findByUserWithItemsPaginated since they pull from the same orders rows.
-     */
     public function countByUser(int $userId): int
     {
         return (int) R::count('orders', 'user_id = ?', [$userId]);
     }
 
-    /**
-     * Paginated variant of findByUserWithItems for the /profile purchase
-     * history card. LIMIT/OFFSET are applied to the *orders* (not the joined
-     * items), so a page always contains exactly $limit orders even when each
-     * order has many line items.
-     *
-     * Two-step query: first fetch the page of order IDs, then re-use the
-     * existing join logic restricted to that set. This avoids the bug where
-     * `LIMIT N` on a flat JOIN would cut off in the middle of an order's
-     * items.
-     */
+    // Fetch order ids first, then join the items. Stops LIMIT from cutting an order in half.
     public function findByUserWithItemsPaginated(int $userId, int $limit, int $offset): array
     {
         $idRows = R::getCol(
@@ -56,8 +38,6 @@ class OrderModel
         }
         $orderIds = array_map('intval', $idRows);
 
-        // Build placeholder list (?,?,?…) for the IN clause; R::getAll only
-        // binds positional params, so we expand the array explicitly.
         $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
 
         $sql = "SELECT o.id            AS order_id,
@@ -86,20 +66,9 @@ class OrderModel
         return $this->collapseOrderRows(R::getAll($sql, $orderIds));
     }
 
-    /**
-     * Orders for a user with their line items + ticket + event already joined,
-     * in a single query. Returns an array of stdClass orders (newest first),
-     * each carrying an `items` array of stdClass line items. Used by the
-     * `/profile` purchase-history card.
-     *
-     * One raw SQL query rather than bean hydration: hydrating orders →
-     * order_items → ticket → events would fire 1 + 3N round-trips. This
-     * mirrors the stdClass-from-raw-SQL pattern used by
-     * EventModel::getWithOnSaleTickets (see CLAUDE.md "OODBBean vs stdClass").
-     */
     public function findByUserWithItems(int $userId): array
     {
-        // `row` is a MySQL reserved word - needs backticks or the query explodes
+        // 'row' is a reserved word in MySQL. The backticks stop the query from breaking.
         $sql = 'SELECT o.id            AS order_id,
                        o.total_price   AS total_price,
                        o.status        AS status,
@@ -126,12 +95,6 @@ class OrderModel
         return $this->collapseOrderRows(R::getAll($sql, [$userId]));
     }
 
-    /**
-     * Collapse a join result (orders LEFT JOIN order_items …) into one
-     * stdClass per order, each carrying an items[] array. Shared by
-     * findByUserWithItems and findByUserWithItemsPaginated so the two stay
-     * shape-compatible (the /profile template reads from this exact shape).
-     */
     private function collapseOrderRows(array $rows): array
     {
         $byOrder = [];
@@ -148,7 +111,7 @@ class OrderModel
                     'items'         => [],
                 ];
             }
-            // left join gives a NULL item_id row when order has no items - skip it
+            // A LEFT JOIN gives a NULL item row when an order has no items. Skip those.
             if ($r['item_id'] !== null) {
                 $byOrder[$oid]->items[] = (object) [
                     'quantity'    => (int) $r['quantity'],

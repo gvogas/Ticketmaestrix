@@ -117,6 +117,7 @@
 
                 <div class="edit-card-pop">
                     <form action="{{ base_path }}/events/{{ event.id }}/update" method="post">
+                        {{ csrf_field() }}
                         <div class="row g-4">
 
                             <div class="col-12">

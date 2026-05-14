@@ -24,7 +24,6 @@ class UserController
         private string            $basePath,
     ) {}
 
-    /** POST /users — create a new user (admin form). */
     public function store(Request $request, Response $response): Response
     {
         $data = (array) ($request->getParsedBody() ?? []);
@@ -57,11 +56,11 @@ class UserController
             ->withStatus(302);
     }
 
-    /** POST /users/{id}/role — toggle admin/user role. Admin-only. */
     public function roleToggle(Request $request, Response $response, array $args): Response
     {
         $user = $this->userModel->load((int) ($args['id'] ?? 0));
 
+        // Block an admin from toggling their own role and locking themselves out.
         if ($user->id && $user->id !== Auth::userId()) {
             $user->role = $user->role === 'admin' ? 'user' : 'admin';
             $this->userModel->save($user);
@@ -73,7 +72,6 @@ class UserController
             ->withStatus(302);
     }
 
-    /** POST /users/{id} — admin updates a user's details. */
     public function update(Request $request, Response $response, array $args): Response
     {
         $id   = (int) ($args['id'] ?? 0);
@@ -86,11 +84,11 @@ class UserController
             ->withStatus(302);
     }
 
-    /** POST /users/{id}/delete — admin deletes a user. */
     public function delete(Request $request, Response $response, array $args): Response
     {
         $userId = (int) ($args['id'] ?? 0);
 
+        // Block an admin from deleting themselves.
         if ($userId === Auth::userId()) {
             return $response->withHeader('Location', $this->basePath . '/admin#users')->withStatus(302);
         }
@@ -101,7 +99,6 @@ class UserController
         return $response->withHeader('Location', $this->basePath . '/admin#users')->withStatus(302);
     }
 
-    /** GET /users/{id} — admin views one user's detail page. */
     public function viewDetails(Request $request, Response $response, array $args): Response
     {
         $user = $this->userModel->load((int) ($args['id'] ?? 0));
@@ -122,7 +119,6 @@ class UserController
         return $response;
     }
 
-    /** GET /users — admin-only listing of all users. */
     public function index(Request $request, Response $response): Response
     {
         $queryParams = $request->getQueryParams();
@@ -138,7 +134,6 @@ class UserController
             'base_path'     => $this->basePath,
             'current_route' => 'admin',
             'users'         => $users,
-            // Pass total so the "X total" header keeps showing the full count.
             'total_users'   => $total,
             'current_page'  => $page,
             'total_pages'   => $totalPages,
@@ -149,15 +144,11 @@ class UserController
         return $response;
     }
 
-    /** GET /profile — the logged-in user's own profile page with stats. */
     public function showProfile(Request $request, Response $response): Response
     {
         $user = Auth::user();
         $id   = (int) $user->id;
 
-        // Paginate the Purchase History card. The points-history card is
-        // already capped at 50 rows by PointsHistoryModel::findByUser, so it
-        // stays unpaginated.
         $queryParams = $request->getQueryParams();
         $page    = max(1, (int) ($queryParams['page'] ?? 1));
         $perPage = 30;
@@ -173,8 +164,6 @@ class UserController
             'tickets_count'   => $this->ticketModel->countByOrderItemsForUser($id),
             'total_spent'     => number_format($this->orderModel->totalSpentByUser($id), 2, '.', ''),
             'events_attended' => $this->orderModel->eventsAttendedByUser($id),
-            // Orders + line items + event titles for the Purchase History card,
-            // shaped as stdClass[] with embedded items[] (single SQL query).
             'orders'          => $this->orderModel->findByUserWithItemsPaginated($id, $perPage, $offset),
             'points_history'  => $this->pointsHistoryModel->findByUser($id),
             'current_page'    => $page,
@@ -186,10 +175,8 @@ class UserController
         return $response;
     }
 
-    /** GET /editprofile — show the form for editing the logged-in user. */
     public function editProfile(Request $request, Response $response): Response
     {
-
         $html = $this->twig->render('user/edit_profile.html.twig', [
             'base_path'     => $this->basePath,
             'current_route' => 'profile',
@@ -200,12 +187,8 @@ class UserController
         return $response;
     }
 
-    /**
-     * POST /editprofile — save the logged-in user's edits.
-     */
     public function updateProfile(Request $request, Response $response): Response
     {
-
         $id   = (int) Auth::userId();
         $data = (array) ($request->getParsedBody() ?? []);
         $form = (array) ($data['user'] ?? []);
@@ -219,7 +202,6 @@ class UserController
 
         $errors = [];
 
-        // avatar upload - mime check beats ext check for disquised files
         $newAvatarPath = null;
         $avatarFile = ($request->getUploadedFiles()['avatar'] ?? null);
         if ($avatarFile !== null && $avatarFile->getError() !== UPLOAD_ERR_NO_FILE) {
@@ -234,7 +216,7 @@ class UserController
                 $tmpPath      = $stream->getMetadata('uri');
                 $cleanupTmp   = false;
                 if ($tmpPath === null) {
-                    // Stream has no filesystem URI (e.g. in-memory); copy to a real temp file.
+                    // In-memory uploads have no file path, so write to a temp file before checking the type.
                     $tmpPath    = tempnam(sys_get_temp_dir(), 'tm_avatar_');
                     file_put_contents($tmpPath, (string) $stream);
                     $cleanupTmp = true;
@@ -254,10 +236,11 @@ class UserController
                     if (!is_dir($uploadDir)) {
                         mkdir($uploadDir, 0755, true);
                     }
-                    $filename = $id . '_' . time() . '.' . $ext;
+                    // Random hex in the filename stops two uploads in the same second from overwriting each other.
+                    $filename = $id . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
                     $oldAvatarPath = (string) (Auth::user()->avatar ?? '');
                     $avatarFile->moveTo($uploadDir . $filename);
-                    // chmod needed - umask can leave uploads at 0600 on shared hosts
+                    // Force readable permissions. The default umask on some shared hosts leaves uploads at 0600.
                     @chmod($uploadDir . $filename, 0644);
                     $newAvatarPath = '/uploads/avatars/' . $filename;
                 }
@@ -311,6 +294,7 @@ class UserController
         }
         $this->userModel->update($id, $updateData);
 
+        // Only delete the old file after the new one is saved. If the save fails, the old file is still there.
         if ($newAvatarPath !== null && ($oldAvatarPath ?? '') !== '') {
             $old = __DIR__ . '/../../' . ltrim($oldAvatarPath, '/');
             if (file_exists($old)) {
@@ -324,7 +308,6 @@ class UserController
             ->withStatus(302);
     }
 
-    /** POST /delete-account — user deletes their own account and is logged out. */
     public function deleteAccount(Request $request, Response $response): Response
     {
         $userId = (int) Auth::userId();

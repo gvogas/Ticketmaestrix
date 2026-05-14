@@ -28,7 +28,7 @@ class StripeService
         foreach ($rows as $row) {
             $lineItems[] = [
                 'price_data' => [
-                    'currency'     => 'usd',
+                    'currency'     => 'cad',
                     'unit_amount'  => (int) round($row['price'] * 100),
                     'product_data' => ['name' => $row['name']],
                 ],
@@ -39,7 +39,7 @@ class StripeService
         if ($serviceFeeCents > 0) {
             $lineItems[] = [
                 'price_data' => [
-                    'currency'     => 'usd',
+                    'currency'     => 'cad',
                     'unit_amount'  => $serviceFeeCents,
                     'product_data' => ['name' => 'Service fee (15%)'],
                 ],
@@ -56,12 +56,13 @@ class StripeService
             'metadata'             => ['pending_id' => $pendingId],
         ];
 
-        // coupon is the only way to do a discount in Stripe Checkout - negative unit_amount is rejected
+        // Stripe will not accept a negative price, so the points discount is sent as a coupon.
         $couponId = null;
         if ($pointsToUse > 0) {
             $coupon = Coupon::create([
-                'amount_off' => $pointsToUse, // 1 point = 1 cent
-                'currency'   => 'usd',
+                // 1 point = 1 cent off.
+                'amount_off' => $pointsToUse,
+                'currency'   => 'cad',
                 'duration'   => 'once',
                 'name'       => "Points discount ({$pointsToUse} pts)",
                 'metadata'   => ['pending_id' => $pendingId],

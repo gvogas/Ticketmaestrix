@@ -19,7 +19,7 @@ class OrderController {
         private string $basePath,
     ) {}
 
-     public function store(Request $request, Response $response): Response {
+    public function store(Request $request, Response $response): Response {
        $data = $request->getParsedBody();
 
        $this->orderModel->create(
@@ -31,9 +31,9 @@ class OrderController {
         return $response
             ->withHeader('Location', $this->basePath . '/orders')
             ->withStatus(302);
-     }
+    }
 
-     public function update(Request $request, Response $response, array $args): Response {
+    public function update(Request $request, Response $response, array $args): Response {
         $id = (int) $args['id'];
         $data = $request->getParsedBody();
 
@@ -51,10 +51,9 @@ class OrderController {
         return $response
             ->withHeader('Location', $this->basePath . '/orders')
             ->withStatus(302);
+    }
 
-     }
-
-     public function delete(Request $request, Response $response, array $args): Response {
+    public function delete(Request $request, Response $response, array $args): Response {
         $order = $this->orderModel->load((int) ($args['id'] ?? 0));
 
         if ($order->id) {
@@ -65,9 +64,9 @@ class OrderController {
         return $response
             ->withHeader('Location', $this->basePath . '/orders')
             ->withStatus(302);
-     }
+    }
 
-     public function viewDetails(Request $request, Response $response, array $args): Response {
+    public function viewDetails(Request $request, Response $response, array $args): Response {
         $order = $this->orderModel->load((int) ($args['id'] ?? 0));
 
         if (!$order->id) {
@@ -91,9 +90,9 @@ class OrderController {
 
         $response->getBody()->write($html);
         return $response;
-     }
+    }
 
-     public function byUser(Request $request, Response $response, array $args): Response {
+    public function byUser(Request $request, Response $response, array $args): Response {
         $userId      = (int) ($args['id'] ?? 0);
         $queryParams = $request->getQueryParams();
         $page    = max(1, (int) ($queryParams['page'] ?? 1));
@@ -108,7 +107,6 @@ class OrderController {
             'base_path'    => $this->basePath,
             'orders'       => $orders,
             'user_id'      => $userId,
-            // Total separately so the "X order(s)" badge keeps showing the full count.
             'total_orders' => $total,
             'current_page' => $page,
             'total_pages'  => $totalPages,
@@ -117,5 +115,5 @@ class OrderController {
 
         $response->getBody()->write($html);
         return $response;
-     }
+    }
 }

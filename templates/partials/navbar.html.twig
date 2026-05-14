@@ -1,7 +1,7 @@
 {% set home_url = base_path ~ '/' %}
 {% set logo_src = base_path ~ '/assets/img/ticketmaestrix-logo.png' %}
 
-<nav class="site-navbar navbar navbar-expand-md navbar-dark sticky-top shadow-sm">
+    <nav class="site-navbar navbar navbar-expand-md navbar-dark sticky-top shadow-sm">
     <div class="container-fluid px-4">
 
         <a class="navbar-brand d-inline-flex align-items-center gap-2 fw-bold fs-4 tracking-tight m-0"
@@ -11,7 +11,6 @@
             <img class="brand-logo" src="{{ logo_src }}" width="58" height="38" alt="" aria-hidden="true">
         </a>
 
-        {# Custom animated hamburger — three bars morph into an × when the drawer is open #}
         <button class="drawer-toggle navbar-toggler border-0 p-0" type="button"
                 data-bs-toggle="offcanvas" data-bs-target="#mobileNav"
                 aria-controls="mobileNav" aria-label="Toggle navigation">
@@ -20,7 +19,6 @@
             <span class="hamburger-bar"></span>
         </button>
 
-        {# Desktop #}
         <div class="collapse navbar-collapse" id="mainNavbar">
             <ul class="navbar-nav ms-auto mb-2 mb-md-0 align-items-center">
                 <li class="nav-item px-2">
@@ -39,7 +37,6 @@
                     </a>
                 </li>
 
-                {# Cart icon with live count badge from the cart_count Twig global #}
                 <li class="nav-item px-2">
                     <a class="nav-link d-flex align-items-center gap-2 position-relative {% if current_route == 'cart' %}active{% endif %}" href="{{ base_path }}/cart">
                         <i class="bi bi-cart3"></i>
@@ -49,8 +46,7 @@
                     </a>
                 </li>
 
-                {# Auth-aware section: profile + admin + logout when logged in, login + signup when not #}
-                {% if current_user %}
+{% if current_user %}
                     <li class="nav-item px-2">
                         <a class="nav-link d-flex align-items-center gap-2 {% if current_route == 'profile' %}active{% endif %}" href="{{ base_path }}/profile">
                             <i class="bi bi-person-circle"></i> {{ current_user.first_name }}
@@ -64,8 +60,9 @@
                         </li>
                     {% endif %}
                     <li class="nav-item px-2">
-                        {# Logout is a POST so it can't be triggered by a stray GET / link prefetch. #}
+                        
                         <form method="POST" action="{{ base_path }}/logout" class="d-inline m-0">
+                            {{ csrf_field() }}
                             <button type="submit" class="nav-link btn btn-link p-0 d-flex align-items-center gap-2">
                                 <i class="bi bi-box-arrow-right"></i> {{ trans('app.logout') }}
                             </button>
@@ -107,7 +104,6 @@
     </div>
 </nav>
 
-{# Mobile right-side drawer  #}
 <div class="offcanvas offcanvas-end" tabindex="-1" id="mobileNav" aria-labelledby="mobileNavLabel">
 
     <div class="offcanvas-header drawer-header">
@@ -156,7 +152,7 @@
             {% if current_user %}
                 <li class="drawer-delay-5">
                     <a class="drawer-link {% if current_route == 'profile' %}active{% endif %}" href="{{ base_path }}/profile">
-                        {# Avatar shows user's first initial instead of a generic icon #}
+                        
                         <span class="drawer-link-icon drawer-avatar">{{ current_user.first_name|slice(0,1)|upper }}</span>
                         <span>{{ current_user.first_name }}</span>
                     </a>
@@ -170,8 +166,9 @@
                     </li>
                 {% endif %}
                 <li class="drawer-delay-7">
-                    {# Logout is a POST so it can't be triggered by a stray GET / link prefetch. #}
+                    
                     <form method="POST" action="{{ base_path }}/logout" class="m-0">
+                        {{ csrf_field() }}
                         <button type="submit" class="drawer-link drawer-logout">
                             <span class="drawer-link-icon"><i class="bi bi-box-arrow-right"></i></span>
                             <span>{{ trans('app.logout') }}</span>

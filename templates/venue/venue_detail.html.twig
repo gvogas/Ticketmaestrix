@@ -67,7 +67,6 @@
 
     <div class="container">
 
-        <!-- Header -->
         <header class="admin-header">
             <div class="row align-items-center">
                 <div class="col-lg-5">
@@ -93,7 +92,7 @@
         </header>
 
         <div class="detail-container">
-            <!-- Hero Image/Icon -->
+            
             {% if venue.image_url %}
                 <img src="{{ venue.image_url }}" alt="{{ venue.name }}" class="venue-hero-display">
             {% else %}
@@ -102,8 +101,7 @@
                 </div>
             {% endif %}
 
-            <!-- Content Card -->
-            <div class="venue-content-card">
+                <div class="venue-content-card">
                 <div class="row g-4">
                     <div class="col-12 text-center mb-4">
                         <h2 class="display-6 fw-800 mb-2">{{ venue.name }}</h2>
@@ -125,7 +123,7 @@
                         <div class="info-pill">
                             <span class="label-text">{{ trans('vadmin.max_capacity') }}</span>
                             <div class="value-text">
-                                <i class="bi bi-people-fill me-2 text-muted"></i>{{ venue.capacity|number_format ?: '—' }} {{ trans('vadmin.seats') }}
+                                <i class="bi bi-people-fill me-2 text-muted"></i>{{ venue.capacity|number_format ?: 'ï¿½' }} {{ trans('vadmin.seats') }}
                             </div>
                         </div>
                     </div>
@@ -137,7 +135,6 @@
                         </p>
                     </div>
 
-                    <!-- Footer Actions -->
                     <div class="col-12 mt-5 pt-4 border-top">
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex gap-2">
@@ -148,6 +145,7 @@
 
                             <form action="{{ base_path }}/venues/{{ venue.id }}/delete" method="POST"
                                   onsubmit="return confirm('{{ trans('confirm.delete_venue')|e('js') }}')">
+                                {{ csrf_field() }}
                                 <button type="submit" class="btn btn-outline-danger px-4 py-2 fw-bold" style="border-radius: 12px;">
                                     <i class="bi bi-trash3 me-2"></i> {{ trans('vadmin.delete_btn') }}
                                 </button>

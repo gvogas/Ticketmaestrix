@@ -41,7 +41,6 @@
 
     <div class="container">
 
-        <!-- Admin Dashboard Header -->
         <header class="admin-header">
             <div class="row align-items-center">
                 <div class="col-lg-6">
@@ -64,17 +63,16 @@
             </div>
         </header>
 
-        <!-- Form Section -->
         <div class="form-container">
             <form action="{{ base_path }}/tickets" method="post">
+                {{ csrf_field() }}
                 <div class="row g-4">
 
-                    <!-- Event Selection -->
                     <div class="col-12">
                         <label for="event_id" class="form-label">{{ trans('tadmin.cud.event') }}</label>
                         <select id="event_id" name="event_id" required
                                 class="form-select{{ errors.event_id is defined ? ' is-invalid' : '' }}">
-                            <option value="">— Choose an event —</option>
+                            <option value="">ï¿½ Choose an event ï¿½</option>
                             {% for event in events %}
                             <option value="{{ event.id }}">{{ event.title }} ({{ event.date }})</option>
                             {% endfor %}
@@ -84,7 +82,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- Row -->
                     <div class="col-md-6">
                         <label for="row" class="form-label">{{ trans('tadmin.crud.row') }}</label>
                         <div class="input-group">
@@ -99,7 +96,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- Seat -->
                     <div class="col-md-6">
                         <label for="seat" class="form-label">{{ trans('tadmin.crud.seat') }}</label>
                         <div class="input-group">
@@ -114,7 +110,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- Price -->
                     <div class="col-12">
                         <label for="price" class="form-label">{{ trans('tadmin.crud.price') }}</label>
                         <div class="input-group">
@@ -130,7 +125,6 @@
                         <div class="form-text text-muted">{{ trans('tadmin.crud.message') }}</div>
                     </div>
 
-                    <!-- Sale -->
                     <div class="col-12">
                         <hr class="my-2">
                         <p class="fw-600 mb-3">Sale (optional)</p>
@@ -169,7 +163,6 @@
                         </div>
                     </div>
 
-                    <!-- Actions -->
                     <div class="col-12 mt-5">
                         <div class="d-flex gap-3 pt-4 border-top">
                             <button type="submit" class="btn-purple px-5">

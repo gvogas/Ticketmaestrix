@@ -69,7 +69,6 @@
 
     <div class="container">
 
-        <!-- Admin Dashboard Header -->
         <header class="admin-header">
             <div class="row align-items-center">
                 <div class="col-lg-6">
@@ -95,13 +94,11 @@
             </div>
         </header>
 
-        <!-- Tickets Grid -->
         <div class="row g-4">
             {% for ticket in tickets %}
             <div class="col-md-6 col-lg-4 col-xl-3">
                 <article class="ticket-card">
 
-                    <!-- Visual Header (Purple with White Icon) -->
                     <div class="ticket-visual">
                         <span class="price-badge">${{ ticket.price|number_format(2) }}</span>
                         <i class="bi bi-ticket-perforated-fill ticket-icon"></i>
@@ -117,7 +114,6 @@
                         </div>
                     </div>
 
-                    <!-- Admin Actions -->
                     <div class="admin-footer">
                         <a href="{{ base_path }}/tickets/{{ ticket.id }}/edit" class="btn btn-sm btn-outline-secondary px-4 rounded-pill">
                             <i class="bi bi-pencil-square me-1"></i> {{ trans('tadmin.crud.edit') }}
@@ -131,7 +127,6 @@
                 </article>
             </div>
 
-            <!-- Delete Confirmation Modal -->
             <div class="modal fade" id="deleteTicketModal-{{ ticket.id }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content rounded-4 border-0 shadow">
@@ -145,6 +140,7 @@
                         <div class="modal-footer border-0 pb-4 px-4">
                             <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">{{ trans('tadmin.crud.cancel') }}</button>
                             <form action="{{ base_path }}/tickets/{{ ticket.id }}/delete" method="post" class="m-0">
+                                {{ csrf_field() }}
                                 <button type="submit" class="btn btn-danger px-4">{{ trans('tadmin.crud.delete') }}</button>
                             </form>
                         </div>

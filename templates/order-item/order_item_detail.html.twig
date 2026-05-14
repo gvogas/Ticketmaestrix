@@ -31,6 +31,7 @@
             </ul>
 
             <form action="{{ base_path }}/order-items/{{ orderItem.id }}/delete" method="POST" class="d-inline">
+                {{ csrf_field() }}
                 <button type="submit" class="btn btn-sm btn-outline-danger"
                         onclick="return confirm('{{ trans('confirm.delete_order_item')|e('js') }}')">
                     <i class="bi bi-trash"></i> {{ trans('order.delete') }}

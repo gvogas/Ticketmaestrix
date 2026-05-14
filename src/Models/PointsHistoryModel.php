@@ -11,7 +11,7 @@ class PointsHistoryModel
 {
     public function addPoints(int $userId, int $amount, string $description, ?int $orderId = null): void
     {
-       
+        // The table name has an underscore, so RedBean's dispense throws. Use raw SQL instead.
         R::exec(
             'INSERT INTO points_history (user_id, order_id, amount, description, created_at)
                   VALUES (?, ?, ?, ?, ?)',

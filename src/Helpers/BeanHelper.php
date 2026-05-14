@@ -12,7 +12,7 @@ class BeanHelper
             $bean->id = (int) $bean->id;
         }
 
-        // FK fields all need int - templates and controllers rely on this
+        // These id-like fields are cast to int so templates and controllers can trust the type.
         $intFields = [
             'category_id',
             'venue_id',
@@ -23,16 +23,16 @@ class BeanHelper
             'quantity',
             'capacity',
         ];
-        
+
         foreach ($intFields as $field) {
             if (isset($bean->$field)) {
                 $bean->$field = (int) $bean->$field;
             }
         }
-        
+
         return $bean;
     }
-    
+
     public static function castBeanArray(array $beans): array
     {
         return array_map([self::class, 'castBeanProperties'], $beans);

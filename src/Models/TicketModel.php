@@ -14,10 +14,6 @@ class TicketModel
         return BeanHelper::castBeanArray(R::findAll('ticket', 'ORDER BY event_id, `row`, seat'));
     }
 
-    /**
-     * Paginated variant of getAll for the admin /tickets index.
-     * Same ORDER as getAll with LIMIT ? OFFSET ? appended.
-     */
     public function getAllPaginated(int $limit, int $offset): array
     {
         return BeanHelper::castBeanArray(
@@ -25,7 +21,6 @@ class TicketModel
         );
     }
 
-    /** Row-count of every ticket — drives the admin /tickets paginator. */
     public function countAll(): int
     {
         return (int) R::count('ticket');
@@ -44,10 +39,6 @@ class TicketModel
         );
     }
 
-    /**
-     * Paginated variant of findByEvent for the user-facing seat-selection page.
-     * Excludes already-sold tickets, same as findByEvent.
-     */
     public function findByEventPaginated(int $eventId, int $limit, int $offset): array
     {
         return BeanHelper::castBeanArray(
@@ -57,7 +48,6 @@ class TicketModel
         );
     }
 
-    /** Count of unsold tickets for an event — pairs with findByEventPaginated. */
     public function countByEvent(int $eventId): int
     {
         return (int) R::count('ticket', 'event_id = ? AND (sold IS NULL OR sold = 0)', [$eventId]);
@@ -95,6 +85,7 @@ class TicketModel
         R::store($bean);
     }
 
+    // A ticket is on sale when it has a sale type and today's date sits inside the sale window.
     public function isOnSale(object $ticket): bool
     {
         if (empty($ticket->sale_type) || empty($ticket->sale_start) || empty($ticket->sale_end)) {

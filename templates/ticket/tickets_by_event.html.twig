@@ -205,7 +205,7 @@
                         <div class="ticket-visual">
                             <i class="bi bi-ticket-perforated-fill ticket-icon"></i>
                             {% if ticket.on_sale %}
-                                {# Sale ribbon in the corner makes it immediately obvious the ticket is discounted #}
+                                
                                 <span class="sale-ribbon">{{ trans('evtickets.on_sale') }}</span>
                                 <span class="price-badge on-sale">
                                     <span class="original-price">${{ ticket.price|number_format(2) }}</span>
@@ -223,6 +223,7 @@
 
                         <div class="card-footer">
                             <form action="{{ base_path }}/cart/add" method="POST">
+                                {{ csrf_field() }}
                                 <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
                                 <input type="hidden" name="quantity" value="1">
                                 <button type="submit" class="btn-add-cart">

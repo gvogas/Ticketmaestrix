@@ -10,7 +10,6 @@
 
 <div style="position: sticky; top: 56px; z-index: 1039; pointer-events: none;">
 
-    {# 30-second warning panel #}
     <div id="expiry-warn-wrap" style="overflow: hidden; max-height: 0; transition: max-height 0.4s cubic-bezier(.4,0,.2,1); pointer-events: auto;">
         <div style="background: linear-gradient(to right, #FFF4E6, #FFEEDD); border-left: 4px solid #F76707; padding: 10px 20px; display: flex; align-items: center; gap: 14px;">
             <div id="expiry-warn-icon" style="width: 42px; height: 42px; min-width: 42px; background: #F76707; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
@@ -39,7 +38,6 @@
         </div>
     </div>
 
-    {# Expired panel #}
     <div id="expiry-expired-wrap" style="overflow: hidden; max-height: 0; transition: max-height 0.4s cubic-bezier(.4,0,.2,1); pointer-events: auto;">
         <div style="background: #1C1033; border-left: 4px solid #5E246E; padding: 10px 20px; display: flex; align-items: center; gap: 14px;">
             <div style="width: 42px; height: 42px; min-width: 42px; background: #5E246E; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
@@ -63,10 +61,9 @@
 
 </div>
 <script>
-    // The Unix timestamp (seconds) when the cart will expire.
+    // Unix timestamp in seconds when the cart will expire.
     const cartExpiresAt = {{ cart_expires_at }};
 
-    // Grab all the elements we need to control
     const warningBanner   = document.getElementById('expiry-warn-wrap');
     const expiredBanner   = document.getElementById('expiry-expired-wrap');
     const secondsDisplay  = document.getElementById('flash-seconds');
@@ -76,31 +73,26 @@
     let warningDismissed = false;
     let warningVisible   = false;
 
-
     document.getElementById('expiry-warn-close').addEventListener('click', () => {
         warningBanner.style.maxHeight = '0';
         warningDismissed = true;
     });
 
-    // When the user clicks X on the expired banner, slide it closed
     document.getElementById('expiry-expired-close').addEventListener('click', () => {
         expiredBanner.style.maxHeight = '0';
     });
 
-    // Animates the orange progress bar from its current position down to 0%
     function animateProgressBar(secondsLeft) {
-        // Figure out what % of the 60-second window is left
         const startPercent = Math.min(100, (secondsLeft / 60) * 100);
 
-      
         progressBar.style.transition = 'none';
         progressBar.style.width = startPercent + '%';
-        progressBar.offsetWidth; // this line forces the browser to "apply" the width before we start animating
+        // Reading offsetWidth forces the browser to apply the width before the animation starts.
+        progressBar.offsetWidth;
         progressBar.style.transition = `width ${secondsLeft}s linear`;
         progressBar.style.width = '0%';
     }
 
-    // Slides the warning banner down and starts the progress bar
     function showWarningBanner(secondsLeft) {
         warningBanner.style.maxHeight = '200px';
         animateProgressBar(secondsLeft);
@@ -108,51 +100,44 @@
     }
 
     function showExpiredBanner() {
-        // Slide the warning up and the expired message down
         warningBanner.style.maxHeight = '0';
         expiredBanner.style.maxHeight = '200px';
 
-        // Fade out the cart item count badge in the navbar, then remove it
         if (cartBadge) {
             cartBadge.style.opacity = '0';
             setTimeout(() => cartBadge.remove(), 400);
         }
 
+        // If the user is not on the cart page, tell the server the cart expired so the session cart is cleared.
         const onCartPage = document.getElementById('cart-expire-form') !== null;
         if (!onCartPage) {
             fetch('{{ base_path }}/cart/expire', {
-            method: 'POST',
-            headers: { 'X-CSRF-Token': '{{ csrf_token }}' }
-        }).catch(() => {});
+                method: 'POST',
+                headers: { 'X-CSRF-Token': '{{ csrf_token }}' }
+            }).catch(() => {});
         }
     }
 
-    // Runs every second to check how much time is left
     function tick() {
         const nowInSeconds     = Math.floor(Date.now() / 1000);
         const secondsRemaining = Math.max(0, cartExpiresAt - nowInSeconds);
 
-        // Cart has expired — show the expired banner and stop the timer
         if (secondsRemaining === 0) {
             showExpiredBanner();
             return;
         }
 
-        // Inside the 60-second warning window
         if (secondsRemaining <= 60 && !warningDismissed) {
             secondsDisplay.textContent = secondsRemaining;
 
-            // Show the warning banner the first time we enter the window
             if (!warningVisible) {
                 showWarningBanner(secondsRemaining);
             }
         }
 
-        // Schedule the next tick in 1 second
         setTimeout(tick, 1000);
     }
 
-    // Kick off the countdown
     tick();
 </script>
 {% endif %}

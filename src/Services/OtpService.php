@@ -40,6 +40,7 @@ class OtpService
             'secret'  => $secret,
         ];
     }
+
     public function verifyCode(string $secret, string $code): bool
     {
         return $this->tfa->verifyCode($secret, $code);
@@ -55,6 +56,6 @@ class OtpService
         return $this->tfa->verifyCode($user->totp_secret, $input);
     }
 
-    // secret is persisted in DB so this is a no-op - kept for API compatability
+    // Kept as a no-op. The secret lives in the database, so there is nothing to clear here.
     public function invalidate(): void {}
 }

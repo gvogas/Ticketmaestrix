@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-// supress deprecation warnings - libs not caught up to 8.4 yet
+// Hides deprecation warnings. Some of our libraries haven't caught up to PHP 8.4 yet.
 error_reporting(E_ALL & ~E_DEPRECATED);
 
 ini_set('display_errors', '0');
@@ -22,6 +22,7 @@ use App\Helpers\Auth;
 use App\Helpers\Cart;
 use App\Middleware\AdminMiddleware;
 use App\Middleware\AuthMiddleware;
+use App\Middleware\CsrfMiddleware;
 use App\Middleware\MaintenanceMiddleware;
 use App\Middleware\SecurityHeadersMiddleware;
 use App\Models\CategoryModel;
@@ -45,20 +46,20 @@ use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFunction;
 
+// Bootstrap: load Composer and the .env file.
 require __DIR__ . '/vendor/autoload.php';
 
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-// ============== SESSION ==============
+// Session: start it and grab any flash message left over from the last request.
 ini_set('session.cookie_lifetime', '0');
 session_start();
 
 $flashMessage = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 
-// ============== DATABASE ==============
-// dont foget charset or emoji in event names will breake things
+// Database: connect with RedBean
 R::setup(
     'mysql:host=' . $_ENV['DB_SERVER']
         . ';port=' . ($_ENV['DB_PORT'] ?? '3306')
@@ -71,17 +72,18 @@ R::setup(
 $debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
 R::freeze(!$debug);
 
-
-// required for begin/commit/rollback - freeze() disables implicit transactions otherwise
+// Without this, R::begin / commit / rollback do nothing in debug (fluid) mode.
 R::setAllowFluidTransactions(true);
 
+// Auth: log the user back in if they have a remember-me cookie.
 Auth::checkRememberToken();
 
+// One random token per session. Every POST form sends it back to prove the request came from us.
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
 }
 
-// ============== TEMPLATE ENGINE ==============
+// Template engine: Twig loads templates from /templates and reads globals from below.
 $loader = new FilesystemLoader(__DIR__ . '/templates');
 $twig   = new Environment($loader, ['cache' => false, 'auto_reload' => true]);
 
@@ -93,7 +95,16 @@ $twig->addGlobal('csrf_token',          $_SESSION['csrf_token']);
 $twig->addGlobal('google_maps_api_key', $_ENV['GOOGLE_MAPS_API_KEY'] ?? '');
 $twig->addGlobal('flash_message',       $flashMessage);
 
-// ============== I18N ==============
+// Drops a hidden input with the CSRF token into any POST form.
+$twig->addFunction(new TwigFunction(
+    'csrf_field',
+    static fn (): string => '<input type="hidden" name="csrf_token" value="'
+        . htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES | ENT_HTML5, 'UTF-8')
+        . '">',
+    ['is_safe' => ['html']]
+));
+
+// Translations: English and French. The active language is stored in the session.
 $locale     = $_SESSION['lang'] ?? 'en';
 $translator = new Translator($locale);
 $translator->addLoader('array', new ArrayLoader());
@@ -114,7 +125,7 @@ $twig->addFunction(new TwigFunction('trans_cat', function ($name) use ($translat
 
 $twig->addGlobal('current_locale', $locale);
 
-// ============== DEPENDENCY INJECTION CONTAINER ==============
+// DI container: every controller is wired here by hand. Add new ones to the list.
 $basePath = $_ENV['APP_BASE_PATH'] ?? '';
 
 $container = new \DI\Container();
@@ -222,7 +233,7 @@ $container->set(VenueController::class, fn() => new VenueController(
     $basePath,
 ));
 
-// ============== APPLICATION ==============
+// Build the Slim app and turn on the built-in middleware (body parser, router, error handler).
 AppFactory::setContainer($container);
 
 $app = AppFactory::create();
@@ -231,7 +242,7 @@ $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
 $app->addErrorMiddleware($debug, true, true);
 
-// ============== MIDDLEWARE ==============
+// Middleware: a simple request logger that writes one line per request to var/app.log.
 $logFile = __DIR__ . '/var/app.log';
 
 $loggerMiddleware = function (Request $request, RequestHandler $handler) use ($logFile) {
@@ -251,18 +262,19 @@ $loggerMiddleware = function (Request $request, RequestHandler $handler) use ($l
     return $response;
 };
 
+// App-wide middleware. Runs from bottom to top: logger first, then CSRF, headers, maintenance.
 $app->add(new MaintenanceMiddleware(__DIR__ . '/var/maintenance.flag', $app->getResponseFactory()));
 $app->add(new SecurityHeadersMiddleware());
+// Stripe posts /stripe/webhook from their own server, so they cannot send our token.
+$app->add(new CsrfMiddleware($responseFactory, ['/stripe/webhook']));
 $app->add($loggerMiddleware);
 
-// ============== ROUTES ==============
-
-// --- Home ---
+// Public pages.
 $app->get('/',     [HomeController::class, 'index']);
 $app->get('/cart', [HomeController::class, 'showCart']);
 $app->get('/map',  [HomeController::class, 'showMap']);
 
-// --- Auth ---
+// Auth: signup, login, logout, 2FA setup, 2FA login.
 $app->group('', function ($group) {
     $group->get('/signup',           [AuthController::class, 'showSignup']);
     $group->post('/signup',          [AuthController::class, 'signup']);
@@ -275,10 +287,10 @@ $app->group('', function ($group) {
     $group->post('/2fa/login',       [AuthController::class, 'verify2faLogin']);
 });
 
-// --- Admin ---
+// Admin dashboard.
 $app->get('/admin', [AdminController::class, 'showAdminDashboard'])->add(AdminMiddleware::class);
 
-// --- Users (admin only) ---
+// Admin: manage users.
 $app->group('/users', function ($group) {
     $group->get('',               [UserController::class, 'index']);
     $group->post('',              [UserController::class, 'store']);
@@ -288,7 +300,7 @@ $app->group('/users', function ($group) {
     $group->post('/{id}/delete',  [UserController::class, 'delete']);
 })->add(AdminMiddleware::class);
 
-// --- Profile (auth required) ---
+// Profile: the logged-in user's own pages.
 $app->group('', function ($group) {
     $group->get('/profile',            [UserController::class, 'showProfile']);
     $group->get('/editprofile',        [UserController::class, 'editProfile']);
@@ -297,7 +309,7 @@ $app->group('', function ($group) {
     $group->post('/profile/delete',   [UserController::class, 'deleteAccount']);
 })->add(AuthMiddleware::class);
 
-// --- Categories (admin only) ---
+// Admin: manage categories.
 $app->group('/categories', function ($group) {
     $group->get('',               [CategoryController::class, 'index']);
     $group->get('/create',        [CategoryController::class, 'create']);
@@ -308,7 +320,7 @@ $app->group('/categories', function ($group) {
     $group->post('/{id}/delete',  [CategoryController::class, 'destroy']);
 })->add(AdminMiddleware::class);
 
-// --- Events ---
+// Events: list is public, create / edit / delete are admin only.
 $app->group('/events', function ($group) {
     $group->get('',               [EventController::class, 'index']);
     $group->post('',              [EventController::class, 'store'])->add(AdminMiddleware::class);
@@ -321,7 +333,7 @@ $app->group('/events', function ($group) {
     $group->post('/{id}/delete',  [EventController::class, 'destroy'])->add(AdminMiddleware::class);
 });
 
-// --- Venues (admin only) ---
+// Admin: manage venues.
 $app->group('/venues', function ($group) {
     $group->get('',               [VenueController::class, 'index']);
     $group->get('/create',        [VenueController::class, 'create']);
@@ -332,7 +344,7 @@ $app->group('/venues', function ($group) {
     $group->post('/{id}/delete',  [VenueController::class, 'destroy']);
 })->add(AdminMiddleware::class);
 
-// --- Tickets ---
+// Tickets: list is public, create / edit / delete are admin only.
 $app->group('/tickets', function ($group) {
     $group->get('',               [TicketController::class, 'index']);
     $group->post('',              [TicketController::class, 'store'])->add(AdminMiddleware::class);
@@ -344,7 +356,7 @@ $app->group('/tickets', function ($group) {
     $group->post('/{id}/delete',  [TicketController::class, 'destroy'])->add(AdminMiddleware::class);
 });
 
-// --- Orders (admin only) ---
+// Admin: manage orders.
 $app->group('/orders', function ($group) {
     $group->post('',              [OrderController::class, 'store']);
     $group->get('/user/{id}',     [OrderController::class, 'byUser']);
@@ -353,7 +365,7 @@ $app->group('/orders', function ($group) {
     $group->post('/{id}/delete',  [OrderController::class, 'delete']);
 })->add(AdminMiddleware::class);
 
-// --- Order Items (admin only) ---
+// Admin: manage order items.
 $app->group('/order-items', function ($group) {
     $group->post('',              [OrderItemController::class, 'store']);
     $group->get('/order/{id}',    [OrderItemController::class, 'byOrder']);
@@ -362,12 +374,11 @@ $app->group('/order-items', function ($group) {
     $group->post('/{id}/delete',  [OrderItemController::class, 'delete']);
 })->add(AdminMiddleware::class);
 
-// --- API ---
+// JSON APIs used by the search bar and the map page sidebar.
 $app->get('/api/search',      [EventController::class, 'searchJson']);
-// Map page sidebar uses this to lazy-load events as the user scrolls.
 $app->get('/api/map-events',  [HomeController::class, 'mapEventsJson']);
 
-// --- Cart (auth required) ---
+// Cart: needs the user to be logged in.
 $app->group('/cart', function ($group) {
     $group->post('/add',                [CartController::class, 'add']);
     $group->post('/remove/{ticket_id}', [CartController::class, 'remove']);
@@ -375,7 +386,7 @@ $app->group('/cart', function ($group) {
     $group->post('/expire',             [CartController::class, 'expire']);
 })->add(AuthMiddleware::class);
 
-// --- Checkout ---
+// Checkout: form is auth-only, the success and cancel pages are reachable from Stripe.
 $app->group('/checkout', function ($group) {
     $group->get('',         [CartController::class, 'showCheckout'])->add(AuthMiddleware::class);
     $group->post('',        [CartController::class, 'checkout'])->add(AuthMiddleware::class);
@@ -383,10 +394,10 @@ $app->group('/checkout', function ($group) {
     $group->get('/cancel',  [CartController::class, 'checkoutCancel']);
 });
 
-// --- Stripe ---
+// Stripe webhook: skipped by CsrfMiddleware. The signature header proves it really came from Stripe.
 $app->post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
 
-// --- Language switcher ---
+// Language switcher: flips the session locale and sends the user back where they came from.
 $app->get('/lang/{locale}', function (Request $request, Response $response, array $args) use ($basePath) {
     if (in_array($args['locale'], ['en', 'fr'], true)) {
         $_SESSION['lang'] = $args['locale'];
@@ -409,4 +420,5 @@ $app->get('/lang/{locale}', function (Request $request, Response $response, arra
     return $response->withHeader('Location', $basePath . $dest)->withStatus(302);
 });
 
+// Go.
 $app->run();

@@ -69,6 +69,7 @@
 
     <div class="card signup-container shadow-lg border-0 rounded-4 p-5">
         <form action="{{ base_path }}/signup" method="POST">
+            {{ csrf_field() }}
 
             <div class="mb-4">
                 <label class="form-label fw-bold">{{ trans('signup.name') }}</label>

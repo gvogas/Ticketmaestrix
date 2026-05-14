@@ -14,6 +14,7 @@ use Twig\Environment;
 class AuthController
 {
     private const MAX_ATTEMPTS    = 5;
+    // 15 minutes.
     private const LOCKOUT_SECONDS = 900;
 
     public function __construct(
@@ -62,7 +63,7 @@ class AuthController
                 return $response->withHeader('Location', $this->basePath . '/2fa/setup')->withStatus(302);
             }
 
-            // same browser already passed 2fa for this account - skip the challange
+            // This browser already passed the 2FA challenge for this account. Skip it.
             if (Auth::check2faTrust((int) $user->id)) {
                 Auth::login((int) $user->id);
                 if ($remember) {
@@ -143,6 +144,7 @@ class AuthController
         $firstName = $parts[0] ?? '';
         $lastName  = $parts[1] ?? '';
 
+        // Stash the new user's details in the session. The account is only created after 2FA setup succeeds.
         $_SESSION['signup_user_data'] = [
             'first_name'   => $firstName,
             'last_name'    => $lastName,
@@ -153,7 +155,7 @@ class AuthController
         return $response->withHeader('Location', $this->basePath . '/2fa/setup')->withStatus(302);
     }
 
-public function show2faSetup(Request $request, Response $response): Response
+    public function show2faSetup(Request $request, Response $response): Response
     {
         $signupData = $_SESSION['signup_user_data'] ?? null;
         $pendingUserId = $_SESSION['2fa_setup_pending_user_id'] ?? null;
@@ -190,6 +192,7 @@ public function show2faSetup(Request $request, Response $response): Response
         $response->getBody()->write($html);
         return $response;
     }
+
     public function verify2faSetup(Request $request, Response $response): Response
     {
         $signupData    = $_SESSION['signup_user_data'] ?? null;
@@ -201,7 +204,7 @@ public function show2faSetup(Request $request, Response $response): Response
                 ->withStatus(302);
         }
 
-        // setup data missing means session expired or request was replayed - bounce to login
+        // Missing setup data means the session expired or the request was replayed. Don't log in. Bounce to login.
         $setupData = $_SESSION['2fa_setup_data'] ?? null;
         if (!$setupData || empty($setupData['secret'])) {
             return $response

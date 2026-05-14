@@ -42,7 +42,6 @@
 
     <div class="container">
 
-        <!-- Header -->
         <header class="admin-header">
             <div class="row align-items-center">
                 <div class="col-lg-5">
@@ -68,12 +67,11 @@
             </div>
         </header>
 
-        <!-- Form Section -->
         <div class="form-container">
             <form action="{{ base_path }}/venues/{{ venue.id }}/update" method="post">
+                {{ csrf_field() }}
                 <div class="row g-4">
 
-                    <!-- Venue Name -->
                     <div class="col-12">
                         <label for="name" class="form-label">{{ trans('vadmin.crud.name') }}</label>
                         <div class="input-group">
@@ -87,13 +85,11 @@
                         {% endif %}
                     </div>
 
-                    <!-- Description -->
                     <div class="col-12">
                         <label for="description" class="form-label">{{ trans('vadmin.crud.description') }}</label>
                         <textarea id="description" name="description" class="form-control" rows="3">{{ venue.description }}</textarea>
                     </div>
 
-                    <!-- Address -->
                     <div class="col-md-6">
                         <label for="address" class="form-label">{{ trans('vadmin.crud.address') }}</label>
                         <div class="input-group">
@@ -107,7 +103,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- Latitude -->
                     <div class="col-md-3">
                         <label for="lat" class="form-label">{{ trans('vadmin.crud.latitude') }}</label>
                         <div class="input-group">
@@ -122,7 +117,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- Longitude -->
                     <div class="col-md-3">
                         <label for="lng" class="form-label">{{ trans('vadmin.crud.longitude') }}</label>
                         <div class="input-group">
@@ -137,7 +131,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- Capacity -->
                     <div class="col-md-4">
                         <label for="capacity" class="form-label">{{ trans('vadmin.crud.total_cap') }}</label>
                         <div class="input-group">
@@ -151,7 +144,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- Image URL -->
                     <div class="col-md-8">
                         <label for="image_url" class="form-label">{{ trans('vadmin.crud.image') }}</label>
                         <div class="input-group">
@@ -160,7 +152,6 @@
                         </div>
                     </div>
 
-                    <!-- Actions -->
                     <div class="col-12 mt-5">
                         <div class="d-flex gap-3 pt-4 border-top">
                             <button type="submit" class="btn-purple px-5">

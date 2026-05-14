@@ -175,7 +175,6 @@
     <div class="container filter-wrapper">
         <div class="filter-card">
 
-
             <div class="row g-2 align-items-center">
                 <div class="col">
                     <div class="search-wrap">
@@ -205,7 +204,6 @@
 
             <div class="filter-divider"></div>
 
-            {# -- Row 2: category pills + active summary -- #}
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div class="cat-pills" id="catPills">
                     <button class="cat-pill {{ query_params.category is empty ? 'active' : '' }}" data-cat="">
@@ -276,8 +274,7 @@
         var selectedVenue = '{{ query_params.venue|default('')|e('js') }}';
         var allVenuesLabel = '{{ trans('events.all_venues')|e('js') }}';
 
-
-        venueBtn.addEventListener('click', function (e) {
+venueBtn.addEventListener('click', function (e) {
             e.stopPropagation();
             var open = venuePanel.classList.toggle('open');
             venueBtn.classList.toggle('open', open);
@@ -303,8 +300,7 @@
             }
         });
 
-
-        function getParams() {
+function getParams() {
             var q = searchInput.value.trim();
             var p = new URLSearchParams();
             if (q)            p.set('q', q);

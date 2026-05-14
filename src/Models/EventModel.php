@@ -35,10 +35,6 @@ class EventModel
         return BeanHelper::castBeanArray(R::find('events', 'category_id = ? ORDER BY date ASC', [$categoryId]));
     }
 
-    /**
-     * Paginated variant of findByCategory for the /events/category/{id} page.
-     * Mirrors getPaginated's LIMIT ? OFFSET ? convention.
-     */
     public function findByCategoryPaginated(int $categoryId, int $limit, int $offset): array
     {
         return BeanHelper::castBeanArray(
@@ -46,10 +42,6 @@ class EventModel
         );
     }
 
-    /**
-     * Count of events in a single category — pairs with findByCategoryPaginated
-     * to drive the page count for the partial.
-     */
     public function countByCategory(int $categoryId): int
     {
         return (int) R::count('events', 'category_id = ?', [$categoryId]);
@@ -86,10 +78,6 @@ class EventModel
         );
     }
 
-    /**
-     * Paginated variant of getUpcoming for the home page main grid.
-     * Same WHERE/ORDER as getUpcoming with LIMIT ? OFFSET ? appended.
-     */
     public function getUpcomingPaginated(int $limit, int $offset): array
     {
         return BeanHelper::castBeanArray(
@@ -97,20 +85,11 @@ class EventModel
         );
     }
 
-    /**
-     * Count of upcoming events — pairs with getUpcomingPaginated to drive
-     * the home-page paginator. Same WHERE as countActive(), kept under a
-     * dedicated name for symmetry with the paginated fetcher.
-     */
     public function countUpcoming(): int
     {
         return (int) R::count('events', 'date >= NOW()');
     }
 
-    /**
-     * Events that currently have at least one ticket actively on sale.
-     * Drives both the home-page featured row and the /events/on-sale listing.
-     */
     public function getWithOnSaleTickets(?int $limit = null, int $offset = 0): array
     {
         $sql = "SELECT DISTINCT e.*
@@ -125,8 +104,7 @@ class EventModel
                    AND (t.sold IS NULL OR t.sold = 0)
                  ORDER BY e.date ASC";
 
-        // Offset is only meaningful with a limit — MySQL rejects OFFSET without LIMIT.
-        // Existing callers that pass only $limit (home-featured row) keep working.
+        // MySQL does not allow OFFSET without a LIMIT, so only add it when a limit is set.
         $bindings = [];
         if ($limit !== null) {
             $sql .= ' LIMIT ? OFFSET ?';
@@ -168,12 +146,98 @@ class EventModel
         );
     }
 
+    public function searchOnSale(array $filters, int $limit, int $offset): array
+    {
+        [$extra, $bindings] = $this->onSaleFilterClause($filters);
+
+        $sql = "SELECT DISTINCT e.*
+                  FROM events e
+                  JOIN ticket t ON t.event_id = e.id
+                  LEFT JOIN venue ON venue.id = e.venue_id
+                 WHERE e.date >= NOW()
+                   AND t.sale_type   IS NOT NULL
+                   AND t.sale_start  IS NOT NULL
+                   AND t.sale_end    IS NOT NULL
+                   AND t.sale_start <= NOW()
+                   AND t.sale_end   >= NOW()
+                   AND (t.sold IS NULL OR t.sold = 0)
+                   {$extra}
+                 ORDER BY e.date ASC
+                 LIMIT ? OFFSET ?";
+
+        $bindings[] = $limit;
+        $bindings[] = $offset;
+
+        $rows = R::getAll($sql, $bindings);
+        $out  = [];
+        foreach ($rows as $row) {
+            $obj = new \stdClass();
+            foreach ($row as $k => $v) {
+                $obj->$k = $v;
+            }
+            foreach (['id', 'category_id', 'venue_id'] as $field) {
+                if (isset($obj->$field)) {
+                    $obj->$field = (int) $obj->$field;
+                }
+            }
+            $out[] = $obj;
+        }
+        return $out;
+    }
+
+    public function countSearchOnSale(array $filters): int
+    {
+        [$extra, $bindings] = $this->onSaleFilterClause($filters);
+
+        $sql = "SELECT COUNT(DISTINCT e.id)
+                  FROM events e
+                  JOIN ticket t ON t.event_id = e.id
+                  LEFT JOIN venue ON venue.id = e.venue_id
+                 WHERE e.date >= NOW()
+                   AND t.sale_type   IS NOT NULL
+                   AND t.sale_start  IS NOT NULL
+                   AND t.sale_end    IS NOT NULL
+                   AND t.sale_start <= NOW()
+                   AND t.sale_end   >= NOW()
+                   AND (t.sold IS NULL OR t.sold = 0)
+                   {$extra}";
+
+        return (int) R::getCell($sql, $bindings);
+    }
+
+    private function onSaleFilterClause(array $filters): array
+    {
+        $where    = [];
+        $bindings = [];
+
+        if (!empty($filters['q'])) {
+            $like = '%' . $filters['q'] . '%';
+            $where[] = '(e.title LIKE ? OR venue.name LIKE ? OR venue.address LIKE ?)';
+            $bindings[] = $like;
+            $bindings[] = $like;
+            $bindings[] = $like;
+        }
+        if (!empty($filters['category'])) {
+            $where[] = 'e.category_id = ?';
+            $bindings[] = (int) $filters['category'];
+        }
+        if (!empty($filters['venue'])) {
+            $where[] = 'e.venue_id = ?';
+            $bindings[] = (int) $filters['venue'];
+        }
+
+        return [
+            $where ? ' AND ' . implode(' AND ', $where) : '',
+            $bindings,
+        ];
+    }
+
     public function countActive(): int
     {
         return (int) R::getCell('SELECT COUNT(*) FROM events WHERE date >= NOW()');
     }
 
-    // stdClass instead of modifying frozen beans directly - they cant take extra props
+    // Adds venue name, address, price, and category to each event. Fires 2 queries per event, so don't call on big lists.
     public function hydrate(array $events, VenueModel $venues, TicketModel $tickets, ?CategoryModel $categories = null): array
     {
         $out = [];
@@ -204,7 +268,6 @@ class EventModel
         return $out;
     }
 
-
     public function getPaginated(int $limit, int $offset): array
     {
         return R::findAll('events', ' LIMIT ? OFFSET ? ', [$limit, $offset]);
@@ -215,83 +278,83 @@ class EventModel
         return (int) R::count('events');
     }
 
-public function search(array $filters, int $limit, int $offset): array
-{
-    $where = [];
-    $bindings = [];
+    public function search(array $filters, int $limit, int $offset): array
+    {
+        $where = [];
+        $bindings = [];
 
-    if (!empty($filters['q'])) {
-        $searchTerm = '%' . $filters['q'] . '%';
-        $where[] = '(events.title LIKE ? OR venue.name LIKE ? OR venue.address LIKE ?)';
-        $bindings[] = $searchTerm;
-        $bindings[] = $searchTerm;
-        $bindings[] = $searchTerm;
-    }
-
-    if (!empty($filters['category'])) {
-        $where[] = 'events.category_id = ?';
-        $bindings[] = (int) $filters['category'];
-    }
-
-    if (!empty($filters['venue'])) {
-        $where[] = 'events.venue_id = ?';
-        $bindings[] = (int) $filters['venue'];
-    }
-
-    $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
-
-    $query = "SELECT events.* FROM events
-              LEFT JOIN venue ON venue.id = events.venue_id
-              $whereClause
-              ORDER BY events.date ASC
-              LIMIT ? OFFSET ?";
-
-    $bindings[] = $limit;
-    $bindings[] = $offset;
-
-    $rawResults = R::getAll($query, $bindings);
-
-    $results = [];
-    foreach ($rawResults as $row) {
-        $obj = new \stdClass();
-        foreach ($row as $key => $value) {
-            $obj->$key = $value;
+        if (!empty($filters['q'])) {
+            $searchTerm = '%' . $filters['q'] . '%';
+            $where[] = '(events.title LIKE ? OR venue.name LIKE ? OR venue.address LIKE ?)';
+            $bindings[] = $searchTerm;
+            $bindings[] = $searchTerm;
+            $bindings[] = $searchTerm;
         }
-        $results[] = $obj;
+
+        if (!empty($filters['category'])) {
+            $where[] = 'events.category_id = ?';
+            $bindings[] = (int) $filters['category'];
+        }
+
+        if (!empty($filters['venue'])) {
+            $where[] = 'events.venue_id = ?';
+            $bindings[] = (int) $filters['venue'];
+        }
+
+        $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        $query = "SELECT events.* FROM events
+                  LEFT JOIN venue ON venue.id = events.venue_id
+                  $whereClause
+                  ORDER BY events.date ASC
+                  LIMIT ? OFFSET ?";
+
+        $bindings[] = $limit;
+        $bindings[] = $offset;
+
+        $rawResults = R::getAll($query, $bindings);
+
+        $results = [];
+        foreach ($rawResults as $row) {
+            $obj = new \stdClass();
+            foreach ($row as $key => $value) {
+                $obj->$key = $value;
+            }
+            $results[] = $obj;
+        }
+
+        return $results;
     }
 
-    return $results;
-}
+    public function countSearch(array $filters): int
+    {
+        $where = [];
+        $bindings = [];
 
-public function countSearch(array $filters): int
-{
-    $where = [];
-    $bindings = [];
+        if (!empty($filters['q'])) {
+            $searchTerm = '%' . $filters['q'] . '%';
+            $where[] = '(events.title LIKE ? OR venue.name LIKE ? OR venue.address LIKE ?)';
+            $bindings[] = $searchTerm;
+            $bindings[] = $searchTerm;
+            $bindings[] = $searchTerm;
+        }
 
-    if (!empty($filters['q'])) {
-        $searchTerm = '%' . $filters['q'] . '%';
-        $where[] = '(events.title LIKE ? OR venue.name LIKE ? OR venue.address LIKE ?)';
-        $bindings[] = $searchTerm;
-        $bindings[] = $searchTerm;
-        $bindings[] = $searchTerm;
+        if (!empty($filters['category'])) {
+            $where[] = 'events.category_id = ?';
+            $bindings[] = (int) $filters['category'];
+        }
+
+        if (!empty($filters['venue'])) {
+            $where[] = 'events.venue_id = ?';
+            $bindings[] = (int) $filters['venue'];
+        }
+
+        $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        $query = "SELECT COUNT(*) FROM events
+                  LEFT JOIN venue ON venue.id = events.venue_id
+                  $whereClause";
+
+        return (int) R::getCell($query, $bindings);
     }
-
-    if (!empty($filters['category'])) {
-        $where[] = 'events.category_id = ?';
-        $bindings[] = (int) $filters['category'];
-    }
-
-    if (!empty($filters['venue'])) {
-        $where[] = 'events.venue_id = ?';
-        $bindings[] = (int) $filters['venue'];
-    }
-
-    $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
-
-    $query = "SELECT COUNT(*) FROM events
-              LEFT JOIN venue ON venue.id = events.venue_id
-              $whereClause";
-    
-    return (int) R::getCell($query, $bindings);
-}
 }

@@ -10,6 +10,7 @@ use App\Models\VenueModel;
 
 class Cart
 {
+    // 15% service fee on every order. Add it last, after points are taken off.
     public const SERVICE_FEE_RATE = 0.15;
 
     public static function add(int $ticketId, int $qty = 1): void
@@ -25,6 +26,7 @@ class Cart
         $cart[$ticketId] = ($cart[$ticketId] ?? 0) + $qty;
         $_SESSION['cart'] = $cart;
 
+        // Cart empties itself after 5 minutes so old tickets don't get stuck.
         if ($wasEmpty) {
             $_SESSION['cart_expires_at'] = time() + 300;
         }
@@ -51,7 +53,6 @@ class Cart
         unset($_SESSION['cart_expires_at']);
     }
 
-    // extend before Stripe redirect - 5 min would expire mid-payment
     public static function extendExpiry(int $seconds): void
     {
         $_SESSION['cart_expires_at'] = time() + $seconds;
@@ -101,7 +102,7 @@ class Cart
             if ($event === null) {
                 continue;
             }
-            $onSale        = $tickets->isOnSale($ticket);
+            $onSale         = $tickets->isOnSale($ticket);
             $effectivePrice = $tickets->effectivePrice($ticket);
             $rows[] = [
                 'ticket_id'      => (int) $ticket->id,

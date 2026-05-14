@@ -7,7 +7,9 @@
     .main-wrapper { display: flex; flex-direction: column; flex: 1; min-height: 0; }
     .content-area { display: flex; flex: 1; overflow: hidden; min-height: 0; }
 
-    .map-sidebar { width: 350px; background: white; border-right: 1px solid #dee2e6; overflow-y: auto; padding: 1.5rem; flex-shrink: 0; }
+    .map-sidebar { width: 350px; background: white; border-right: 1px solid #dee2e6; flex-shrink: 0; display: flex; flex-direction: column; min-height: 0; }
+    .map-sidebar-header { padding: 1.5rem 1.5rem 0.75rem; background: white; flex-shrink: 0; }
+    #event-list { flex: 1 1 0; overflow-y: auto; padding: 0 1.5rem 1.5rem; min-height: 0; }
     .map-container { flex: 1; position: relative; min-height: 0; }
     .map-container #map { position: absolute; inset: 0; }
     .search-box { position: relative; margin-bottom: 1rem; }
@@ -66,10 +68,10 @@
             width: 100% !important;
             border-right: none;
             border-bottom: 1px solid #dee2e6;
-            padding: 0.875rem 1rem;
             max-height: 42vh;
-            flex-shrink: 0;
         }
+        .map-sidebar-header { padding: 0.875rem 1rem 0.5rem; }
+        #event-list { padding: 0 1rem 0.875rem; }
         .map-container { min-height: 0; }
         .map-placeholder-box { max-width: calc(100% - 2rem); padding: 1.25rem; }
         .legend-box { bottom: 10px; left: 10px; padding: 10px; font-size: 0.8rem; }
@@ -81,16 +83,18 @@
     <div class="main-wrapper">
 
         <div class="content-area">
-            <!-- Sidebar -->
+            
             <div class="map-sidebar">
-                <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill text-primary me-2"></i>{{ trans('map.header') }}</h5>
+                <div class="map-sidebar-header">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill text-primary me-2"></i>{{ trans('map.header') }}</h5>
 
-                <div class="search-box">
-                    <i class="bi bi-search"></i>
-                    <input type="text" id="mapSearch" class="form-control" placeholder="{{ trans('map.search_placeholder') }}" autocomplete="off">
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="mapSearch" class="form-control" placeholder="{{ trans('map.search_placeholder') }}" autocomplete="off">
+                    </div>
+
+                    <button class="btn-location" id="use-location-btn"><i class="bi bi-send-fill me-2"></i> {{ trans('map.use_location') }}</button>
                 </div>
-
-                <button class="btn-location" id="use-location-btn"><i class="bi bi-send-fill me-2"></i> {{ trans('map.use_location') }}</button>
 
                 <div id="event-list">
                 <div id="mapEventsList">
@@ -117,8 +121,7 @@
                 </div>
             </div>
 
-            <!-- Map Area -->
-            {% if google_maps_api_key is not empty %}
+{% if google_maps_api_key is not empty %}
             <div class="map-container">
                 <div id="map"></div>
                 <div class="legend-box">
@@ -144,9 +147,7 @@
 {% block scripts %}
     {% if google_maps_api_key is not empty %}
     <script>
-        // EVENTS grows over time as the sidebar's infinite scroll loads more
-        // pages. markers/infoWindows are indexed in lock-step with EVENTS,
-        // so a sidebar card's data-event-index always maps to the right marker.
+        // EVENTS, markers, and infoWindows all use the same position. Push to all three together.
         let EVENTS = {{ events_json|raw }};
         const MAP_PER_PAGE = {{ map_per_page|default(20) }};
         const MAP_TOTAL    = {{ map_total|default(events|length) }};
@@ -169,7 +170,7 @@
                 animation: google.maps.Animation.DROP,
             });
 
-            // Build InfoWindow with DOM methods so no user data touches innerHTML.
+            // Build with DOM methods so untrusted event text never goes through innerHTML.
             var infoDiv = document.createElement('div');
             infoDiv.className = 'info-window-content';
 
@@ -250,14 +251,12 @@
             });
             geocoder = new google.maps.Geocoder();
 
-            // Count how many events need geocoding
             EVENTS.forEach(function(event) {
                 if (!event.venue_lat || !event.venue_lng) {
                     if (event.venue_address) geocodingInProgress++;
                 }
             });
 
-            // Add markers
             EVENTS.forEach(function(event, index) {
                 if (event.venue_lat && event.venue_lng) {
                     var lat = parseFloat(event.venue_lat);
@@ -268,7 +267,6 @@
                     }
                 }
 
-                // No coordinates — geocode the venue address
                 if (event.venue_address) {
                     geocoder.geocode({ address: event.venue_address }, function(results, status) {
                         if (status === 'OK' && results[0] && results[0].geometry) {
@@ -279,13 +277,11 @@
                 }
             });
 
-            // If nothing needed geocoding, fit bounds now
             if (geocodingInProgress <= 0) {
                 var hasDirect = EVENTS.some(function(e) { return e.venue_lat && e.venue_lng; });
                 if (hasDirect) fitBounds();
             }
 
-            // Places Autocomplete on search
             var searchInput = document.getElementById('mapSearch');
             var autocomplete = new google.maps.places.Autocomplete(searchInput);
             autocomplete.bindTo('bounds', map);
@@ -301,7 +297,6 @@
             });
         }
 
-        // Sidebar card click -> focus marker
         document.addEventListener('DOMContentLoaded', function() {
             var cards = document.querySelectorAll('.event-card-mini');
             cards.forEach(function(card) {
@@ -321,7 +316,6 @@
                 });
             });
 
-            // Use My Location
             var locBtn = document.getElementById('use-location-btn');
             if (locBtn) {
                 locBtn.addEventListener('click', function() {
@@ -344,8 +338,8 @@
 
     <script>
     (function () {
-        // Sidebar event card — uses DOM methods; no innerHTML with untrusted data.
-        // Image src blocks javascript: URIs while allowing relative paths and https:// URLs.
+        // Build the card with DOM methods so untrusted text never goes through innerHTML.
+        // The image check also blocks javascript: URIs while still allowing https:// and relative paths.
         function buildSidebarCard(ev) {
             var url = (typeof ev.url === 'string' && ev.url.startsWith('/')) ? ev.url : '#';
             var a = document.createElement('a');
@@ -420,14 +414,16 @@
 
         var input = document.getElementById('mapSearch');
         var eventsList = document.getElementById('mapEventsList');
-        var sidebar    = document.querySelector('.map-sidebar');
+        var scroller   = document.getElementById('event-list');
         var originalHTML = eventsList.innerHTML;
         var timer, controller;
 
-        // === Infinite-scroll: load 20 more events when the sidebar nears the bottom ===
-        // Holds a reference to the temporary loader row while a fetch is in flight,
-        // so we can remove it once the new cards land.
         var loaderRow = null;
+
+        // Track which event ids and page numbers we already loaded. Stops a double scroll-burst from adding the same event twice.
+        var loadedEventIds = new Set();
+        EVENTS.forEach(function (e) { if (e && e.id != null) loadedEventIds.add(e.id); });
+        var pendingPages = new Set();
 
         function buildLoaderRow() {
             // A small shimmering pill with a spinner — visible while the next
@@ -445,8 +441,6 @@
             return row;
         }
 
-        // Build a sidebar card for an event that just arrived from the API,
-        // tagging it with its EVENTS-array index so sidebar↔marker clicks work.
         function buildLoadedCard(ev, index) {
             var card = document.createElement('div');
             card.className = 'event-card-mini card-in';
@@ -487,7 +481,6 @@
             info.appendChild(dateEl);
             card.appendChild(info);
 
-            // Sidebar card → focus marker (same behavior as the static cards).
             card.addEventListener('click', function () {
                 var idx = parseInt(this.dataset.eventIndex);
                 document.querySelectorAll('.event-card-mini').forEach(function (c) { c.classList.remove('active'); });
@@ -505,8 +498,6 @@
         }
 
         function placeMarkerForNewEvent(ev, index) {
-            // Mirror initMap's logic for the newly-arrived event so it lands
-            // on the map alongside the existing markers.
             if (typeof map === 'undefined') return;
             if (ev.venue_lat && ev.venue_lng) {
                 var lat = parseFloat(ev.venue_lat);
@@ -526,16 +517,19 @@
         }
 
         function loadNextMapPage() {
-            // Bail if we're already loading, there's nothing left, or the user
-            // is in search-mode (the sidebar isn't showing the paginated list).
+            // Skip while a load is in flight, when there's nothing left, or when search mode is on. Search replaces the list completely.
             if (mapLoading || !mapHasMore) return;
             if (input.value.trim()) return;
+
+            var nextPage = mapCurrentPage + 1;
+            // Don't fetch the same page twice.
+            if (pendingPages.has(nextPage)) return;
+            pendingPages.add(nextPage);
 
             mapLoading = true;
             loaderRow  = buildLoaderRow();
             eventsList.appendChild(loaderRow);
 
-            var nextPage = mapCurrentPage + 1;
             fetch('{{ base_path }}/api/map-events?page=' + nextPage)
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
@@ -543,6 +537,9 @@
                     loaderRow = null;
                     var batch = data.events || [];
                     batch.forEach(function (ev, i) {
+                        // Skip any event we already have on the page.
+                        if (ev && ev.id != null && loadedEventIds.has(ev.id)) return;
+                        if (ev && ev.id != null) loadedEventIds.add(ev.id);
                         var index = EVENTS.length;
                         EVENTS.push(ev);
                         placeMarkerForNewEvent(ev, index);
@@ -552,24 +549,23 @@
                     });
                     mapCurrentPage = data.page || nextPage;
                     mapHasMore     = !!data.has_more;
-                    // Capture the new, fuller list so clearing search restores it.
+                    // Snapshot the fuller list so clearing search restores it.
                     originalHTML = eventsList.innerHTML;
+                    pendingPages.delete(nextPage);
                     mapLoading = false;
                 })
                 .catch(function () {
                     if (loaderRow && loaderRow.parentNode) loaderRow.parentNode.removeChild(loaderRow);
                     loaderRow = null;
+                    pendingPages.delete(nextPage);
                     mapLoading = false;
                 });
         }
 
-        // Trigger a load when the sidebar's scrollable area is within 200px of
-        // the bottom. 200px gives us a head start so the new cards appear
-        // before the user hits the very end. `passive: true` lets the browser
-        // skip preventDefault checks for smoother mobile scrolling.
-        if (sidebar) {
-            sidebar.addEventListener('scroll', function () {
-                var remaining = sidebar.scrollHeight - sidebar.scrollTop - sidebar.clientHeight;
+        // Start loading when the user is within 200px of the bottom so the next cards land before they scroll there.
+        if (scroller) {
+            scroller.addEventListener('scroll', function () {
+                var remaining = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
                 if (remaining < 200) loadNextMapPage();
             }, { passive: true });
         }
@@ -579,8 +575,7 @@
             clearTimeout(timer);
             if (controller) controller.abort();
             if (!q) {
-                // Restore the (possibly-already-extended) paginated list and
-                // resume infinite scroll where we left off.
+                // Clearing the search puts back the paginated list. Infinite scroll resumes from where we left off.
                 eventsList.innerHTML = originalHTML;
                 return;
             }
