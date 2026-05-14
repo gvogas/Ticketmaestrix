@@ -385,12 +385,6 @@ public function show2faSetup(Request $request, Response $response): Response
             ->withStatus(302);
     }
 
-    public function logout(Request $request, Response $response): Response
-    {
-        Auth::logout();
-        return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
-    }
-
     /**
      * Internal helper to render templates with the base_path.
      */

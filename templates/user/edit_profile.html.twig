@@ -130,7 +130,28 @@
                     <p class="text-muted small mb-0">{{ trans('editprofile.delete_desc') }}</p>
                 </div>
                 <button class="btn btn-danger px-4 py-2 flex-shrink-0"
-                        onclick="return confirm('{{ trans('confirm.delete_account')|e('js') }}')">{{ trans('editprofile.delete_btn') }}</button>
+                        data-bs-toggle="modal" data-bs-target="#deleteModal">{{ trans('editprofile.delete_btn') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Account Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="fw-bold text-danger">{{ trans('editprofile.delete_label') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 pb-4">
+                    <p class="mb-0">{{ trans('confirm.delete_account') }}</p>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">{{ trans('editprofile.cancel_btn') }}</button>
+                    <form action="{{ base_path }}/delete-account" method="POST" class="m-0">
+                        <button type="submit" class="btn btn-danger px-4">{{ trans('editprofile.delete_btn') }}</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

@@ -245,4 +245,22 @@ class UserController
             ->withHeader('Location', $this->basePath . '/profile')
             ->withStatus(302);
     }
+
+    /** POST /delete-account — user deletes their own account and is logged out. */
+    public function deleteAccount(Request $request, Response $response): Response
+    {
+        if ($redirect = Auth::requireLogin($response, $this->basePath)) {
+            return $redirect;
+        }
+
+        $userId = (int) Auth::userId();
+
+        $this->userModel->delete($userId);
+
+        Auth::logout();
+
+        return $response
+            ->withHeader('Location', $this->basePath . '/login')
+            ->withStatus(302);
+    }
 }

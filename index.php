@@ -295,7 +295,6 @@ $app->group('', function ($group) {
     $group->post('/signup',          [AuthController::class, 'signup']);
     $group->get('/login',            [AuthController::class, 'showLogin']);
     $group->post('/login',           [AuthController::class, 'login']);
-    $group->post('/logout',          [AuthController::class, 'logout']);
     $group->get('/forgotpassword',   [AuthController::class, 'showForgotPassword']);
     $group->post('/forgotpassword',  [AuthController::class, 'forgotPassword']);
     $group->get('/verificationcode', [AuthController::class, 'showVerificationCode']);
@@ -321,9 +320,10 @@ $app->group('/users', function ($group) {
     $group->post('/{id}/role',   [UserController::class, 'roleToggle']);
     $group->post('/{id}/delete', [UserController::class, 'delete']);
 });
-$app->get('/profile',    [UserController::class, 'showProfile']);
-$app->get('/editprofile',[UserController::class, 'editProfile']);
-$app->post('/editprofile',[UserController::class, 'updateProfile']);
+$app->get('/profile',       [UserController::class, 'showProfile']);
+$app->get('/editprofile',   [UserController::class, 'editProfile']);
+$app->post('/editprofile',  [UserController::class, 'updateProfile']);
+$app->post('/delete-account',[UserController::class, 'deleteAccount']);
 
 // --- Categories ---
 $app->group('/categories', function ($group) {
