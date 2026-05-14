@@ -1,2 +1,9 @@
-php_flag engine off
+# Deny execution of PHP files regardless of how PHP is loaded (mod_php or PHP-FPM).
+# php_flag is mod_php-only and causes a 500 on PHP-FPM hosts, so we use
+# FilesMatch + Require instead.
+<FilesMatch "\.php\d?$">
+    Require all denied
+</FilesMatch>
+
+# Belt-and-suspenders: serve any PHP-extension file as plain text rather than executing it.
 AddType text/plain .php .php3 .phtml .pht .phps

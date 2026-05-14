@@ -216,7 +216,12 @@ class UserController
                     file_put_contents($tmpPath, (string) $stream);
                     $cleanupTmp = true;
                 }
-                $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($tmpPath);
+                // getimagesize() is used instead of finfo because the fileinfo
+                // extension is not guaranteed to be available on all hosts.
+                // It also actually parses the image data, which is stricter than
+                // a pure MIME sniff and prevents disguised non-image uploads.
+                $imageInfo = @getimagesize($tmpPath);
+                $mime      = $imageInfo ? $imageInfo['mime'] : '';
                 if ($cleanupTmp) {
                     @unlink($tmpPath);
                 }
@@ -233,6 +238,10 @@ class UserController
                     $filename = $id . '_' . time() . '.' . $ext;
                     $oldAvatarPath = (string) (Auth::user()->avatar ?? '');
                     $avatarFile->moveTo($uploadDir . $filename);
+                    // Ensure the file is world-readable so the web server can serve it.
+                    // PHP's move_uploaded_file inherits the process umask, which on many
+                    // shared hosts leaves files at 0600 (owner-only), blocking Apache.
+                    @chmod($uploadDir . $filename, 0644);
                     $newAvatarPath = '/uploads/avatars/' . $filename;
                 }
             }

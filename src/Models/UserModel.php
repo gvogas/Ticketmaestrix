@@ -71,7 +71,7 @@ class UserModel
             $user->email = (string) $data['email'];
         }
         if (array_key_exists('birthday', $data)) {
-            $user->birthday = $data['birthday'] !== '' ? (string) $data['birthday'] : null;
+            $user->birthday = ($data['birthday'] !== null && $data['birthday'] !== '') ? (string) $data['birthday'] : null;
         }
         if (array_key_exists('location', $data)) {
             $user->location = (string) $data['location'];
