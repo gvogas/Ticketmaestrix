@@ -11,13 +11,12 @@ class PointsHistoryModel
 {
     public function addPoints(int $userId, int $amount, string $description, ?int $orderId = null): void
     {
-        $bean = R::dispense('points_history');
-        $bean->user_id     = $userId;
-        $bean->order_id    = $orderId;
-        $bean->amount      = $amount;
-        $bean->description = $description;
-        $bean->created_at  = date('Y-m-d H:i:s');
-        R::store($bean);
+       
+        R::exec(
+            'INSERT INTO points_history (user_id, order_id, amount, description, created_at)
+                  VALUES (?, ?, ?, ?, ?)',
+            [$userId, $orderId, $amount, $description, date('Y-m-d H:i:s')]
+        );
     }
 
     public function findByUser(int $userId, int $limit = 50): array
