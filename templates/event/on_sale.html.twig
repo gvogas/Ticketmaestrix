@@ -1,0 +1,58 @@
+{% extends "layout.html.twig" %}
+{% block title %}{{ trans('home.sale') }} — {{ trans('app.title') }}{% endblock %}
+{% block head %}
+<style>
+    body { background: var(--bg-light); }
+
+    .sale-hero {
+        background: linear-gradient(135deg, #c53030 0%, #e53e3e 100%);
+        color: white;
+        padding: 4rem 0 6rem;
+        text-align: center;
+    }
+    .sale-hero h1 { font-weight: 800; font-size: clamp(1.6rem, 5vw, 2.6rem); }
+    .sale-hero p  { opacity: 0.85; font-size: 1.05rem; }
+
+    .cards-wrapper { margin-top: -3rem; position: relative; z-index: 10; }
+
+    /* Card entrance */
+    @keyframes card-in {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: none; }
+    }
+    .card-in { animation: card-in 0.2s ease both; }
+</style>
+{% endblock %}
+{% block content %}
+
+    <section class="sale-hero">
+        <div class="container">
+            <p class="mb-2 opacity-75 small fw-bold text-uppercase letter-spacing-1">
+                <i class="bi bi-tags-fill me-1"></i> {{ trans('home.badge_sale') }}
+            </p>
+            <h1>{{ trans('home.sale') }}</h1>
+            <p>{{ events|length }} {{ trans('home.nb_events') }}</p>
+            <a href="{{ base_path }}/" class="btn btn-light btn-sm rounded-pill px-4 mt-2 fw-bold text-danger">
+                <i class="bi bi-arrow-left me-1"></i> {{ trans('home.all') }}
+            </a>
+        </div>
+    </section>
+
+    <div class="container cards-wrapper mb-5">
+        {% if events is empty %}
+            <div class="text-center py-5 bg-white rounded-4 border">
+                <i class="bi bi-tags display-3 text-muted opacity-25 mb-3 d-block"></i>
+                <p class="text-muted fs-5 mb-0">{{ trans('home.no_sale') }}</p>
+            </div>
+        {% else %}
+        <div class="row g-4">
+            {% for event in events %}
+            <div class="col-md-6 col-lg-4 card-in" style="animation-delay:{{ loop.index0 * 40 }}ms">
+                {% include 'event/event-card.html.twig' with { 'event': event, 'base_path': base_path } %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+{% endblock %}

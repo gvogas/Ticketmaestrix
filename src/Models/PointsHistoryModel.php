@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Helpers\BeanHelper;
 use RedBeanPHP\R;
 
 class PointsHistoryModel
 {
     public function addPoints(int $userId, int $amount, string $description, ?int $orderId = null): void
     {
-        $bean = R::dispense('pointshistory');
+        $bean = R::dispense('points_history');
         $bean->user_id     = $userId;
         $bean->order_id    = $orderId;
         $bean->amount      = $amount;
@@ -21,17 +22,19 @@ class PointsHistoryModel
 
     public function findByUser(int $userId, int $limit = 50): array
     {
-        return R::findAll(
-            'pointshistory',
-            'user_id = ? ORDER BY created_at DESC LIMIT ?',
-            [$userId, $limit]
+        return BeanHelper::castBeanArray(
+            R::findAll(
+                'points_history',
+                'user_id = ? ORDER BY created_at DESC LIMIT ?',
+                [$userId, $limit]
+            )
         );
     }
 
     public function getTotal(int $userId): int
     {
         return (int) R::getCell(
-            'SELECT COALESCE(SUM(amount), 0) FROM pointshistory WHERE user_id = ?',
+            'SELECT COALESCE(SUM(amount), 0) FROM points_history WHERE user_id = ?',
             [$userId]
         );
     }

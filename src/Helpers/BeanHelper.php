@@ -56,8 +56,8 @@ class BeanHelper
     /**
      * Check if bean exists and has valid ID
      */
-    public static function isValidBean(\RedBeanPHP\OODBBean $bean): bool
+    public static function isValidBean(?\RedBeanPHP\OODBBean $bean): bool
     {
-        return isset($bean->id) && $bean->id > 0;
+        return $bean !== null && isset($bean->id) && $bean->id > 0;
     }
 }

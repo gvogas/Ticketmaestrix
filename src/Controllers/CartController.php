@@ -161,7 +161,8 @@ class CartController
 
         $userId          = (int) Auth::userId();
         $subtotal        = Cart::subtotal($rows);
-        $pointsToUse     = (int) ($request->getParsedBody()['points_to_use'] ?? 0);
+        $body            = $request->getParsedBody() ?? [];
+        $pointsToUse     = (int) ($body['points_to_use'] ?? 0);
         $user            = Auth::user(); // request-cached; avoids a redundant R::load
         $availablePoints = (int) ($user->points ?? 0);
         $pointsToUse     = $this->clampPoints($pointsToUse, $availablePoints, (int) floor($subtotal * 100));
@@ -172,7 +173,7 @@ class CartController
         if ($total < 0.50) {
             try {
                 return $this->createOrderDirectly(
-                    $rows, $userId, $total, $subtotal, $pointsToUse, $availablePoints, $response
+                    $rows, $userId, $total, $subtotal, $pointsToUse, $response
                 );
             } catch (\Throwable $e) {
                 error_log('Direct order creation failed: ' . $e->getMessage());
@@ -278,7 +279,6 @@ class CartController
         float    $total,
         float    $subtotal,
         int      $pointsToUse,
-        int      $availablePoints,
         Response $response,
     ): Response {
         $pointsEarned = (int) floor($subtotal * 0.10);
@@ -296,7 +296,8 @@ class CartController
             $orderId = (int) R::store($order);
 
             foreach ($rows as $row) {
-                $item            = R::dispense('orderitem');
+                // Bean type matches the live DB table `order_items`.
+                $item            = R::dispense('order_items');
                 $item->quantity  = (int) $row['quantity'];
                 $item->order_id  = $orderId;
                 $item->ticket_id = (int) $row['ticket_id'];
@@ -306,7 +307,9 @@ class CartController
 
             $user = R::load('users', $userId);
             if ($pointsToUse > 0) {
-                $user->points = max(0, $availablePoints - $pointsToUse);
+                // Read from the freshly-loaded bean, not the session-cached value,
+                // to avoid a stale-read race if the user's points changed mid-request.
+                $user->points = max(0, (int) ($user->points ?? 0) - $pointsToUse);
                 $this->pointsHistoryModel->addPoints(
                     $userId,
                     -$pointsToUse,

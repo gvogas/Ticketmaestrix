@@ -356,6 +356,7 @@ $app->group('/events', function ($group) {
     $group->get('',                   [EventController::class, 'index']);
     $group->post('',                  [EventController::class, 'store'])->add(AdminMiddleware::class);
     $group->get('/create',            [EventController::class, 'create'])->add(AdminMiddleware::class);
+    $group->get('/on-sale',           [HomeController::class, 'showOnSale']);
     $group->get('/category/{id}',     [EventController::class, 'byCategory']);
 
     $group->get('/{id}',              [EventController::class, 'viewDetails']);

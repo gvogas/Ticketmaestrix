@@ -83,6 +83,44 @@
         padding: 8px 16px;
         font-size: 1.2rem;
         border: 2px solid var(--brand-deep);
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    .price-badge.on-sale {
+        background: #e53e3e;
+        color: #ffffff;
+        border-color: #c53030;
+    }
+
+    .price-badge .original-price {
+        font-size: 0.75rem;
+        font-weight: 600;
+        opacity: 0.8;
+        text-decoration: line-through;
+        display: block;
+    }
+
+    .price-badge .sale-price {
+        font-size: 1.2rem;
+        font-weight: 800;
+        display: block;
+    }
+
+    .sale-ribbon {
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: #e53e3e;
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 4px 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        z-index: 3;
+        border-bottom: 1px solid #c53030;
+        border-right: 1px solid #c53030;
     }
 
     .card-content {
@@ -137,7 +175,7 @@
                         <p class="text-muted mb-0">
                             <i class="bi bi-geo-alt-fill text-purple"></i> {{ event.venue_name|default('Venue TBD') }}
                             <span class="mx-2">|</span>
-                            <i class="bi bi-calendar-event text-purple"></i> {{ event.date }}
+                            <i class="bi bi-calendar-event text-purple"></i> {{ event.date|default('') }}
                         </p>
                     </div>
                     <div class="col-md-4 text-md-end mt-3 mt-md-0">
@@ -167,8 +205,12 @@
                         <div class="ticket-visual">
                             <i class="bi bi-ticket-perforated-fill ticket-icon"></i>
                             {% if ticket.on_sale %}
-                                <span class="price-badge" style="background:#e53e3e;">${{ ticket.effective_price|number_format(2) }}</span>
-                                <span class="text-decoration-line-through text-white-50 small ms-1">${{ ticket.price|number_format(2) }}</span>
+                                {# Sale ribbon in the corner makes it immediately obvious the ticket is discounted #}
+                                <span class="sale-ribbon">{{ trans('evtickets.on_sale') }}</span>
+                                <span class="price-badge on-sale">
+                                    <span class="original-price">${{ ticket.price|number_format(2) }}</span>
+                                    <span class="sale-price">${{ ticket.effective_price|number_format(2) }}</span>
+                                </span>
                             {% else %}
                                 <span class="price-badge">${{ ticket.price|number_format(2) }}</span>
                             {% endif %}

@@ -74,7 +74,7 @@
                         <label for="event_id" class="form-label">{{ trans('tadmin.crud.updateevent') }}</label>
                         <select id="event_id" name="event_id" required
                                 class="form-select{{ errors.event_id is defined ? ' is-invalid' : '' }}">
-                            <option value="">— Choose an event —</option>
+                            <option value="">â€” Choose an event â€”</option>
                             {% for event in events %}
                             <option value="{{ event.id }}" {% if event.id == ticket.event_id %}selected{% endif %}>
                                 {{ event.title }} ({{ event.date }})

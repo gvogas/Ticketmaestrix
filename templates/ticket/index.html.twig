@@ -116,12 +116,12 @@
 
                     <!-- Visual Header (Purple with White Icon) -->
                     <div class="ticket-visual">
-                        <span class="price-badge">${{ ticket.price }}</span>
+                        <span class="price-badge">${{ ticket.price|number_format(2) }}</span>
                         <i class="bi bi-ticket-perforated-fill ticket-icon"></i>
                     </div>
 
                     <div class="card-content">
-                        <h3 class="h5 fw-bold mb-2">{{ trans('tadmin.row_label') }} {{ ticket.row }} — {{ trans('tadmin.seat_label') }} {{ ticket.seat }}</h3>
+                        <h3 class="h5 fw-bold mb-2">{{ trans('tadmin.row_label') }} {{ ticket.row }} â€” {{ trans('tadmin.seat_label') }} {{ ticket.seat }}</h3>
 
                         <div class="small text-muted mb-2">
                             <span class="badge bg-light text-dark border fw-normal px-3 py-2">

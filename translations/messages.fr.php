@@ -151,6 +151,7 @@ return [
     'evtickets.tickets'  => 'BILLETS',
     'evtickets.seat'     => 'NUMÉRO DE SIÈGE :',
     'evtickets.button'   => 'CHOISIR LE SIÈGE',
+    'evtickets.on_sale'  => 'SOLDE',
 
     // ADMIN
 

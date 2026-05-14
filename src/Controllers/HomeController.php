@@ -38,16 +38,20 @@ class HomeController
      */
     public function index(Request $request, Response $response): Response
     {
-        // Pull all upcoming events once, then split into featured (first 3)
-        // and the remainder. One DB hit instead of two with overlap risk.
-        $upcoming = $this->eventModel->getUpcoming();
-        $featured = array_slice($upcoming, 0, 3);
-        $rest     = array_slice($upcoming, 3);
+        // Events with active sale tickets for the featured "On Sale" row.
+        // Limit to 3 in SQL; count separately to avoid fetching all rows just for the badge.
+        $featured = $this->eventModel->hydrate(
+            $this->eventModel->getWithOnSaleTickets(3),
+            $this->venueModel,
+            $this->ticketModel
+        );
 
-        // Hydrate both lists with venue + min_price so the cards have
-        // everything they need without lookups in Twig.
-        $featured = $this->eventModel->hydrate($featured, $this->venueModel, $this->ticketModel);
-        $rest     = $this->eventModel->hydrate($rest,     $this->venueModel, $this->ticketModel);
+        // All upcoming events for the main grid below.
+        $rest = $this->eventModel->hydrate(
+            $this->eventModel->getUpcoming(),
+            $this->venueModel,
+            $this->ticketModel
+        );
 
         $html = $this->twig->render('home/home.html.twig', [
             'base_path'     => $this->basePath,
@@ -56,7 +60,34 @@ class HomeController
             'events'        => $rest,
             'categories'    => $this->categoryModel->getAll(),
             'live_count'    => $this->eventModel->countActive(),
-            'on_sale_count' => count($featured),
+            'on_sale_count' => $this->eventModel->countWithOnSaleTickets(),
+        ]);
+
+        $response->getBody()->write($html);
+        return $response;
+    }
+
+    /**
+     * "All On Sale" listing: every upcoming event that has at least one
+     * ticket currently within its sale window.
+     */
+    public function showOnSale(Request $request, Response $response): Response
+    {
+        $events = $this->eventModel->hydrate(
+            $this->eventModel->getWithOnSaleTickets(),
+            $this->venueModel,
+            $this->ticketModel
+        );
+
+        // Tag every event so event-card.html.twig shows the SALE ribbon.
+        foreach ($events as $event) {
+            $event->badge = 'SALE';
+        }
+
+        $html = $this->twig->render('event/on_sale.html.twig', [
+            'base_path'     => $this->basePath,
+            'current_route' => 'events',
+            'events'        => $events,
         ]);
 
         $response->getBody()->write($html);

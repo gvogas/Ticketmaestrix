@@ -97,7 +97,7 @@ class StripeWebhookController
                 $orderId = (int) R::store($order);
 
                 foreach ($rows as $row) {
-                    $item            = R::dispense('orderitem');
+                    $item            = R::dispense('order_items');
                     $item->quantity  = (int) $row['quantity'];
                     $item->order_id  = $orderId;
                     $item->ticket_id = (int) $row['ticket_id'];

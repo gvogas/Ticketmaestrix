@@ -74,7 +74,7 @@
     @keyframes row-in { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
     .row-in { animation:row-in 0.15s ease both; }
 
-    /* Connected search — active state */
+    /* Connected search â€” active state */
     .search-active .form-control { border:2px solid #9b51e0; border-bottom:1px solid #ede8f5; border-radius:16px 16px 0 0; box-shadow:0 0 0 3px rgba(155,81,224,0.15); }
     .search-active #homeSearchResults { border:2px solid #9b51e0; border-top:1px solid #ede8f5; border-radius:0 0 16px 16px; box-shadow:0 12px 28px rgba(155,81,224,0.18); }
 
@@ -128,7 +128,7 @@
         <!-- Tickets On Sale Section -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="fw-bold"><i class="bi bi-tags text-danger me-2"></i>{{ trans('home.sale') }}</h4>
-            <a href="#" class="text-muted small text-decoration-none">{{ trans('home.view') }} <i class="bi bi-arrow-right"></i></a>
+            <a href="{{ base_path }}/events/on-sale" class="text-muted small text-decoration-none">{{ trans('home.view') }} <i class="bi bi-arrow-right"></i></a>
         </div>
 
         <div class="row g-4 mb-5">
@@ -211,7 +211,7 @@
     <script>
     (function () {
         var COLORS = ['#9b51e0','#5E246E','#22c55e','#f59e0b','#3b82f6','#ef4444'];
-        // Deterministic color from category name — same category always gets the same dot color.
+        // Deterministic color from category name â€” same category always gets the same dot color.
         function catColor(name) {
             var h = 0, s = name || '';
             for (var i = 0; i < s.length; i++) h += s.charCodeAt(i);
@@ -219,16 +219,16 @@
             return COLORS[h % COLORS.length];
         }
 
-        // Builds one result row using DOM methods only — no innerHTML with untrusted data.
+        // Builds one result row using DOM methods only â€” no innerHTML with untrusted data.
         function buildRow(ev) {
             var a = document.createElement('a');
-            // Only allow root-relative paths — guards against javascript: or data: URIs in API response.
+            // Only allow root-relative paths â€” guards against javascript: or data: URIs in API response.
             var url = (typeof ev.url === 'string' && ev.url.startsWith('/')) ? ev.url : '#';
             a.setAttribute('href', url);
             a.style.cssText = 'display:flex;align-items:center;gap:10px;padding:7px 14px;border-bottom:1px solid #f5f0fa;text-decoration:none;';
 
             var dot = document.createElement('span');
-            // Set layout styles via cssText and color separately — avoids concatenating untrusted values into cssText.
+            // Set layout styles via cssText and color separately â€” avoids concatenating untrusted values into cssText.
             dot.style.cssText = 'width:8px;height:8px;border-radius:50%;flex-shrink:0;';
             dot.style.background = catColor(ev.category);
 
@@ -242,7 +242,7 @@
             var meta = document.createElement('span');
             meta.style.cssText = 'font-size:11px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;';
             var locationParts = [ev.venue_name, ev.venue_address].filter(Boolean);
-            var locationStr = locationParts.join(' · ');
+            var locationStr = locationParts.join(' - ');
             meta.textContent = locationStr + (ev.date ? (locationStr ? ', ' : '') + ev.date : '');
 
             body.appendChild(title);
@@ -250,7 +250,7 @@
 
             var price = document.createElement('span');
             price.style.cssText = 'font-size:12px;font-weight:700;color:#5E246E;white-space:nowrap;flex-shrink:0;';
-            // null/undefined means price is not yet set — show "TBA" rather than "Free".
+            // null/undefined means price is not yet set â€” show "TBA" rather than "Free".
             price.textContent = (ev.min_price === null || ev.min_price === undefined)
                 ? '{{ trans('home.tba')|e('js') }}'
                 : (ev.min_price > 0 ? '$' + parseFloat(ev.min_price).toFixed(2) : 'Free');
@@ -277,7 +277,7 @@
             spin.className = 'search-spinner';
             var txt = document.createElement('span');
             txt.style.cssText = 'font-size:12px;color:#aaa;';
-            txt.textContent = 'Searching…';
+            txt.textContent = 'Searching...';
             s.appendChild(spin);
             s.appendChild(txt);
             return s;
@@ -285,7 +285,7 @@
 
         function hideResults() {
             results.classList.remove('open');
-            // Only deactivate the pill if the input is actually empty — keeps active state
+            // Only deactivate the pill if the input is actually empty â€” keeps active state
             // while results are loading or hidden but the user is still typing.
             if (!input.value.trim()) searchContainer.classList.remove('search-active');
             setTimeout(function () { results.style.display = 'none'; }, 150);

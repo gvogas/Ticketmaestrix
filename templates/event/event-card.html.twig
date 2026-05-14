@@ -91,8 +91,12 @@
 
         <div class="d-flex align-items-center justify-content-between pt-2 border-top">
             <div>
-                {% set display_price = event.min_price ?: event.price ?: 0 %}
-                <span class="fs-5 fw-bold text-dark">${{ display_price|number_format(2) }}</span>
+                {% set display_price = event.min_price is not null ? event.min_price : (event.price is not null ? event.price : null) %}
+                {% if display_price is not null %}
+                    <span class="fs-5 fw-bold text-dark">${{ display_price|number_format(2) }}</span>
+                {% else %}
+                    <span class="fs-5 fw-bold text-muted">{{ trans('home.tba') }}</span>
+                {% endif %}
                 {% if event.original_price is defined and event.original_price %}
                     <span class="text-decoration-line-through text-muted small ms-1">${{ event.original_price|number_format(2) }}</span>
                 {% endif %}

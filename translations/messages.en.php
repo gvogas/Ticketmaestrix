@@ -144,6 +144,7 @@ return [
     'evtickets.tickets'  => 'TICKETS',
     'evtickets.seat'     => 'SEAT NUMBER:',
     'evtickets.button'   => 'SELECT SEAT',
+    'evtickets.on_sale'  => 'SALE',
 
     // ADMIN
 

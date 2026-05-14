@@ -72,13 +72,65 @@ class EventModel
     }
 
     /**
-     * The next $limit upcoming events. Powers the "Tickets On Sale"
-     * featured row on the home page.
+     * Events that currently have at least one ticket actively on sale.
+     * Drives both the home-page featured row and the /events/on-sale listing.
      */
-    public function getUpcomingFeatured(int $limit = 3): array
+    public function getWithOnSaleTickets(?int $limit = null): array
     {
-        return BeanHelper::castBeanArray(
-            R::find('events', 'date >= NOW() ORDER BY date ASC LIMIT ?', [$limit])
+        $sql = "SELECT DISTINCT e.*
+                  FROM events e
+                  JOIN ticket t ON t.event_id = e.id
+                 WHERE e.date >= NOW()
+                   AND t.sale_type   IS NOT NULL
+                   AND t.sale_start  IS NOT NULL
+                   AND t.sale_end    IS NOT NULL
+                   AND t.sale_start <= NOW()
+                   AND t.sale_end   >= NOW()
+                   AND (t.sold IS NULL OR t.sold = 0)
+                 ORDER BY e.date ASC";
+
+        $bindings = [];
+        if ($limit !== null) {
+            $sql .= ' LIMIT ?';
+            $bindings[] = $limit;
+        }
+
+        $rows = R::getAll($sql, $bindings);
+
+        $out = [];
+        foreach ($rows as $row) {
+            $obj = new \stdClass();
+            foreach ($row as $k => $v) {
+                $obj->$k = $v;
+            }
+            // Cast FK fields to int so templates and controllers behave consistently.
+            foreach (['id', 'category_id', 'venue_id'] as $field) {
+                if (isset($obj->$field)) {
+                    $obj->$field = (int) $obj->$field;
+                }
+            }
+            $out[] = $obj;
+        }
+        return $out;
+    }
+
+    /**
+     * Count of events with at least one active sale ticket.
+     * Powers the "On Sale" hero badge on the home page.
+     */
+    public function countWithOnSaleTickets(): int
+    {
+        return (int) R::getCell(
+            "SELECT COUNT(DISTINCT e.id)
+               FROM events e
+               JOIN ticket t ON t.event_id = e.id
+              WHERE e.date >= NOW()
+                AND t.sale_type   IS NOT NULL
+                AND t.sale_start  IS NOT NULL
+                AND t.sale_end    IS NOT NULL
+                AND t.sale_start <= NOW()
+                AND t.sale_end   >= NOW()
+                AND (t.sold IS NULL OR t.sold = 0)"
         );
     }
 
@@ -153,7 +205,7 @@ public function search(array $filters, int $limit, int $offset): array
     $where = [];
     $bindings = [];
     
-    // Search by event title, venue name, or venue address — description excluded (too broad, causes false positives).
+    // Search by event title, venue name, or venue address
     if (!empty($filters['q'])) {
         $searchTerm = '%' . $filters['q'] . '%';
         $where[] = '(events.title LIKE ? OR venue.name LIKE ? OR venue.address LIKE ?)';
@@ -208,7 +260,7 @@ public function countSearch(array $filters): int
     $where = [];
     $bindings = [];
     
-    // Search by event title, venue name, or venue address — description excluded (too broad, causes false positives).
+    // Search by event title, venue name, or venue address 
     if (!empty($filters['q'])) {
         $searchTerm = '%' . $filters['q'] . '%';
         $where[] = '(events.title LIKE ? OR venue.name LIKE ? OR venue.address LIKE ?)';
