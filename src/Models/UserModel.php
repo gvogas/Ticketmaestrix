@@ -46,9 +46,23 @@ class UserModel
     public function deleteById(int $id): void
     {
         $user = R::load('users', $id);
-        if (BeanHelper::isValidBean($user)) {
-            R::trash($user);
+        if (!BeanHelper::isValidBean($user)) {
+            return;
         }
+
+        // Remove avatar file from disk before trashing the row.
+        $avatar = (string) ($user->avatar ?? '');
+        if ($avatar !== '') {
+            $file = __DIR__ . '/../../' . ltrim($avatar, '/');
+            if (file_exists($file)) {
+                @unlink($file);
+            }
+        }
+
+        // Revoke all remember-me and 2FA-trust tokens for this user.
+        R::exec('DELETE FROM authtoken WHERE user_id = ?', [$id]);
+
+        R::trash($user);
     }
 
     /**

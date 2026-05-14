@@ -294,10 +294,11 @@ $app->group('/users', function ($group) {
 
 // --- Profile (auth required) ---
 $app->group('', function ($group) {
-    $group->get('/profile',         [UserController::class, 'showProfile']);
-    $group->get('/editprofile',     [UserController::class, 'editProfile']);
-    $group->post('/editprofile',    [UserController::class, 'updateProfile']);
-    $group->post('/profile/delete', [UserController::class, 'deleteAccount']);
+    $group->get('/profile',            [UserController::class, 'showProfile']);
+    $group->get('/editprofile',        [UserController::class, 'editProfile']);
+    $group->post('/editprofile',      [UserController::class, 'updateProfile']);
+    $group->post('/delete-account',   [UserController::class, 'deleteAccount']);
+    $group->post('/profile/delete',   [UserController::class, 'deleteAccount']);
 })->add(AuthMiddleware::class);
 
 // --- Categories (admin only) ---

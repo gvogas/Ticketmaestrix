@@ -308,19 +308,18 @@ class UserController
             ->withStatus(302);
     }
 
-    /** POST /profile/delete — permanently delete the logged-in user's account. */
+    /** POST /delete-account — user deletes their own account and is logged out. */
     public function deleteAccount(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireLogin($response, $this->basePath)) {
-            return $redirect;
-        }
+        $userId = (int) Auth::userId();
 
-        $id = (int) Auth::userId();
+        // deleteById handles avatar file removal and auth token revocation.
+        $this->userModel->deleteById($userId);
+
         Auth::logout();
-        $this->userModel->deleteById($id);
 
         return $response
-            ->withHeader('Location', $this->basePath . '/')
+            ->withHeader('Location', $this->basePath . '/login')
             ->withStatus(302);
     }
 }
