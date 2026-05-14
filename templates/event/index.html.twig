@@ -99,7 +99,7 @@
 
                         <div class="small text-muted mb-4">
                             <i class="bi bi-geo-alt-fill me-2" style="color: var(--brand-purple);"></i>
-                            {{ trans('evadmin.venue_id') }} {{ event.venue_id }}
+                            {{ event.venue_name ?: trans('evadmin.venue') }}
                         </div>
 
                         <!-- Ticket Button -->

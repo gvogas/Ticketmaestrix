@@ -62,7 +62,7 @@ class AuthController
                 return $response->withHeader('Location', $this->basePath . '/2fa/setup')->withStatus(302);
             }
 
-            // This browser already passed 2FA for this account — skip it.
+            // same browser already passed 2fa for this account - skip the challange
             if (Auth::check2faTrust((int) $user->id)) {
                 Auth::login((int) $user->id);
                 if ($remember) {
@@ -201,8 +201,7 @@ public function show2faSetup(Request $request, Response $response): Response
                 ->withStatus(302);
         }
 
-        // Setup data is missing (session expired or replayed request) — restart login.
-        // Never log in without completing TOTP verification.
+        // setup data missing means session expired or request was replayed - bounce to login
         $setupData = $_SESSION['2fa_setup_data'] ?? null;
         if (!$setupData || empty($setupData['secret'])) {
             return $response
@@ -220,12 +219,9 @@ public function show2faSetup(Request $request, Response $response): Response
                 ->withStatus(302);
         }
 
-        // Code verified — now safe to persist.
         if ($pendingUserId) {
-            // Existing user completing 2FA setup for the first time.
             $user = $this->users->load((int) $pendingUserId);
             if (!\App\Helpers\BeanHelper::isValidBean($user)) {
-                // User was deleted between login and 2FA completion — restart.
                 unset($_SESSION['2fa_setup_pending_user_id'], $_SESSION['2fa_setup_data']);
                 return $response->withHeader('Location', $this->basePath . '/login')->withStatus(302);
             }
@@ -237,11 +233,9 @@ public function show2faSetup(Request $request, Response $response): Response
                 ->withStatus(302);
         }
 
-        // New signup — create the account now that setup is confirmed.
         $signupData['totp_secret'] = $secret;
         $newUser = $this->users->create($signupData);
         if (!$newUser || !(int) $newUser->id) {
-            // Account creation failed (e.g. DB error or duplicate email race).
             $html = $this->twig->render('auth/2fa_qr.html.twig', [
                 'base_path' => $this->basePath,
                 'error'     => 'Account creation failed. Please try signing up again.',
@@ -265,7 +259,6 @@ public function show2faSetup(Request $request, Response $response): Response
             return $response->withHeader('Location', $this->basePath . '/login')->withStatus(302);
         }
 
-        // Read and clear the error that verify2faLogin() may have written on the previous attempt.
         $error = $_SESSION['2fa_login_error'] ?? null;
         unset($_SESSION['2fa_login_error']);
 
@@ -309,9 +302,6 @@ public function show2faSetup(Request $request, Response $response): Response
         return $response->withHeader('Location', $this->basePath . '/login')->withStatus(302);
     }
 
-    /**
-     * Internal helper to render templates with the base_path.
-     */
     private function render(Response $response, string $template, array $data = []): Response
     {
         $data['base_path'] = $this->basePath;

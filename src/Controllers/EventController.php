@@ -34,11 +34,9 @@ class EventController
         $perPage = 30;
         $offset = ($page - 1) * $perPage;
 
-        // Check if there are any search/filter parameters
         $hasFilters = !empty($queryParams['q']) || !empty($queryParams['category']) || !empty($queryParams['venue']);
 
         if ($hasFilters) {
-            // Use search functionality
             $filters = [
                 'q' => $queryParams['q'] ?? '',
                 'category' => $queryParams['category'] ?? '',
@@ -48,20 +46,22 @@ class EventController
             $events = $this->eventModel->search($filters, $perPage, $offset);
             $totalEvents = $this->eventModel->countSearch($filters);
         } else {
-            // No filters - use regular pagination
             $events = $this->eventModel->getPaginated($perPage, $offset);
             $totalEvents = $this->eventModel->countAll();
         }
 
         $totalPages = ceil($totalEvents / $perPage);
 
-        // Check if user is admin - render admin dashboard or user-friendly page
         if (\App\Helpers\Auth::isAdmin()) {
-            // Admin sees the management console with edit/delete capabilities.
-            // Pass both old (`currentPage`/`totalPages`) and new
-            // (`current_page`/`total_pages`) variable names so the inline
-            // pagination block and the shared partial both keep working
+            // Hydrate even for admins — the admin template reads `event.venue_name`
+            // (added 2026-05-14 to replace "Venue #<id>" fallbacks), which is a
+            // hydrate-only property and unset on raw beans.
+            //
+            // Both old (`currentPage`/`totalPages`) and new
+            // (`current_page`/`total_pages`) variable names are passed so the
+            // inline pagination block and the shared partial keep working
             // during the template refactor.
+            $events = $this->eventModel->hydrate($events, $this->venueModel, $this->ticketModel, $this->categoryModel);
             $html = $this->twig->render('event/index.html.twig', [
                 'base_path'    => $this->basePath,
                 'events'       => $events,
@@ -72,8 +72,6 @@ class EventController
                 'query_params' => $queryParams,
             ]);
         } else {
-            // Regular users see a clean events listing page
-            // Hydrate events with venue, category, and ticket information for the user view
             $events = $this->eventModel->hydrate($events, $this->venueModel, $this->ticketModel, $this->categoryModel);
 
             $html = $this->twig->render('event/user_index.html.twig', [
@@ -220,13 +218,9 @@ class EventController
             return $response->withHeader('Location', $this->basePath . '/events')->withStatus(302);
         }
 
-        // Check if user is admin to show different views
         $isAdmin = \App\Helpers\Auth::isAdmin();
 
-        // Always hydrate so the detail page can show the venue name, category
-        // name, and min price. Without this, admins fall through to the
-        // template's "Venue #N" / "Category #N" id-fallbacks because the
-        // hydrate-only properties (venue_name, category) are unset on raw beans.
+        // hydrate even for admins - raw beans dont have venue_name/category props
         $event = $this->eventModel->hydrate([$event], $this->venueModel, $this->ticketModel, $this->categoryModel)[0];
 
         $html = $this->twig->render('event/event_detail.html.twig', [
@@ -275,7 +269,7 @@ class EventController
         return $response;
     }
 
-    /** GET /api/search?q= — JSON live-search endpoint */
+    /** GET /api/search?q= — JSON live-search, used by the navbar typeahed */
     public function searchJson(Request $request, Response $response): Response
     {
         $params = $request->getQueryParams();

@@ -6,17 +6,13 @@ namespace App\Helpers;
 
 class BeanHelper
 {
-    /**
-     * Convert bean properties to proper types
-     */
     public static function castBeanProperties(\RedBeanPHP\OODBBean $bean): \RedBeanPHP\OODBBean
     {
-        // Cast ID to integer
         if (isset($bean->id)) {
             $bean->id = (int) $bean->id;
         }
-        
-        // Cast common integer fields used across models
+
+        // FK fields all need int - templates and controllers rely on this
         $intFields = [
             'category_id',
             'venue_id',
@@ -37,25 +33,16 @@ class BeanHelper
         return $bean;
     }
     
-    /**
-     * Cast array of beans
-     */
     public static function castBeanArray(array $beans): array
     {
         return array_map([self::class, 'castBeanProperties'], $beans);
     }
-    
-    /**
-     * Safe integer casting from mixed input
-     */
+
     public static function toInt(mixed $value): int
     {
         return (int) $value;
     }
-    
-    /**
-     * Check if bean exists and has valid ID
-     */
+
     public static function isValidBean(?\RedBeanPHP\OODBBean $bean): bool
     {
         return $bean !== null && isset($bean->id) && $bean->id > 0;

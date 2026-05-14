@@ -15,11 +15,6 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Twig\Environment;
 
-/**
- * Public-facing landing pages: home grid, events-near-you map, and the
- * shopping cart. None of these require login, but cart checkout (handled
- * by CartController) does.
- */
 class HomeController
 {
     public function __construct(
@@ -32,10 +27,6 @@ class HomeController
         private string          $basePath,
     ) {}
 
-    /**
-     * Home page: featured upcoming events on top, the rest in a grid below,
-     * dynamic category pills, and live counts in the hero badges.
-     */
     public function index(Request $request, Response $response): Response
     {
         // Paginate the main grid (3 cols × 10 rows). The featured row above
@@ -79,10 +70,6 @@ class HomeController
         return $response;
     }
 
-    /**
-     * "All On Sale" listing: every upcoming event that has at least one
-     * ticket currently within its sale window.
-     */
     public function showOnSale(Request $request, Response $response): Response
     {
         $queryParams = $request->getQueryParams();
@@ -96,7 +83,6 @@ class HomeController
             $this->ticketModel
         );
 
-        // Tag every event so event-card.html.twig shows the SALE ribbon.
         foreach ($events as $event) {
             $event->badge = 'SALE';
         }
@@ -120,15 +106,9 @@ class HomeController
         return $response;
     }
 
-    /**
-     * Cart page: hydrates the session cart at render time so prices and
-     * names are always fresh.
-     */
     public function showCart(Request $request, Response $response): Response
     {
-        // If the user is returning from the Stripe redirect (cancel button or browser
-        // back button — bfcache means back button never hits showCheckout), restore
-        // the original expiry so the timer doesn't jump to 30 minutes.
+        // bfcache means back-button can land here after Stripe cancel - restore old expiry
         $pre = $_SESSION['cart_expires_at_pre_stripe'] ?? null;
         if ($pre !== null) {
             unset($_SESSION['cart_expires_at_pre_stripe']);
@@ -142,17 +122,11 @@ class HomeController
         $cart     = Cart::hydrate($this->ticketModel, $this->eventModel, $this->venueModel);
         $subtotal = Cart::subtotal($cart);
 
-        // 15% service fee on the (post-discount) subtotal. On this page no
-        // discount has been applied yet, so it's just 15% of the subtotal —
-        // the cart's inline JS recomputes this live when the user types a
-        // points value, mirroring the server-side math in CartController.
-        $serviceFee = round($subtotal * 0.15, 2);
+        $serviceFee = round($subtotal * Cart::SERVICE_FEE_RATE, 2);
         $total      = round($subtotal + $serviceFee, 2);
 
         $userId      = Auth::userId();
         $userPoints  = 0;
-        // Points cap is subtotal in cents — applying all of it zeroes the
-        // taxable amount (and the tax), which the JS handles automatically.
         $maxDiscount = 0;
 
         if ($userId) {
@@ -168,9 +142,6 @@ class HomeController
             'subtotal'          => $subtotal,
             'service_fee'       => $serviceFee,
             'total'             => $total,
-            // Earn rate is 20% of subtotal (20 points per $1). Keep this in sync with
-            // CartController::createOrderDirectly() and StripeWebhookController so the
-            // cart preview matches what actually credits to the user post-purchase.
             'points_earned'     => (int) floor($subtotal * 0.20),
             'user_points'       => $userPoints,
             'max_discount'      => min($userPoints, $maxDiscount),
@@ -181,17 +152,16 @@ class HomeController
         return $response;
     }
 
-    /**
-     * Map page: shows upcoming events on the map with their
-     * venue + cheapest ticket price.
-     *
-     * For venues without stored lat/lng coordinates, the address is
-     * geocoded server-side (via Google Geocoding API) and cached back
-     * to the venue record so subsequent loads are instant.
-     */
     /** Per-page batch size for the /map infinite-scroll sidebar. */
     private const MAP_PAGE_SIZE = 20;
 
+    /**
+     * Map page: renders the first batch of upcoming events on the map.
+     * The sidebar then streams more in via /api/map-events as the user
+     * scrolls. Venues without cached lat/lng get geocoded server-side
+     * and the coordinates are written back to the `venue` row so future
+     * requests skip the Google API call.
+     */
     public function showMap(Request $request, Response $response): Response
     {
         // Initial render shows only the first batch — the rest stream in via
@@ -310,11 +280,6 @@ class HomeController
         }
     }
 
-    /**
-     * Geocode an address string via the Google Geocoding API.
-     *
-     * Returns ['lat' => float, 'lng' => float] on success, or null on failure.
-     */
     private function geocodeAddress(string $address, string $apiKey): ?array
     {
         $url = 'https://maps.googleapis.com/maps/api/geocode/json?address='

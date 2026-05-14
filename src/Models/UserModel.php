@@ -68,7 +68,6 @@ class UserModel
             return;
         }
 
-        // Remove avatar file from disk before trashing the row.
         $avatar = (string) ($user->avatar ?? '');
         if ($avatar !== '') {
             $file = __DIR__ . '/../../' . ltrim($avatar, '/');
@@ -77,15 +76,12 @@ class UserModel
             }
         }
 
-        // Revoke all remember-me and 2FA-trust tokens for this user.
+        // dont forget to wipe auth tokens too - they wont expire on thier own
         R::exec('DELETE FROM authtoken WHERE user_id = ?', [$id]);
 
         R::trash($user);
     }
 
-    /**
-     * Updated to handle password changes and role management.
-     */
     public function update(int $id, array $data): mixed
     {
         $user = R::load('users', $id);

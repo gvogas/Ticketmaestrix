@@ -35,17 +35,6 @@ class OrderModel
     }
 
     /**
-     * Orders for a user with their line items + ticket + event already joined,
-     * in a single query. Returns an array of stdClass orders (newest first),
-     * each carrying an `items` array of stdClass line items. Used by the
-     * `/profile` purchase-history card.
-     *
-     * One raw SQL query rather than bean hydration: hydrating orders →
-     * order_items → ticket → events would fire 1 + 3N round-trips. This
-     * mirrors the stdClass-from-raw-SQL pattern used by
-     * EventModel::getWithOnSaleTickets (see CLAUDE.md "OODBBean vs stdClass").
-     */
-    /**
      * Paginated variant of findByUserWithItems for the /profile purchase
      * history card. LIMIT/OFFSET are applied to the *orders* (not the joined
      * items), so a page always contains exactly $limit orders even when each
@@ -97,10 +86,20 @@ class OrderModel
         return $this->collapseOrderRows(R::getAll($sql, $orderIds));
     }
 
+    /**
+     * Orders for a user with their line items + ticket + event already joined,
+     * in a single query. Returns an array of stdClass orders (newest first),
+     * each carrying an `items` array of stdClass line items. Used by the
+     * `/profile` purchase-history card.
+     *
+     * One raw SQL query rather than bean hydration: hydrating orders →
+     * order_items → ticket → events would fire 1 + 3N round-trips. This
+     * mirrors the stdClass-from-raw-SQL pattern used by
+     * EventModel::getWithOnSaleTickets (see CLAUDE.md "OODBBean vs stdClass").
+     */
     public function findByUserWithItems(int $userId): array
     {
-        // `t`.`row` is backticked because `row` is a MySQL reserved word —
-        // TicketModel does the same in its `getAll`/`findByEvent` SQL.
+        // `row` is a MySQL reserved word - needs backticks or the query explodes
         $sql = 'SELECT o.id            AS order_id,
                        o.total_price   AS total_price,
                        o.status        AS status,
@@ -149,9 +148,7 @@ class OrderModel
                     'items'         => [],
                 ];
             }
-            // LEFT JOIN can yield a single row with NULL item_id for an order
-            // that somehow has no line items — keep the order visible but skip
-            // the empty item.
+            // left join gives a NULL item_id row when order has no items - skip it
             if ($r['item_id'] !== null) {
                 $byOrder[$oid]->items[] = (object) [
                     'quantity'    => (int) $r['quantity'],
@@ -196,10 +193,6 @@ class OrderModel
         R::trash($bean);
     }
 
-    /**
-     * All orders, newest first. Used by the admin events tab indirectly
-     * and any future admin-orders listing.
-     */
     public function findAll(): array
     {
         return BeanHelper::castBeanArray(
@@ -207,10 +200,6 @@ class OrderModel
         );
     }
 
-    /**
-     * Site-wide revenue from paid orders only (status > 0). Drives the
-     * "Total Revenue" admin card.
-     */
     public function getTotalRevenue(): float
     {
         return (float) R::getCell(
@@ -218,10 +207,6 @@ class OrderModel
         );
     }
 
-    /**
-     * Total dollars one user has spent on paid orders. Drives the
-     * "Total Spent" stat on the profile page.
-     */
     public function totalSpentByUser(int $userId): float
     {
         return (float) R::getCell(
@@ -232,10 +217,6 @@ class OrderModel
         );
     }
 
-    /**
-     * Number of distinct events the user has tickets for, via paid orders.
-     * Powers the "Events Attended" stat on the profile page.
-     */
     public function eventsAttendedByUser(int $userId): int
     {
         $sql = 'SELECT COUNT(DISTINCT t.event_id)

@@ -473,6 +473,7 @@ return [
     'order.status_completed' => 'Completed',
     'order.status_pending'   => 'Pending',
     'order.user_id'          => 'User ID',
+    'order.customer'         => 'Customer',
     'order.total'            => 'Total',
     'order.view_items'       => 'View Items',
     'order.delete'           => 'Delete',

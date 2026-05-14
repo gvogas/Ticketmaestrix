@@ -13,9 +13,6 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Twig\Environment;
 
-/**
- * User-facing profile pages and admin-only user management.
- */
 class UserController
 {
     public function __construct(
@@ -222,7 +219,7 @@ class UserController
 
         $errors = [];
 
-        // Avatar upload
+        // avatar upload - mime check beats ext check for disquised files
         $newAvatarPath = null;
         $avatarFile = ($request->getUploadedFiles()['avatar'] ?? null);
         if ($avatarFile !== null && $avatarFile->getError() !== UPLOAD_ERR_NO_FILE) {
@@ -242,10 +239,6 @@ class UserController
                     file_put_contents($tmpPath, (string) $stream);
                     $cleanupTmp = true;
                 }
-                // getimagesize() is used instead of finfo because the fileinfo
-                // extension is not guaranteed to be available on all hosts.
-                // It also actually parses the image data, which is stricter than
-                // a pure MIME sniff and prevents disguised non-image uploads.
                 $imageInfo = @getimagesize($tmpPath);
                 $mime      = $imageInfo ? $imageInfo['mime'] : '';
                 if ($cleanupTmp) {
@@ -264,9 +257,7 @@ class UserController
                     $filename = $id . '_' . time() . '.' . $ext;
                     $oldAvatarPath = (string) (Auth::user()->avatar ?? '');
                     $avatarFile->moveTo($uploadDir . $filename);
-                    // Ensure the file is world-readable so the web server can serve it.
-                    // PHP's move_uploaded_file inherits the process umask, which on many
-                    // shared hosts leaves files at 0600 (owner-only), blocking Apache.
+                    // chmod needed - umask can leave uploads at 0600 on shared hosts
                     @chmod($uploadDir . $filename, 0644);
                     $newAvatarPath = '/uploads/avatars/' . $filename;
                 }
@@ -320,7 +311,6 @@ class UserController
         }
         $this->userModel->update($id, $updateData);
 
-        // Safe to remove old avatar now that the DB row is committed.
         if ($newAvatarPath !== null && ($oldAvatarPath ?? '') !== '') {
             $old = __DIR__ . '/../../' . ltrim($oldAvatarPath, '/');
             if (file_exists($old)) {
@@ -339,7 +329,6 @@ class UserController
     {
         $userId = (int) Auth::userId();
 
-        // deleteById handles avatar file removal and auth token revocation.
         $this->userModel->deleteById($userId);
 
         Auth::logout();

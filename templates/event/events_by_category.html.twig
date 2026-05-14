@@ -110,7 +110,7 @@
                                 <i class="bi bi-calendar3 me-2" style="color: var(--brand-purple);"></i>{{ event.date }}
                             </div>
                             <div class="small text-muted mb-4">
-                                <i class="bi bi-geo-alt-fill me-2" style="color: var(--brand-purple);"></i>{{ event.venue_name ?: ('Venue #' ~ event.venue_id) }}
+                                <i class="bi bi-geo-alt-fill me-2" style="color: var(--brand-purple);"></i>{{ event.venue_name }}
                             </div>
 
                             <a href="{{ base_path }}/events/{{ event.id }}" class="btn-get-tickets">

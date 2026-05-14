@@ -31,7 +31,7 @@
             <ul class="list-group list-group-flush mb-4">
                 <li class="list-group-item px-0">
                     <i class="bi bi-person me-2 text-muted"></i>
-                    <strong>{{ trans('order.user_id') }}:</strong> {{ order.user_id }}
+                    <strong>{{ trans('order.customer') }}:</strong> {{ customer_name ?: order.user_id }}
                 </li>
                 <li class="list-group-item px-0">
                     <i class="bi bi-currency-dollar me-2 text-muted"></i>
@@ -43,12 +43,31 @@
             <a href="{{ base_path }}/order-items/order/{{ order.id }}" class="btn btn-sm btn-outline-secondary me-2">
                 <i class="bi bi-list-ul"></i> {{ trans('order.view_items') }}
             </a>
-            <form action="{{ base_path }}/orders/{{ order.id }}/delete" method="POST" class="d-inline">
-                <button type="submit" class="btn btn-sm btn-outline-danger"
-                        onclick="return confirm('{{ trans('confirm.delete_order')|e('js') }}')">
-                    <i class="bi bi-trash"></i> {{ trans('order.delete') }}
-                </button>
-            </form>
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    data-bs-toggle="modal" data-bs-target="#deleteOrderModal">
+                <i class="bi bi-trash"></i> {{ trans('order.delete') }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteOrderModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="fw-bold text-danger">{{ trans('order.delete') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 pb-4">
+                    <p class="mb-0">{{ trans('confirm.delete_order') }}</p>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">{{ trans('evadmin.crud.cancel') }}</button>
+                    <form action="{{ base_path }}/orders/{{ order.id }}/delete" method="POST" class="m-0">
+                        <button type="submit" class="btn btn-danger px-4">{{ trans('order.delete') }}</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 

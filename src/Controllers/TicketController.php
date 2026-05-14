@@ -33,9 +33,18 @@ class TicketController
         $total      = $this->ticketModel->countAll();
         $totalPages = (int) ceil($total / $perPage);
 
+        // event_titles maps event_id → title so the admin ticket list can show
+        // titles instead of bare numeric ids. Built once across all events
+        // rather than N times per ticket.
+        $eventTitles = [];
+        foreach ($this->eventModel->getAll() as $event) {
+            $eventTitles[(int) $event->id] = (string) $event->title;
+        }
+
         $html = $this->twig->render('ticket/index.html.twig', [
             'base_path'    => $this->basePath,
             'tickets'      => $tickets,
+            'event_titles' => $eventTitles,
             'current_page' => $page,
             'total_pages'  => $totalPages,
             'query_params' => $queryParams,
@@ -200,16 +209,16 @@ class TicketController
             return $response->withHeader('Location', $this->basePath . '/tickets')->withStatus(302);
         }
 
-        // Ticket detail page is admin-only for inventory management
-        // Regular users should not access this page directly
         if (!\App\Helpers\Auth::isAdmin()) {
-            // Redirect regular users to the event page instead
             return $response->withHeader('Location', $this->basePath . '/events/' . $ticket->event_id)->withStatus(302);
         }
+
+        $event = $this->eventModel->getById((int) $ticket->event_id);
 
         $html = $this->twig->render('ticket/ticket_detail.html.twig', [
             'base_path' => $this->basePath,
             'ticket'    => $ticket,
+            'event'     => $event,
             'is_admin'  => true,
         ]);
         $response->getBody()->write($html);
@@ -218,7 +227,6 @@ class TicketController
 
     public function byEvent(Request $request, Response $response, array $args): Response
     {
-        // Redirect admins from the seat-selection (purchase) page to the ticket inventory (management)
         if (Auth::isAdmin()) {
             return $response->withHeader('Location', $this->basePath . '/tickets')->withStatus(302);
         }
@@ -247,7 +255,7 @@ class TicketController
             'base_path'    => $this->basePath,
             'tickets'      => $tickets,
             'event'        => $event,
-            'event_id'     => $eventId, // Fallback
+            'event_id'     => $eventId, // Fallback when $event load fails
             // Pass the total so the "X tickets" header stays accurate after
             // pagination — tickets|length is now just the page count.
             'total_tickets' => $totalTickets,

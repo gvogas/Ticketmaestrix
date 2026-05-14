@@ -15,13 +15,7 @@ use RedBeanPHP\R;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Webhook;
 
-/**
- * Receives and processes Stripe webhook events.
- *
- * Called by Stripe's servers — no PHP session is available here.
- * All order data comes from the stripepending table, which was populated
- * by CartController::checkout() before the Stripe redirect.
- */
+// no PHP session here - stripe calls this directly, cart data comes from stripepending table
 class StripeWebhookController
 {
     private const ORDER_STATUS_PAID = 1;
@@ -34,25 +28,15 @@ class StripeWebhookController
         private string             $webhookSecret,
     ) {}
 
-    /**
-     * POST /stripe/webhook
-     *
-     * Verifies the Stripe-Signature header, then on checkout.session.completed:
-     * loads stripepending, creates the order + order items, handles points,
-     * deletes the pending row. Returns 200 for all handled events so Stripe
-     * stops retrying. Returns 500 on transaction failure so Stripe retries.
-     */
     public function handle(Request $request, Response $response): Response
     {
-        // Read the raw body before any framework parsing — Stripe's signature
-        // is computed against the exact raw bytes Stripe sent
+        // must read raw body before any framework parsing - sig covers the exact bytes
         $payload   = (string) $request->getBody();
         $sigHeader = $request->getHeaderLine('Stripe-Signature');
 
         try {
             $event = Webhook::constructEvent($payload, $sigHeader, $this->webhookSecret);
         } catch (SignatureVerificationException $e) {
-            // Invalid or missing signature — could be a spoofed request
             error_log('Stripe webhook: invalid signature — ' . $e->getMessage());
             $response->getBody()->write('Invalid signature');
             return $response->withStatus(400);
@@ -65,13 +49,12 @@ class StripeWebhookController
 
             $pending = R::load('stripepending', $pendingId);
             if (!BeanHelper::isValidBean($pending)) {
-                // Row gone — already processed or manually deleted; acknowledge so Stripe stops retrying
                 error_log("Stripe webhook: stripepending #{$pendingId} not found for session {$sessionId}");
                 $response->getBody()->write('ok');
                 return $response->withStatus(200);
             }
 
-            // Idempotency guard — Stripe may deliver the same event more than once
+            // stripe can send the same event twice - dont create a duplicate order
             if (R::findOne('orders', 'stripe_session_id = ?', [$sessionId])) {
                 $response->getBody()->write('ok');
                 return $response->withStatus(200);
@@ -82,10 +65,6 @@ class StripeWebhookController
             $total        = (float) $pending->total;
             $rows         = json_decode($pending->cart_json, true);
             $subtotal     = (float) array_sum(array_column($rows, 'total'));
-            // 20% earn rate on the pre-tax, pre-discount subtotal (snapshot from
-            // stripepending.cart_json). Must match HomeController's cart preview
-            // and CartController::createOrderDirectly so the user sees the same
-            // points number on every surface.
             $pointsEarned = (int) floor($subtotal * 0.20);
 
             R::begin();
@@ -97,11 +76,10 @@ class StripeWebhookController
                 $order->user_id           = $userId;
                 $order->points_earned     = $pointsEarned;
                 $order->points_spent      = $pointsToUse;
-                $order->stripe_session_id = $sessionId; // stored for idempotency on duplicate delivery
+                $order->stripe_session_id = $sessionId;
                 $orderId = (int) R::store($order);
 
                 foreach ($rows as $row) {
-                    
                     $this->orderItemModel->create(
                         (int) $row['quantity'],
                         $orderId,
@@ -132,13 +110,12 @@ class StripeWebhookController
                     $orderId
                 );
 
-                // Pending row is no longer needed — the order is real now
                 R::trash($pending);
 
                 R::commit();
             } catch (\Throwable $e) {
                 R::rollback();
-                // Return 500 so Stripe retries the webhook delivery
+                // 500 tells stripe to retry - importent for reliablity
                 error_log('Stripe webhook: order creation failed — ' . $e->getMessage());
                 return $response->withStatus(500);
             }
