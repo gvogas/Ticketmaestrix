@@ -74,6 +74,9 @@ R::setup(
 $debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
 R::freeze(!$debug);
 
+
+R::setAllowFluidTransactions(true);
+
 // Restore session from auth_token cookie if no active session.
 Auth::checkRememberToken();
 

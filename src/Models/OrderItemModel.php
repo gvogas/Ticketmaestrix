@@ -21,11 +21,11 @@ class OrderItemModel
 
     public function create(int $quantity, int $orderId, int $ticketId): void
     {
-        $bean = R::dispense('order_items');
-        $bean->quantity  = $quantity;
-        $bean->order_id  = $orderId;
-        $bean->ticket_id = $ticketId;
-        R::store($bean);
+        
+        R::exec(
+            'INSERT INTO order_items (quantity, order_id, ticket_id) VALUES (?, ?, ?)',
+            [$quantity, $orderId, $ticketId]
+        );
     }
 
     public function save(mixed $bean): void
