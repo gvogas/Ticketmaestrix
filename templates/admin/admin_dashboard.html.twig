@@ -214,7 +214,50 @@
                 <div class="card stat-card">
                     <h6 class="fw-bold">{{ trans('dashboard.perf_placeholder') }}</h6>
                     <hr class="text-muted opacity-25">
-                    <div class="py-5 text-center text-muted">{{ trans('evadmin.no_events') }}</div>
+                    {% if top_events|length == 0 %}
+                        <div class="py-5 text-center text-muted">{{ trans('admin.performance.message') }}</div>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>{{ trans('admin.perf.col_event') }}</th>
+                                        <th>{{ trans('admin.perf.col_date') }}</th>
+                                        <th class="text-end">{{ trans('admin.perf.col_tickets') }}</th>
+                                        <th class="text-end">{{ trans('admin.perf.col_revenue') }}</th>
+                                        <th style="min-width: 160px;">{{ trans('admin.perf.col_sellthrough') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for event in top_events %}
+                                        <tr>
+                                            <td>
+                                                <a href="{{ base_path }}/events/{{ event.id }}/edit" class="fw-bold text-decoration-none d-inline-flex align-items-center gap-2">
+                                                    {% if event.event_image %}
+                                                        <img src="{{ event.event_image }}" alt="" width="36" height="36" style="object-fit: cover; border-radius: 6px;">
+                                                    {% endif %}
+                                                    <span>{{ event.title }}</span>
+                                                </a>
+                                            </td>
+                                            <td class="text-muted">{{ event.date }}</td>
+                                            <td class="text-end">{{ event.tickets_sold }}</td>
+                                            <td class="text-end fw-semibold">${{ event.revenue|number_format(2) }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="progress flex-grow-1" style="height: 6px;">
+                                                        <div class="progress-bar" role="progressbar"
+                                                             style="width: {{ event.sellthrough_pct }}%; background-color: var(--brand-purple, #5E246E);"
+                                                             aria-valuenow="{{ event.sellthrough_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    </div>
+                                                    <small class="text-muted" style="min-width: 36px; text-align: right;">{{ event.sellthrough_pct }}%</small>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
 

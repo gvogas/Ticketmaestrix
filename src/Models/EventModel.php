@@ -237,6 +237,46 @@ class EventModel
         return (int) R::getCell('SELECT COUNT(*) FROM events WHERE date >= NOW()');
     }
 
+    public function topByPerformance(int $limit = 10): array
+    {
+        $sql = "SELECT
+                    e.id,
+                    e.title,
+                    e.date,
+                    e.event_image,
+                    COALESCE(SUM(oi.quantity), 0)           AS tickets_sold,
+                    COALESCE(SUM(t.price * oi.quantity), 0) AS revenue,
+                    (SELECT COUNT(*) FROM ticket WHERE event_id = e.id)              AS total_seats,
+                    (SELECT COUNT(*) FROM ticket WHERE event_id = e.id AND sold = 1) AS sold_seats
+                  FROM events e
+                  INNER JOIN ticket      t  ON t.event_id  = e.id
+                  INNER JOIN order_items oi ON oi.ticket_id = t.id
+                  INNER JOIN orders      o  ON o.id = oi.order_id AND o.status > 0
+                 GROUP BY e.id, e.title, e.date, e.event_image
+                 ORDER BY revenue DESC, tickets_sold DESC
+                 LIMIT ?";
+
+        $rows = R::getAll($sql, [$limit]);
+
+        $out = [];
+        foreach ($rows as $row) {
+            $obj = new \stdClass();
+            foreach ($row as $k => $v) {
+                $obj->$k = $v;
+            }
+            $obj->id            = (int)   ($obj->id ?? 0);
+            $obj->tickets_sold  = (int)   ($obj->tickets_sold ?? 0);
+            $obj->revenue       = (float) ($obj->revenue ?? 0);
+            $obj->total_seats   = (int)   ($obj->total_seats ?? 0);
+            $obj->sold_seats    = (int)   ($obj->sold_seats ?? 0);
+            $obj->sellthrough_pct = $obj->total_seats > 0
+                ? (int) round($obj->sold_seats / $obj->total_seats * 100)
+                : 0;
+            $out[] = $obj;
+        }
+        return $out;
+    }
+
     // Adds venue name, address, price, and category to each event. Fires 2 queries per event, so don't call on big lists.
     public function hydrate(array $events, VenueModel $venues, TicketModel $tickets, ?CategoryModel $categories = null): array
     {

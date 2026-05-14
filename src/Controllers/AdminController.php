@@ -39,6 +39,8 @@ class AdminController
             'customers'     => $this->userModel->customerCount(),
         ];
 
+        $topEvents = $this->eventModel->topByPerformance(10);
+
         // Each tab uses its own page param (?ev= for events, ?u= for users) so flipping pages on one tab doesn't reset the other.
         $queryParams = $request->getQueryParams();
         $perPage     = 30;
@@ -66,6 +68,7 @@ class AdminController
             'current_route'    => 'admin',
             'admin_user'       => Auth::user(),
             'stats'            => $stats,
+            'top_events'       => $topEvents,
             'events'           => $events,
             'users'            => $users,
             'categories'       => $this->categoryModel->getAll(),
