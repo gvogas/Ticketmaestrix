@@ -116,8 +116,17 @@ class HomeController
         $cart     = Cart::hydrate($this->ticketModel, $this->eventModel, $this->venueModel);
         $subtotal = Cart::subtotal($cart);
 
+        // 15% service fee on the (post-discount) subtotal. On this page no
+        // discount has been applied yet, so it's just 15% of the subtotal —
+        // the cart's inline JS recomputes this live when the user types a
+        // points value, mirroring the server-side math in CartController.
+        $serviceFee = round($subtotal * 0.15, 2);
+        $total      = round($subtotal + $serviceFee, 2);
+
         $userId      = Auth::userId();
         $userPoints  = 0;
+        // Points cap is subtotal in cents — applying all of it zeroes the
+        // taxable amount (and the tax), which the JS handles automatically.
         $maxDiscount = 0;
 
         if ($userId) {
@@ -131,7 +140,8 @@ class HomeController
             'current_route'     => 'cart',
             'cart'              => $cart,
             'subtotal'          => $subtotal,
-            'total'             => $subtotal,
+            'service_fee'       => $serviceFee,
+            'total'             => $total,
             'points_earned'     => (int) floor($subtotal * 0.10),
             'user_points'       => $userPoints,
             'max_discount'      => min($userPoints, $maxDiscount),

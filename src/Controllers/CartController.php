@@ -27,6 +27,11 @@ class CartController
 {
     private const ORDER_STATUS_PAID = 1;
 
+    // 15% service fee applied to the post-discount subtotal. Kept as a class
+    // constant so the cart page, checkout page, and Stripe line item all use
+    // the exact same rate and rounding rule.
+    private const SERVICE_FEE_RATE = 0.15;
+
     public function __construct(
         private Environment        $twig,
         private TicketModel        $ticketModel,
@@ -60,15 +65,20 @@ class CartController
         $subtotal        = Cart::subtotal($rows);
         $user            = Auth::user();
         $availablePoints = (int) ($user->points ?? 0);
+        // Points cap stays at subtotal cents — discount can fully zero the
+        // taxable amount (tax then becomes 0) but never go beyond it.
         $pointsToUse     = $this->clampPoints($pointsToUse, $availablePoints, (int) floor($subtotal * 100));
         $discount        = $pointsToUse * 0.01;
-        $total           = max(0, $subtotal - $discount);
+        $taxable         = max(0, $subtotal - $discount);
+        $serviceFee      = round($taxable * self::SERVICE_FEE_RATE, 2);
+        $total           = round($taxable + $serviceFee, 2);
 
         $html = $this->twig->render('home/checkout.html.twig', [
             'base_path'     => $this->basePath,
             'points_to_use' => $pointsToUse,
             'subtotal'      => $subtotal,
             'discount'      => $discount,
+            'service_fee'   => $serviceFee,
             'total'         => $total,
             'error'         => null,
         ]);
@@ -170,9 +180,13 @@ class CartController
         $pointsToUse     = (int) ($body['points_to_use'] ?? 0);
         $user            = Auth::user(); // request-cached; avoids a redundant R::load
         $availablePoints = (int) ($user->points ?? 0);
+        // Points cap is subtotal cents — discount can zero the taxable amount
+        // (and thus the tax) but cannot make it negative.
         $pointsToUse     = $this->clampPoints($pointsToUse, $availablePoints, (int) floor($subtotal * 100));
         $discount        = $pointsToUse * 0.01;
-        $total           = round($subtotal - $discount, 2);
+        $taxable         = max(0, $subtotal - $discount);
+        $serviceFee      = round($taxable * self::SERVICE_FEE_RATE, 2);
+        $total           = round($taxable + $serviceFee, 2);
 
         // Stripe requires a minimum charge of $0.50 — bypass for fully-discounted orders
         if ($total < 0.50) {
@@ -187,6 +201,7 @@ class CartController
                     'points_to_use' => $pointsToUse,
                     'subtotal'      => $subtotal,
                     'discount'      => $discount,
+                    'service_fee'   => $serviceFee,
                     'total'         => $total,
                     'error'         => 'Something went wrong placing your order. Please try again.',
                 ]);
@@ -217,6 +232,7 @@ class CartController
             $session = $this->stripeService->createCheckoutSession(
                 $rows,
                 $pointsToUse,
+                (int) round($serviceFee * 100),
                 $pendingId,
                 $appUrl . $this->basePath . '/checkout/success',
                 $appUrl . $this->basePath . '/checkout/cancel',
@@ -231,6 +247,7 @@ class CartController
                 'points_to_use' => $pointsToUse,
                 'subtotal'      => $subtotal,
                 'discount'      => $discount,
+                'service_fee'   => $serviceFee,
                 'total'         => $total,
                 'error'         => 'Payment service temporarily unavailable. Please try again.',
             ]);
