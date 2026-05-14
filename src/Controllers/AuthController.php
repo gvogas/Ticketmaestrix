@@ -68,17 +68,32 @@ class AuthController
         }
 
         $user = $this->users->findByEmail($email);
-        if (!$user) {
-            $html = $this->twig->render('auth/forgot_password_p1.html.twig', [
-                'base_path' => $this->basePath,
-                'error'     => 'No account found with that email address.',
-            ]);
-            $response->getBody()->write($html);
-            return $response->withStatus(404);
+
+        // Always redirect to the verification page — returning 404 here lets attackers
+        // enumerate valid accounts by response code. For non-existent emails we store a
+        // dummy code that can never be entered (32 hex chars vs a 6-digit input field).
+        $_SESSION['reset_email'] = $email;
+        $_SESSION['reset_code']  = $user
+            ? str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT)
+            : bin2hex(random_bytes(16));
+        unset($_SESSION['reset_code_verified']);
+
+        return $response
+            ->withHeader('Location', $this->basePath . '/verificationcode')
+            ->withStatus(302);
+    }
+
+    public function resendCode(Request $request, Response $response): Response
+    {
+        if (!isset($_SESSION['reset_email'])) {
+            // No active reset session — send them back to step 1.
+            return $response
+                ->withHeader('Location', $this->basePath . '/forgotpassword')
+                ->withStatus(302);
         }
 
-        $_SESSION['reset_email'] = $email;
-        $_SESSION['reset_code']  = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        // Regenerate the 6-digit code (same session email, new code).
+        $_SESSION['reset_code'] = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         unset($_SESSION['reset_code_verified']);
 
         return $response
@@ -329,14 +344,12 @@ public function show2faSetup(Request $request, Response $response): Response
                 ->withStatus(302);
         }
 
-        // Session may have expired between QR display and code entry.
+        // Setup data is missing (session expired or replayed request) — restart login.
+        // Never log in without completing TOTP verification.
         $setupData = $_SESSION['2fa_setup_data'] ?? null;
         if (!$setupData || empty($setupData['secret'])) {
-            // Existing user who just set up their first TOTP — log them in now
-            Auth::login((int) $pendingUserId);
-            Auth::setRememberToken((int) $pendingUserId);
             return $response
-                ->withHeader('Location', $this->basePath . '/')
+                ->withHeader('Location', $this->basePath . '/login')
                 ->withStatus(302);
         }
 
@@ -370,6 +383,15 @@ public function show2faSetup(Request $request, Response $response): Response
         // New signup — create the account now that setup is confirmed.
         $signupData['totp_secret'] = $secret;
         $newUser = $this->users->create($signupData);
+        if (!$newUser || !(int) $newUser->id) {
+            // Account creation failed (e.g. DB error or duplicate email race).
+            $html = $this->twig->render('auth/2fa_qr.html.twig', [
+                'base_path' => $this->basePath,
+                'error'     => 'Account creation failed. Please try signing up again.',
+            ]);
+            $response->getBody()->write($html);
+            return $response->withStatus(500);
+        }
         unset($_SESSION['signup_user_data'], $_SESSION['2fa_setup_data']);
         Auth::login((int) $newUser->id);
         Auth::setRememberToken((int) $newUser->id);

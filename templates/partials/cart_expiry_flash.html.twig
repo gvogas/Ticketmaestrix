@@ -64,7 +64,6 @@
 </div>
 <script>
     // The Unix timestamp (seconds) when the cart will expire.
-    // This value comes from the server via Twig.
     const cartExpiresAt = {{ cart_expires_at }};
 
     // Grab all the elements we need to control
@@ -74,11 +73,10 @@
     const progressBar     = document.getElementById('expiry-progress');
     const cartBadge       = document.getElementById('cart-badge');
 
-    // Keep track of whether the user closed the warning or if we already showed it
     let warningDismissed = false;
     let warningVisible   = false;
 
-    // When the user clicks X on the warning banner, slide it closed
+
     document.getElementById('expiry-warn-close').addEventListener('click', () => {
         warningBanner.style.maxHeight = '0';
         warningDismissed = true;
@@ -94,7 +92,7 @@
         // Figure out what % of the 60-second window is left
         const startPercent = Math.min(100, (secondsLeft / 60) * 100);
 
-        // Set the starting width instantly (no animation), then animate to 0
+      
         progressBar.style.transition = 'none';
         progressBar.style.width = startPercent + '%';
         progressBar.offsetWidth; // this line forces the browser to "apply" the width before we start animating
@@ -109,8 +107,6 @@
         warningVisible = true;
     }
 
-    // Swaps the warning banner for the "cart expired" banner,
-    // fades out the cart badge, and clears the session on the server
     function showExpiredBanner() {
         // Slide the warning up and the expired message down
         warningBanner.style.maxHeight = '0';
@@ -122,12 +118,12 @@
             setTimeout(() => cartBadge.remove(), 400);
         }
 
-        // Tell the server to clear the cart session.
-        // We skip this on the cart page because it already has its own form that
-        // does the same thing and then redirects the user.
         const onCartPage = document.getElementById('cart-expire-form') !== null;
         if (!onCartPage) {
-            fetch('{{ base_path }}/cart/expire', { method: 'POST' }).catch(() => {});
+            fetch('{{ base_path }}/cart/expire', {
+            method: 'POST',
+            headers: { 'X-CSRF-Token': '{{ csrf_token }}' }
+        }).catch(() => {});
         }
     }
 

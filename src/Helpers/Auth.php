@@ -68,10 +68,6 @@ class Auth
         $token = bin2hex(random_bytes(32));
         $hash  = hash('sha256', $token);
 
-        // Purge any existing tokens for this user so only one device is active.
-        $old = R::find('authtoken', 'user_id = ?', [$userId]);
-        R::trashAll($old);
-
         $bean = R::dispense('authtoken');
         $bean->user_id    = $userId;
         $bean->token_hash = $hash;

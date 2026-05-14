@@ -1,5 +1,4 @@
 <?php
-//test 
 declare(strict_types=1);
 
 // Suppress deprecation warnings for libraries not yet fully compatible with PHP 8.4+
@@ -20,7 +19,6 @@ use App\Controllers\StripeWebhookController;
 use App\Controllers\TicketController;
 use App\Controllers\UserController;
 use App\Controllers\VenueController;
-use App\Services\StripeService;
 use App\Helpers\Auth;
 use App\Helpers\Cart;
 use App\Middleware\AdminMiddleware;
@@ -31,11 +29,12 @@ use App\Models\CategoryModel;
 use App\Models\EventModel;
 use App\Models\OrderItemModel;
 use App\Models\OrderModel;
+use App\Models\PointsHistoryModel;
 use App\Models\TicketModel;
 use App\Models\UserModel;
 use App\Models\VenueModel;
-use App\Models\PointsHistoryModel;
 use App\Services\OtpService;
+use App\Services\StripeService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
@@ -47,33 +46,27 @@ use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFunction;
 
-
-
 require __DIR__ . '/vendor/autoload.php';
-
-
 
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-
-
 // ============== SESSION ==============
-// Bootstraps PHP sessions so Auth + Cart helpers can read/write $_SESSION.
-// Must run before any output and before the DI container builds controllers
-// that may consult Auth during construction.
-// cookie_lifetime=0 means the PHPSESSID cookie expires when the browser closes.
+// cookie_lifetime=0 — PHPSESSID expires when the browser closes.
+// Must start before any output and before Auth/Cart are first consulted.
 ini_set('session.cookie_lifetime', '0');
 session_start();
 
-// Consume flash message set by a previous redirect — available in templates as {{ flash_message }}
+// Consume flash message set by a previous redirect.
 $flashMessage = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 
-
 // ============== DATABASE ==============
 R::setup(
-    'mysql:host=' . $_ENV['DB_SERVER'] . ';port=' . ($_ENV['DB_PORT'] ?? '3306') . ';dbname=' . $_ENV['DB_NAME'] . ';charset=utf8mb4',
+    'mysql:host=' . $_ENV['DB_SERVER']
+        . ';port=' . ($_ENV['DB_PORT'] ?? '3306')
+        . ';dbname=' . $_ENV['DB_NAME']
+        . ';charset=utf8mb4',
     $_ENV['DB_USERNAME'],
     $_ENV['DB_PASSWORD']
 );
@@ -81,68 +74,56 @@ R::setup(
 $debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
 R::freeze(!$debug);
 
-// If no session but a valid auth_token cookie exists, restore the session
-// so the user stays logged in without re-entering credentials.
+// Restore session from auth_token cookie if no active session.
 Auth::checkRememberToken();
 
+// One-time CSRF token per session — protects the cart/expire endpoint.
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
+}
 
 // ============== TEMPLATE ENGINE ==============
 $loader = new FilesystemLoader(__DIR__ . '/templates');
-$twig   = new Environment($loader, [
-    'cache'       => false,
-    'auto_reload' => true,
-]);
+$twig   = new Environment($loader, ['cache' => false, 'auto_reload' => true]);
 
-// Twig globals — exposed to every template so the navbar (and any other
-// partial) can render auth-aware UI without each controller passing them.
-$twig->addGlobal('current_user', Auth::user());
-$twig->addGlobal('is_admin', Auth::isAdmin());
-$twig->addGlobal('cart_count', Cart::count());
-
+// Globals available in every template (navbar, partials, etc.).
+$twig->addGlobal('current_user',        Auth::user());
+$twig->addGlobal('is_admin',            Auth::isAdmin());
+$twig->addGlobal('cart_count',          Cart::count());
+$twig->addGlobal('cart_expires_at',     (int) ($_SESSION['cart_expires_at'] ?? 0));
+$twig->addGlobal('csrf_token',          $_SESSION['csrf_token']);
 $twig->addGlobal('google_maps_api_key', $_ENV['GOOGLE_MAPS_API_KEY'] ?? '');
+$twig->addGlobal('flash_message',       $flashMessage);
 
-$twig->addGlobal('cart_expires_at', (int) ($_SESSION['cart_expires_at'] ?? 0));
-$twig->addGlobal('flash_message', $flashMessage);
-
-
-// ============== I18N — symfony/translation ================
-// Reads locale from session; defaults to 'en'.
-// trans('key') is available in every Twig template.
-
-$translator = new Translator($_SESSION['lang'] ?? 'en');
+// ============== I18N ==============
+// Locale captured once at bootstrap 
+$locale     = $_SESSION['lang'] ?? 'en';
+$translator = new Translator($locale);
 $translator->addLoader('array', new ArrayLoader());
 $translator->addResource('array', require __DIR__ . '/translations/messages.en.php', 'en');
 $translator->addResource('array', require __DIR__ . '/translations/messages.fr.php', 'fr');
 
-// Expose trans() to templates and inject the active locale on every render.
-$twig->addFunction(new TwigFunction('trans', function (string $key, array $params = []) use ($translator) {
-    $locale = $_SESSION['lang'] ?? 'en';
+$twig->addFunction(new TwigFunction('trans', function (string $key, array $params = []) use ($translator, $locale) {
     return $translator->trans($key, $params, null, $locale);
 }));
-// Translate a category name; falls back to the raw name if no translation exists.
-$twig->addFunction(new TwigFunction('trans_cat', function ($name) use ($translator) {
+
+// Translates a category name; falls back to the raw name if no key exists.
+$twig->addFunction(new TwigFunction('trans_cat', function ($name) use ($translator, $locale) {
     if (is_object($name) && method_exists($name, '__toString')) $name = (string) $name;
     if (!is_string($name) || $name === '') return is_string($name) ? $name : '';
-    $locale = $_SESSION['lang'] ?? 'en';
-    $key = 'categories.' . strtolower(str_replace([' ', '-', '\''], '_', $name));
+    $key        = 'categories.' . strtolower(str_replace([' ', '-', '\''], '_', $name));
     $translated = $translator->trans($key, [], null, $locale);
     return $translated !== $key ? $translated : $name;
 }));
-$twig->addGlobal('current_locale', $_SESSION['lang'] ?? 'en');
 
-
+$twig->addGlobal('current_locale', $locale);
 
 // ============== DEPENDENCY INJECTION CONTAINER ==============
-//   PHP-DI container wires dependencies together.
-//   Each controller receives Twig\Environment, its model(s), and the base path
-//   through its constructor instead of pulling them from global scope.
-
+// PHP-DI wires dependencies into controllers via constructor injection.
 $basePath = $_ENV['APP_BASE_PATH'] ?? '';
-
 
 $container = new \DI\Container();
 $container->set(Environment::class, $twig);
-
 
 $responseFactory = new \Slim\Psr7\Factory\ResponseFactory();
 $container->set(AuthMiddleware::class,  fn() => new AuthMiddleware($responseFactory, $basePath));
@@ -155,6 +136,32 @@ $container->set(HomeController::class, fn() => new HomeController(
     new TicketModel(),
     new VenueModel(),
     new OrderItemModel(),
+    $basePath,
+));
+
+$container->set(AuthController::class, function () use ($twig, $basePath) {
+    $userModel = new UserModel();
+    return new AuthController($twig, $userModel, new OtpService($userModel), $basePath);
+});
+
+$container->set(UserController::class, fn() => new UserController(
+    $twig,
+    new UserModel(),
+    new TicketModel(),
+    new OrderModel(),
+    new PointsHistoryModel(),
+    $basePath,
+));
+
+$container->set(AdminController::class, fn() => new AdminController(
+    $twig,
+    new UserModel(),
+    new EventModel(),
+    new OrderModel(),
+    new OrderItemModel(),
+    new CategoryModel(),
+    new VenueModel(),
+    new TicketModel(),
     $basePath,
 ));
 
@@ -176,34 +183,6 @@ $container->set(StripeWebhookController::class, fn() => new StripeWebhookControl
     new PointsHistoryModel(),
     new TicketModel(),
     $_ENV['STRIPE_WEBHOOK_SECRET'] ?? '',
-));
-
-$container->set(AuthController::class, fn() => new AuthController(
-    $twig,
-    new UserModel(),
-    new OtpService(new UserModel()),
-    $basePath,
-));
-
-$container->set(UserController::class, fn() => new UserController(
-    $twig,
-    new UserModel(),
-    new TicketModel(),
-    new OrderModel(),
-    new PointsHistoryModel(),
-    $basePath,
-));
-
-$container->set(AdminController::class, fn() => new AdminController(
-    $twig,
-    new UserModel(),
-    new EventModel(),
-    new OrderModel(),
-    new OrderItemModel(),
-    new CategoryModel(),
-    new VenueModel(),
-    new TicketModel(),
-    $basePath,
 ));
 
 $container->set(CategoryController::class, fn() => new CategoryController(
@@ -247,53 +226,38 @@ $container->set(VenueController::class, fn() => new VenueController(
     $basePath,
 ));
 
-
-// ==============   APPLICATION ==============
-
+// ============== APPLICATION ==============
 AppFactory::setContainer($container);
 
 $app = AppFactory::create();
-
 $app->setBasePath($basePath);
 $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
-
-
 $app->addErrorMiddleware($debug, true, true);
 
 // ============== MIDDLEWARE ==============
-
 $logFile = __DIR__ . '/var/app.log';
 
 $loggerMiddleware = function (Request $request, RequestHandler $handler) use ($logFile) {
-    $start  = microtime(true);
-    $method = $request->getMethod();
-    $path   = $request->getUri()->getPath();
-
+    $start    = microtime(true);
     $response = $handler->handle($request);
+    $elapsed  = round((microtime(true) - $start) * 1000);
 
-    $status  = $response->getStatusCode();
-    $elapsed = round((microtime(true) - $start) * 1000);
-
-    $timestamp = date('Y-m-d H:i:s');
-    $line      = sprintf(
+    file_put_contents($logFile, sprintf(
         "[%s] %-6s %-25s → %d  (%dms)\n",
-        $timestamp, $method, $path, $status, $elapsed
-    );
-
-    file_put_contents($logFile, $line, FILE_APPEND);
+        date('Y-m-d H:i:s'),
+        $request->getMethod(),
+        $request->getUri()->getPath(),
+        $response->getStatusCode(),
+        $elapsed
+    ), FILE_APPEND);
 
     return $response;
 };
 
-$app->add(new MaintenanceMiddleware(
-    __DIR__ . '/var/maintenance.flag',
-    $app->getResponseFactory()
-));
-
+$app->add(new MaintenanceMiddleware(__DIR__ . '/var/maintenance.flag', $app->getResponseFactory()));
 $app->add(new SecurityHeadersMiddleware());
 $app->add($loggerMiddleware);
-
 
 // ============== ROUTES ==============
 
@@ -304,122 +268,122 @@ $app->get('/map',  [HomeController::class, 'showMap']);
 
 // --- Auth ---
 $app->group('', function ($group) {
-    $group->get('/signup',           [AuthController::class, 'showSignup']);
-    $group->post('/signup',          [AuthController::class, 'signup']);
-    $group->get('/login',            [AuthController::class, 'showLogin']);
-    $group->post('/login',           [AuthController::class, 'login']);
-    $group->post('/logout',          [AuthController::class, 'logout']);
-    $group->get('/forgotpassword',   [AuthController::class, 'showForgotPassword']);
-    $group->post('/forgotpassword',  [AuthController::class, 'forgotPassword']);
-    $group->get('/verificationcode', [AuthController::class, 'showVerificationCode']);
-    $group->post('/verificationcode',[AuthController::class, 'verifyCode']);
-    $group->get('/newpassword',      [AuthController::class, 'showNewPassword']);
-    $group->post('/newpassword',     [AuthController::class, 'resetPassword']);
-    $group->get('/2fa/setup',        [AuthController::class, 'show2faSetup']);
-    $group->post('/2fa/setup',       [AuthController::class, 'verify2faSetup']);
-    $group->get('/2fa/login',        [AuthController::class, 'show2faLogin']);
-    $group->post('/2fa/login',       [AuthController::class, 'verify2faLogin']);
+    $group->get('/signup',            [AuthController::class, 'showSignup']);
+    $group->post('/signup',           [AuthController::class, 'signup']);
+    $group->get('/login',             [AuthController::class, 'showLogin']);
+    $group->post('/login',            [AuthController::class, 'login']);
+    $group->post('/logout',           [AuthController::class, 'logout']);
+    $group->get('/forgotpassword',    [AuthController::class, 'showForgotPassword']);
+    $group->post('/forgotpassword',   [AuthController::class, 'forgotPassword']);
+    $group->get('/verificationcode',  [AuthController::class, 'showVerificationCode']);
+    $group->post('/verificationcode', [AuthController::class, 'verifyCode']);
+    $group->get('/resend-code',       [AuthController::class, 'resendCode']);
+    $group->get('/newpassword',       [AuthController::class, 'showNewPassword']);
+    $group->post('/newpassword',      [AuthController::class, 'resetPassword']);
+    $group->get('/2fa/setup',         [AuthController::class, 'show2faSetup']);
+    $group->post('/2fa/setup',        [AuthController::class, 'verify2faSetup']);
+    $group->get('/2fa/login',         [AuthController::class, 'show2faLogin']);
+    $group->post('/2fa/login',        [AuthController::class, 'verify2faLogin']);
 });
 
 // --- Admin ---
-
 $app->get('/admin', [AdminController::class, 'showAdminDashboard'])->add(AdminMiddleware::class);
 
-
-// --- Users ---
+// --- Users (admin only) ---
 $app->group('/users', function ($group) {
     $group->get('',               [UserController::class, 'index']);
     $group->post('',              [UserController::class, 'store']);
-    $group->get('/{id}',         [UserController::class, 'viewDetails']);
-    $group->post('/{id}',        [UserController::class, 'update']);
-    $group->post('/{id}/role',   [UserController::class, 'roleToggle']);
-    $group->post('/{id}/delete', [UserController::class, 'delete']);
+    $group->get('/{id}',          [UserController::class, 'viewDetails']);
+    $group->post('/{id}',         [UserController::class, 'update']);
+    $group->post('/{id}/role',    [UserController::class, 'roleToggle']);
+    $group->post('/{id}/delete',  [UserController::class, 'delete']);
 })->add(AdminMiddleware::class);
 
-$app->get('/profile',     [UserController::class, 'showProfile'])->add(AuthMiddleware::class);
-$app->get('/editprofile', [UserController::class, 'editProfile'])->add(AuthMiddleware::class);
-$app->post('/editprofile',[UserController::class, 'updateProfile'])->add(AuthMiddleware::class);
+// --- Profile (auth required) ---
+$app->group('', function ($group) {
+    $group->get('/profile',         [UserController::class, 'showProfile']);
+    $group->get('/editprofile',     [UserController::class, 'editProfile']);
+    $group->post('/editprofile',    [UserController::class, 'updateProfile']);
+    $group->post('/profile/delete', [UserController::class, 'deleteAccount']);
+})->add(AuthMiddleware::class);
 
-// --- Categories ---
+// --- Categories (admin only) ---
 $app->group('/categories', function ($group) {
     $group->get('',               [CategoryController::class, 'index']);
     $group->get('/create',        [CategoryController::class, 'create']);
     $group->post('',              [CategoryController::class, 'store']);
-    $group->get('/{id}',         [CategoryController::class, 'viewDetails']);
-    $group->get('/{id}/edit',    [CategoryController::class, 'edit']);
-    $group->post('/{id}/update', [CategoryController::class, 'update']);
-    $group->post('/{id}/delete', [CategoryController::class, 'destroy']);
+    $group->get('/{id}',          [CategoryController::class, 'viewDetails']);
+    $group->get('/{id}/edit',     [CategoryController::class, 'edit']);
+    $group->post('/{id}/update',  [CategoryController::class, 'update']);
+    $group->post('/{id}/delete',  [CategoryController::class, 'destroy']);
 })->add(AdminMiddleware::class);
 
 // --- Events ---
 $app->group('/events', function ($group) {
-    $group->get('',                   [EventController::class, 'index']);
-    $group->post('',                  [EventController::class, 'store'])->add(AdminMiddleware::class);
-    $group->get('/create',            [EventController::class, 'create'])->add(AdminMiddleware::class);
-    $group->get('/on-sale',           [HomeController::class, 'showOnSale']);
-    $group->get('/category/{id}',     [EventController::class, 'byCategory']);
-
-    $group->get('/{id}',              [EventController::class, 'viewDetails']);
-    $group->get('/{id}/edit',         [EventController::class, 'edit'])->add(AdminMiddleware::class);
-    $group->post('/{id}/update',      [EventController::class, 'update'])->add(AdminMiddleware::class);
-    $group->post('/{id}/delete',      [EventController::class, 'destroy'])->add(AdminMiddleware::class);
+    $group->get('',               [EventController::class, 'index']);
+    $group->post('',              [EventController::class, 'store'])->add(AdminMiddleware::class);
+    $group->get('/create',        [EventController::class, 'create'])->add(AdminMiddleware::class);
+    $group->get('/on-sale',       [HomeController::class,  'showOnSale']);
+    $group->get('/category/{id}', [EventController::class, 'byCategory']);
+    $group->get('/{id}',          [EventController::class, 'viewDetails']);
+    $group->get('/{id}/edit',     [EventController::class, 'edit'])->add(AdminMiddleware::class);
+    $group->post('/{id}/update',  [EventController::class, 'update'])->add(AdminMiddleware::class);
+    $group->post('/{id}/delete',  [EventController::class, 'destroy'])->add(AdminMiddleware::class);
 });
 
-// --- Venues ---
+// --- Venues (admin only) ---
 $app->group('/venues', function ($group) {
     $group->get('',               [VenueController::class, 'index']);
     $group->get('/create',        [VenueController::class, 'create']);
     $group->post('',              [VenueController::class, 'store']);
-    $group->get('/{id}',         [VenueController::class, 'viewDetails']);
-    $group->get('/{id}/edit',    [VenueController::class, 'edit']);
-    $group->post('/{id}/update', [VenueController::class, 'update']);
-    $group->post('/{id}/delete', [VenueController::class, 'destroy']);
+    $group->get('/{id}',          [VenueController::class, 'viewDetails']);
+    $group->get('/{id}/edit',     [VenueController::class, 'edit']);
+    $group->post('/{id}/update',  [VenueController::class, 'update']);
+    $group->post('/{id}/delete',  [VenueController::class, 'destroy']);
 })->add(AdminMiddleware::class);
 
 // --- Tickets ---
 $app->group('/tickets', function ($group) {
-    // Static segments before /{id} — FastRoute won't accept the reverse order.
     $group->get('',               [TicketController::class, 'index']);
     $group->post('',              [TicketController::class, 'store'])->add(AdminMiddleware::class);
     $group->get('/create',        [TicketController::class, 'create'])->add(AdminMiddleware::class);
     $group->get('/event/{id}',    [TicketController::class, 'byEvent']);
-
     $group->get('/{id}',          [TicketController::class, 'viewDetails']);
     $group->get('/{id}/edit',     [TicketController::class, 'edit'])->add(AdminMiddleware::class);
     $group->post('/{id}/update',  [TicketController::class, 'update'])->add(AdminMiddleware::class);
     $group->post('/{id}/delete',  [TicketController::class, 'destroy'])->add(AdminMiddleware::class);
 });
 
-// --- Orders ---
+// --- Orders (admin only) ---
 $app->group('/orders', function ($group) {
     $group->post('',              [OrderController::class, 'store']);
-    $group->get('/user/{id}',    [OrderController::class, 'byUser']);
-    $group->get('/{id}',         [OrderController::class, 'viewDetails']);
-    $group->post('/{id}',        [OrderController::class, 'update']);
-    $group->post('/{id}/delete', [OrderController::class, 'delete']);
+    $group->get('/user/{id}',     [OrderController::class, 'byUser']);
+    $group->get('/{id}',          [OrderController::class, 'viewDetails']);
+    $group->post('/{id}',         [OrderController::class, 'update']);
+    $group->post('/{id}/delete',  [OrderController::class, 'delete']);
 })->add(AdminMiddleware::class);
 
-// --- Order Items ---
+// --- Order Items (admin only) ---
 $app->group('/order-items', function ($group) {
     $group->post('',              [OrderItemController::class, 'store']);
-    $group->get('/order/{id}',   [OrderItemController::class, 'byOrder']);
-    $group->get('/{id}',         [OrderItemController::class, 'viewDetails']);
-    $group->post('/{id}',        [OrderItemController::class, 'update']);
-    $group->post('/{id}/delete', [OrderItemController::class, 'delete']);
+    $group->get('/order/{id}',    [OrderItemController::class, 'byOrder']);
+    $group->get('/{id}',          [OrderItemController::class, 'viewDetails']);
+    $group->post('/{id}',         [OrderItemController::class, 'update']);
+    $group->post('/{id}/delete',  [OrderItemController::class, 'delete']);
 })->add(AdminMiddleware::class);
 
 // --- API ---
 $app->get('/api/search', [EventController::class, 'searchJson']);
 
-// --- Cart ---
+// --- Cart (auth required) ---
 $app->group('/cart', function ($group) {
-    $group->post('/add',                  [CartController::class, 'add']);
-    $group->post('/remove/{ticket_id}',   [CartController::class, 'remove']);
-    $group->post('/clear',                [CartController::class, 'clear']);
-    $group->post('/expire',               [CartController::class, 'expire']);
-});
+    $group->post('/add',                [CartController::class, 'add']);
+    $group->post('/remove/{ticket_id}', [CartController::class, 'remove']);
+    $group->post('/clear',              [CartController::class, 'clear']);
+    $group->post('/expire',             [CartController::class, 'expire']);
+})->add(AuthMiddleware::class);
 
-
+// --- Checkout ---
 $app->group('/checkout', function ($group) {
     $group->get('',         [CartController::class, 'showCheckout'])->add(AuthMiddleware::class);
     $group->post('',        [CartController::class, 'checkout'])->add(AuthMiddleware::class);
@@ -427,36 +391,30 @@ $app->group('/checkout', function ($group) {
     $group->get('/cancel',  [CartController::class, 'checkoutCancel']);
 });
 
-
+// --- Stripe ---
 $app->post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
-
 
 // --- Language switcher ---
 $app->get('/lang/{locale}', function (Request $request, Response $response, array $args) use ($basePath) {
-    $allowed = ['en', 'fr'];
-    // Store the chosen locale in session so it persists across requests.
-    if (in_array($args['locale'], $allowed, true)) {
+    if (in_array($args['locale'], ['en', 'fr'], true)) {
         $_SESSION['lang'] = $args['locale'];
     }
 
-
     $referer = $request->getHeaderLine('Referer');
-    $dest = $basePath . '/';
+    $dest    = $basePath . '/';
     if ($referer) {
         $parts = parse_url($referer);
-        $dest = ($parts['path'] ?? '') . (isset($parts['query']) ? '?' . $parts['query'] : '') . (isset($parts['fragment']) ? '#' . $parts['fragment'] : '');
-        // Strip base path prefix if present so we don't double it
+        $dest  = ($parts['path'] ?? '')
+               . (isset($parts['query'])    ? '?' . $parts['query']    : '')
+               . (isset($parts['fragment']) ? '#' . $parts['fragment'] : '');
         if ($basePath && str_starts_with($dest, $basePath)) {
             $dest = substr($dest, strlen($basePath));
         }
-        // Fallback to home if the resulting path is empty
         if (!$dest || $dest === '?' || $dest === '#') {
             $dest = '/';
         }
     }
     return $response->withHeader('Location', $basePath . $dest)->withStatus(302);
 });
-
-
 
 $app->run();

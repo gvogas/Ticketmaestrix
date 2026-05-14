@@ -204,8 +204,19 @@ class UserController
                 $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
                 $clientName   = $avatarFile->getClientFilename() ?? '';
                 $ext          = strtolower(pathinfo($clientName, PATHINFO_EXTENSION));
-                $tmpPath      = $avatarFile->getStream()->getMetadata('uri');
-                $mime         = (new \finfo(FILEINFO_MIME_TYPE))->file($tmpPath);
+                $stream       = $avatarFile->getStream();
+                $tmpPath      = $stream->getMetadata('uri');
+                $cleanupTmp   = false;
+                if ($tmpPath === null) {
+                    // Stream has no filesystem URI (e.g. in-memory); copy to a real temp file.
+                    $tmpPath    = tempnam(sys_get_temp_dir(), 'tm_avatar_');
+                    file_put_contents($tmpPath, (string) $stream);
+                    $cleanupTmp = true;
+                }
+                $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($tmpPath);
+                if ($cleanupTmp) {
+                    @unlink($tmpPath);
+                }
 
                 if (!in_array($ext, $allowedExts, true) || !in_array($mime, $allowedMimes, true)) {
                     $errors['avatar'] = ['Only JPG, PNG, GIF, and WebP images are allowed.'];
@@ -217,16 +228,9 @@ class UserController
                         mkdir($uploadDir, 0755, true);
                     }
                     $filename = $id . '_' . time() . '.' . $ext;
+                    $oldAvatarPath = (string) (Auth::user()->avatar ?? '');
                     $avatarFile->moveTo($uploadDir . $filename);
                     $newAvatarPath = '/uploads/avatars/' . $filename;
-
-                    $currentAvatar = (string) (Auth::user()->avatar ?? '');
-                    if ($currentAvatar !== '') {
-                        $old = __DIR__ . '/../../' . ltrim($currentAvatar, '/');
-                        if (file_exists($old)) {
-                            @unlink($old);
-                        }
-                    }
                 }
             }
         }
@@ -277,6 +281,14 @@ class UserController
             $updateData['avatar'] = $newAvatarPath;
         }
         $this->userModel->update($id, $updateData);
+
+        // Safe to remove old avatar now that the DB row is committed.
+        if ($newAvatarPath !== null && ($oldAvatarPath ?? '') !== '') {
+            $old = __DIR__ . '/../../' . ltrim($oldAvatarPath, '/');
+            if (file_exists($old)) {
+                @unlink($old);
+            }
+        }
 
         $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.profile_updated'];
         return $response

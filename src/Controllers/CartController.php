@@ -127,6 +127,11 @@ class CartController
      */
     public function expire(Request $request, Response $response): Response
     {
+        $token = $request->getHeaderLine('X-CSRF-Token');
+        if ($token === '' || $token !== ($_SESSION['csrf_token'] ?? '')) {
+            return $response->withStatus(403);
+        }
+
         Cart::clear();
 
         return $response
