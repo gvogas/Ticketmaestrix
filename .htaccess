@@ -1,5 +1,12 @@
 
 
+# Without these, big phone-camera uploads overflow PHP's default 8M cap and
+# the entire POST body (csrf_token included) is silently discarded.
+<IfModule mod_php.c>
+    php_value upload_max_filesize 8M
+    php_value post_max_size      16M
+</IfModule>
+
 RewriteEngine On
 
 # Block dotfiles and sensitive files

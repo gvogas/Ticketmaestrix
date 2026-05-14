@@ -35,6 +35,10 @@ class CsrfMiddleware implements MiddlewareInterface
             }
         }
 
+        $contentLength = (int) ($_SERVER['CONTENT_LENGTH'] ?? 0);
+        $postMaxBytes  = self::shorthandToBytes((string) ini_get('post_max_size'));
+        $overflowed    = $postMaxBytes > 0 && $contentLength > $postMaxBytes;
+
         $expected  = (string) ($_SESSION[$this->sessionKey] ?? '');
         $headerTok = $request->getHeaderLine('X-CSRF-Token');
         $bodyTok   = '';
@@ -45,12 +49,75 @@ class CsrfMiddleware implements MiddlewareInterface
         $submitted = $headerTok !== '' ? $headerTok : $bodyTok;
 
         // hash_equals stops timing attacks where the attacker measures how long the check takes.
-        if ($expected === '' || $submitted === '' || !hash_equals($expected, $submitted)) {
-            $response = $this->responseFactory->createResponse(403);
-            $response->getBody()->write('Forbidden — CSRF token missing or invalid.');
-            return $response->withHeader('Content-Type', 'text/plain; charset=utf-8');
+        $tokenInvalid = $expected === '' || $submitted === '' || !hash_equals($expected, $submitted);
+
+        if (!$overflowed && !$tokenInvalid) {
+            return $handler->handle($request);
         }
 
-        return $handler->handle($request);
+        if ($this->isBrowserForm($request)) {
+            $_SESSION['flash'] = [
+                'type' => 'danger',
+                'key'  => $overflowed ? 'flash.upload_too_large' : 'flash.csrf_expired',
+            ];
+            $response = $this->responseFactory->createResponse(303);
+            return $response->withHeader('Location', $this->safeReferer($request));
+        }
+
+        $response = $this->responseFactory->createResponse(403);
+        $response->getBody()->write('Forbidden — CSRF token missing or invalid.');
+        return $response->withHeader('Content-Type', 'text/plain; charset=utf-8');
+    }
+
+    private function isBrowserForm(Request $request): bool
+    {
+        if (strcasecmp($request->getHeaderLine('X-Requested-With'), 'XMLHttpRequest') === 0) {
+            return false;
+        }
+        $contentType = strtolower($request->getHeaderLine('Content-Type'));
+        $isFormType  = str_starts_with($contentType, 'multipart/form-data')
+                    || str_starts_with($contentType, 'application/x-www-form-urlencoded');
+        if (!$isFormType) {
+            return false;
+        }
+        $accept = strtolower($request->getHeaderLine('Accept'));
+        return $accept === '' || str_contains($accept, 'text/html');
+    }
+
+    private function safeReferer(Request $request): string
+    {
+        $referer = $request->getHeaderLine('Referer');
+        if ($referer === '') {
+            return '/';
+        }
+        $parts = parse_url($referer);
+        if ($parts === false || empty($parts['host'])) {
+            return '/';
+        }
+        // Only honour same-host referers so a forged header can't bounce users off-site.
+        if (strcasecmp($parts['host'], $request->getUri()->getHost()) !== 0) {
+            return '/';
+        }
+        $target = $parts['path'] ?? '/';
+        if (!empty($parts['query'])) {
+            $target .= '?' . $parts['query'];
+        }
+        return $target;
+    }
+
+    private static function shorthandToBytes(string $value): int
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return 0;
+        }
+        $unit = strtolower($value[strlen($value) - 1]);
+        $num  = (int) $value;
+        return match ($unit) {
+            'g'     => $num * 1024 * 1024 * 1024,
+            'm'     => $num * 1024 * 1024,
+            'k'     => $num * 1024,
+            default => $num,
+        };
     }
 }

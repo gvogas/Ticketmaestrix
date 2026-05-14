@@ -36,7 +36,7 @@ The app is built on **Slim 4** (PHP 8.4), **Twig 3** templates, **RedBeanPHP 5.7
 - Per-device "trust this browser" cookie that skips 2FA for 30 days on the same browser + account, persisted in the `tfatoken` table
 - Remember-me cookie (`auth_token`, 2-hour expiry) keeps users logged in across browser restarts inside the window; each login on each device gets its own SHA-256 token row in `authtoken`, so logging in on a new device never invalidates older devices, and logging out only revokes the current device's token
 - Login rate limiting (5 failed attempts → 15-minute lockout, tracked in the session)
-- Self-service profile editing, avatar upload (JPG / PNG / GIF / WebP, ≤ 5 MB, validated with `getimagesize`, random-hex filename so two uploads in the same second don't collide, old avatar only deleted after the DB update succeeds), and account deletion
+- Self-service profile editing, avatar upload (JPG / PNG / GIF / WebP, ≤ 5 MB, validated with `getimagesize`, random-hex filename so two uploads in the same second don't collide, old avatar only deleted after the DB update succeeds, client-side size guard rejects oversize files before they hit the network), and account deletion
 - Loyalty point history visible on `/profile` alongside paginated purchase history (orders + their line items collapsed in a single SQL pass to avoid N+1 hydration)
 
 ### Admin
@@ -54,7 +54,8 @@ The app is built on **Slim 4** (PHP 8.4), **Twig 3** templates, **RedBeanPHP 5.7
 - Per-request access log appended to `var/app.log` (method, path, status, elapsed ms)
 - Security headers middleware (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-XSS-Protection: 1; mode=block`)
 - Uploads directory hardened: an `.htaccess` denies execution of any `.php*` file under `uploads/avatars/`
-- CSRF protection on every state-changing route via `CsrfMiddleware`: one random token per session, every POST form embeds it with `{{ csrf_field() }}`, AJAX paths send it as `X-CSRF-Token`. `/stripe/webhook` is the only allow-listed path (Stripe signs the body instead).
+- Root `.htaccess` raises PHP upload limits to `upload_max_filesize = 8M` / `post_max_size = 16M` (inside `<IfModule mod_php.c>`) so legitimate phone-camera avatars don't overflow PHP's default POST body cap
+- CSRF protection on every state-changing route via `CsrfMiddleware`: one random token per session, every POST form embeds it with `{{ csrf_field() }}`, AJAX paths send it as `X-CSRF-Token`. Two paths are allow-listed: `/stripe/webhook` (Stripe signs the body instead) and `/logout` (forced-logout is the worst possible CSRF outcome, and exempting it lets stale-session users sign out cleanly). Failures on regular browser forms redirect back to the previous page with a localised flash (`flash.upload_too_large` when the POST body overflowed `post_max_size`, otherwise `flash.csrf_expired`) instead of a bare 403; XHR/JSON callers still get plaintext 403.
 - English and French translations (`translations/messages.en.php`, `messages.fr.php`), per-language switching at `/lang/{locale}`
 
 ## Tech stack

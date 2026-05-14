@@ -266,7 +266,9 @@ $loggerMiddleware = function (Request $request, RequestHandler $handler) use ($l
 $app->add(new MaintenanceMiddleware(__DIR__ . '/var/maintenance.flag', $app->getResponseFactory()));
 $app->add(new SecurityHeadersMiddleware());
 // Stripe posts /stripe/webhook from their own server, so they cannot send our token.
-$app->add(new CsrfMiddleware($responseFactory, ['/stripe/webhook']));
+// Logout is also exempt: CSRF on logout can only annoy, not exploit, and a stale-token
+// logout from an expired session would otherwise leave the user stuck.
+$app->add(new CsrfMiddleware($responseFactory, ['/stripe/webhook', '/logout']));
 $app->add($loggerMiddleware);
 
 // Public pages.

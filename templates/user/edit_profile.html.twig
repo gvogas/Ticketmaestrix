@@ -44,7 +44,9 @@
                         <h6 class="fw-bold mb-1">{{ trans('editprofile.photo_heading') }}</h6>
                         <p class="text-muted small mb-2">{{ trans('editprofile.photo_desc') }}</p>
                         <input type="file" name="avatar" id="avatar-input"
-                               accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;">
+                               accept="image/jpeg,image/png,image/gif,image/webp"
+                               data-too-large-msg="{{ trans('editprofile.photo_too_large') }}"
+                               style="display:none;">
                         <button type="button" class="btn px-3 py-2 text-white"
                                 style="background: #9b51e0; border-radius: 6px; font-size: 0.875rem;"
                                 onclick="document.getElementById('avatar-input').click()">
@@ -165,7 +167,22 @@
 <script>
 document.getElementById('avatar-input').addEventListener('change', function () {
     var file = this.files[0];
+    var prevWarning = document.getElementById('avatar-size-warning');
+    if (prevWarning) prevWarning.remove();
     if (!file) return;
+
+    
+    var MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+    if (file.size > MAX_AVATAR_BYTES) {
+        this.value = '';
+        var warning = document.createElement('div');
+        warning.id = 'avatar-size-warning';
+        warning.className = 'text-danger small mt-2';
+        warning.textContent = this.dataset.tooLargeMsg || 'Image must be under 5 MB.';
+        this.parentNode.appendChild(warning);
+        return;
+    }
+
     var reader = new FileReader();
     reader.onload = function (e) {
         var preview = document.getElementById('avatar-preview');

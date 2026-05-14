@@ -14,3 +14,5 @@ vendor/
 # User-uploaded avatars
 uploads/avatars/*
 !uploads/avatars/.htaccess
+
+database/
