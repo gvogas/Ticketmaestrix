@@ -123,15 +123,35 @@
                             <i class="bi bi-pencil-square"></i> {{ trans('catadmin.crud.edit') }}
                         </a>
 
-                        <form action="{{ base_path }}/categories/{{ category.id }}/delete" method="post" class="m-0"
-                              onsubmit="return confirm('{{ trans('confirm.delete_category')|e('js') }}')">
-                            <button type="submit" class="btn btn-sm btn-outline-danger px-3 rounded-pill fw-bold">
-                                <i class="bi bi-trash3"></i> {{ trans('catadmin.crud.delete') }}
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-sm btn-outline-danger px-3 rounded-pill fw-bold"
+                                data-bs-toggle="modal" data-bs-target="#deleteCategoryModal-{{ category.id }}">
+                            <i class="bi bi-trash3"></i> {{ trans('catadmin.crud.delete') }}
+                        </button>
                     </div>
                 </article>
             </div>
+
+            <!-- Delete Confirmation Modal -->
+            <div class="modal fade" id="deleteCategoryModal-{{ category.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content rounded-4 border-0 shadow">
+                        <div class="modal-header border-0 pt-4 px-4">
+                            <h5 class="fw-bold text-danger">{{ trans('catadmin.crud.delete') }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body px-4 pb-4">
+                            <p class="mb-0">{{ trans('confirm.delete_category') }}</p>
+                        </div>
+                        <div class="modal-footer border-0 pb-4 px-4">
+                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">{{ trans('catadmin.crud.cancel') }}</button>
+                            <form action="{{ base_path }}/categories/{{ category.id }}/delete" method="post" class="m-0">
+                                <button type="submit" class="btn btn-danger px-4">{{ trans('catadmin.crud.delete') }}</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {% else %}
             <div class="col-12 text-center py-5">
                 <div class="py-5">

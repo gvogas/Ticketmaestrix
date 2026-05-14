@@ -126,14 +126,35 @@
                             <i class="bi bi-pencil-square me-1"></i> {{ trans('evadmin.edit') }}
                         </a>
 
-                        <form action="{{ base_path }}/events/{{ event.id }}/delete" method="post" class="m-0" onsubmit="return confirm('{{ trans('confirm.delete_event')|e('js') }}')">
-                            <button type="submit" class="btn btn-sm btn-outline-danger px-4 rounded-pill">
-                                <i class="bi bi-trash3 me-1"></i> {{ trans('evadmin.delete') }}
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-sm btn-outline-danger px-4 rounded-pill"
+                                data-bs-toggle="modal" data-bs-target="#deleteEventModal-{{ event.id }}">
+                            <i class="bi bi-trash3 me-1"></i> {{ trans('evadmin.delete') }}
+                        </button>
                     </div>
                 </article>
             </div>
+
+            <!-- Delete Confirmation Modal -->
+            <div class="modal fade" id="deleteEventModal-{{ event.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content rounded-4 border-0 shadow">
+                        <div class="modal-header border-0 pt-4 px-4">
+                            <h5 class="fw-bold text-danger">{{ trans('evadmin.delete') }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body px-4 pb-4">
+                            <p class="mb-0">{{ trans('confirm.delete_event') }}</p>
+                        </div>
+                        <div class="modal-footer border-0 pb-4 px-4">
+                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">{{ trans('evadmin.crud.cancel') }}</button>
+                            <form action="{{ base_path }}/events/{{ event.id }}/delete" method="post" class="m-0">
+                                <button type="submit" class="btn btn-danger px-4">{{ trans('evadmin.delete') }}</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {% else %}
             <div class="col-12 text-center py-5">
                 <div class="py-5">
