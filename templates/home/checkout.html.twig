@@ -75,7 +75,7 @@
         </div>
         {% endif %}
 
-        {# Order summary — amounts calculated server-side before redirect #}
+      
         <div class="mb-3 p-3 bg-light rounded-3 border text-center">
             <label class="form-label d-block text-muted small text-uppercase fw-bold">{{ trans('checkout.subtotal') }}</label>
             <span class="fs-5 text-dark">${{ subtotal|number_format(2) }}</span>
@@ -87,6 +87,11 @@
             <span class="fs-5 text-success">-${{ discount|number_format(2) }}</span>
         </div>
         {% endif %}
+
+        <div class="mb-3 p-3 bg-light rounded-3 border text-center">
+            <label class="form-label d-block text-muted small text-uppercase fw-bold">{{ trans('checkout.service_fee') }}</label>
+            <span class="fs-5 text-dark">${{ service_fee|number_format(2) }}</span>
+        </div>
 
         <div class="mb-4 p-3 bg-light rounded-3 border text-center">
             <label class="form-label d-block text-muted small text-uppercase fw-bold">{{ trans('checkout.total') }}</label>

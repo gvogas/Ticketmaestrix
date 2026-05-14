@@ -590,6 +590,7 @@ return [
     'checkout.subtitle'         => 'Secure payment via Stripe',
     'checkout.subtotal'         => 'Subtotal',
     'checkout.points_discount'  => 'Points Discount',
+    'checkout.service_fee'      => 'Service Fee (15%)',
     'checkout.total'            => 'Total to Pay',
     'checkout.pay_button'       => 'Pay with Stripe',
     'checkout.back_to_cart'     => 'Back to cart',

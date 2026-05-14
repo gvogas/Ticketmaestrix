@@ -103,8 +103,8 @@
                             <span class="fw-bold">${{ subtotal|number_format(2) }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-3 border-bottom pb-3">
-                            <span class="text-muted">{{ trans('cart.service') }}</span>
-                            <span class="fw-bold">$0.00</span>
+                            <span class="text-muted">{{ trans('cart.service') }} (15%)</span>
+                            <span class="fw-bold" id="service-fee-display">${{ service_fee|number_format(2) }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-4">
                             <span class="h5 fw-bold">{{ trans('cart.total') }}</span>
@@ -172,7 +172,9 @@
             var totalDisp   = document.getElementById('total-display');
             var discountRow = document.getElementById('discount-row');
             var discountAmt = document.getElementById('discount-amount');
-            var baseTotal   = {{ total|number_format(2, '.', '') }};
+            var serviceFeeDisp = document.getElementById('service-fee-display');
+            
+            var subtotal    = {{ subtotal|number_format(2, '.', '') }};
 
             function update() {
                 var pts = parseInt(input.value, 10) || 0;
@@ -181,15 +183,18 @@
                 input.value = pts;
                 hidden.value = pts;
 
-                var discount = (pts * 0.01).toFixed(2);
-                var newTotal = (baseTotal - pts * 0.01).toFixed(2);
+                var discount  = pts * 0.01;
+                var taxable   = Math.max(0, subtotal - discount);
+                var serviceFee = Math.round(taxable * 15) / 100; // 15% rounded to cents
+                var newTotal  = Math.round((taxable + serviceFee) * 100) / 100;
 
-                preview.textContent = '$' + discount;
-                totalDisp.textContent = '$' + newTotal;
+                preview.textContent = '$' + discount.toFixed(2);
+                serviceFeeDisp.textContent = '$' + serviceFee.toFixed(2);
+                totalDisp.textContent = '$' + newTotal.toFixed(2);
 
                 if (pts > 0) {
                     discountRow.style.display = 'flex';
-                    discountAmt.textContent = '-$' + discount;
+                    discountAmt.textContent = '-$' + discount.toFixed(2);
                 } else {
                     discountRow.style.display = 'none';
                 }
