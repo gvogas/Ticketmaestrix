@@ -308,13 +308,10 @@ class UserController
     /** POST /delete-account — user deletes their own account and is logged out. */
     public function deleteAccount(Request $request, Response $response): Response
     {
-        if ($redirect = Auth::requireLogin($response, $this->basePath)) {
-            return $redirect;
-        }
-
         $userId = (int) Auth::userId();
 
-        $this->userModel->delete($userId);
+        // deleteById handles avatar file removal and auth token revocation.
+        $this->userModel->deleteById($userId);
 
         Auth::logout();
 
