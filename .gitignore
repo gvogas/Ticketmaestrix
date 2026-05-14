@@ -6,6 +6,9 @@ composer.phar
 #Node modules
 node_modules/
 .env
+
+.htaccess
+
 # Logs
 var/app.log
 

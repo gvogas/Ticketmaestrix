@@ -52,9 +52,7 @@
         }
 
         document.addEventListener('click', function (e) {
-            // Modified clicks (cmd/ctrl/shift/alt) and middle-clicks open in
-            // a new tab — the current page doesn't actually navigate, so
-            // showing the bar would mislead.
+         
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
             var link = e.target.closest('.pagination .page-link');
             if (!link) return;
@@ -64,7 +62,7 @@
             startLoading(link);
         }, true);
 
-        // Restore-from-bfcache: hide the bar so it doesn't appear pre-filled.
+        
         window.addEventListener('pageshow', function (e) {
             if (e.persisted) {
                 bar.classList.remove('is-active', 'is-done');
