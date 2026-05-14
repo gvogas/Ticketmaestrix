@@ -63,7 +63,6 @@ class VenueController
         $lat     = !empty($data['lat']) ? (float) $data['lat'] : null;
         $lng     = !empty($data['lng']) ? (float) $data['lng'] : null;
 
-        // Geocode the address if no coordinates were manually provided.
         if (($lat === null) && $address !== '') {
             $coords = $this->geocodeAddress($address);
             if ($coords !== null) {
@@ -138,7 +137,6 @@ class VenueController
         $venue->lat         = !empty($data['lat']) ? (float) $data['lat'] : null;
         $venue->lng         = !empty($data['lng']) ? (float) $data['lng'] : null;
 
-        // If coordinates are still absent (not manually entered), geocode the address.
         if ((empty($venue->lat) || empty($venue->lng)) && !empty($venue->address)) {
             $coords = $this->geocodeAddress($venue->address);
             if ($coords !== null) {
@@ -179,10 +177,6 @@ class VenueController
         return $response;
     }
 
-    /**
-     * Look up lat/lng for an address using the Google Geocoding API.
-     * Returns ['lat' => float, 'lng' => float] or null on failure or missing key.
-     */
     private function geocodeAddress(string $address): ?array
     {
         $apiKey = $_ENV['GOOGLE_MAPS_API_KEY'] ?? '';

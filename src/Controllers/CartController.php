@@ -18,18 +18,9 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use RedBeanPHP\R;
 use Twig\Environment;
 
-/**
- * Mutates the session-backed cart and initiates Stripe Checkout on checkout.
- * Order creation happens in StripeWebhookController after payment succeeds.
- * Read-only cart rendering lives in HomeController::showCart.
- */
 class CartController
 {
     private const ORDER_STATUS_PAID = 1;
-
-    // 15% service fee applied to the post-discount subtotal. Kept as a class
-    // constant so the cart page, checkout page, and Stripe line item all use
-    // the exact same rate and rounding rule.
     private const SERVICE_FEE_RATE = 0.15;
 
     public function __construct(
@@ -47,7 +38,6 @@ class CartController
     /** GET /checkout — display the order summary and "Pay with Stripe" button. */
     public function showCheckout(Request $request, Response $response): Response
     {
-        // Admins should manage the system, not use the checkout flow
         if (Auth::isAdmin()) {
             return $response->withHeader('Location', $this->basePath . '/admin')->withStatus(302);
         }
@@ -57,7 +47,6 @@ class CartController
 
         $rows = Cart::hydrate($this->ticketModel, $this->eventModel, $this->venueModel);
 
-        // Navigating to /checkout with an empty cart would show a $0.00 form
         if (count($rows) === 0) {
             return $response->withHeader('Location', $this->basePath . '/cart')->withStatus(302);
         }
@@ -65,8 +54,6 @@ class CartController
         $subtotal        = Cart::subtotal($rows);
         $user            = Auth::user();
         $availablePoints = (int) ($user->points ?? 0);
-        // Points cap stays at subtotal cents — discount can fully zero the
-        // taxable amount (tax then becomes 0) but never go beyond it.
         $pointsToUse     = $this->clampPoints($pointsToUse, $availablePoints, (int) floor($subtotal * 100));
         $discount        = $pointsToUse * 0.01;
         $taxable         = max(0, $subtotal - $discount);
@@ -89,7 +76,6 @@ class CartController
     /** POST /cart/add — add a ticket id to the session cart. */
     public function add(Request $request, Response $response): Response
     {
-        // If an admin clicks 'Buy', redirect them to the management inventory instead
         if (Auth::isAdmin()) {
             return $response->withHeader('Location', $this->basePath . '/tickets')->withStatus(302);
         }
@@ -131,10 +117,7 @@ class CartController
             ->withStatus(302);
     }
 
-    /**
-     * POST /cart/expire — called by the client-side countdown when the timer
-     * hits zero. Clears the cart and sends the user back to browse events.
-     */
+    /** POST /cart/expire — client countdown fires this when timer hits zero. */
     public function expire(Request $request, Response $response): Response
     {
         $token = $request->getHeaderLine('X-CSRF-Token');
@@ -149,16 +132,6 @@ class CartController
             ->withStatus(302);
     }
 
-    /**
-     * POST /checkout — validate the cart, save a snapshot in stripepending,
-     * create a Stripe Checkout Session, and redirect the user to Stripe.
-     *
-     * Order creation happens in StripeWebhookController after Stripe confirms
-     * payment via the checkout.session.completed webhook event.
-     *
-     * Exception: if total < $0.50 (Stripe minimum), the order is created
-     * directly here without going through Stripe.
-     */
     public function checkout(Request $request, Response $response): Response
     {
         if (Auth::isAdmin()) {
@@ -178,17 +151,15 @@ class CartController
         $subtotal        = Cart::subtotal($rows);
         $body            = $request->getParsedBody() ?? [];
         $pointsToUse     = (int) ($body['points_to_use'] ?? 0);
-        $user            = Auth::user(); // request-cached; avoids a redundant R::load
+        $user            = Auth::user();
         $availablePoints = (int) ($user->points ?? 0);
-        // Points cap is subtotal cents — discount can zero the taxable amount
-        // (and thus the tax) but cannot make it negative.
         $pointsToUse     = $this->clampPoints($pointsToUse, $availablePoints, (int) floor($subtotal * 100));
         $discount        = $pointsToUse * 0.01;
         $taxable         = max(0, $subtotal - $discount);
         $serviceFee      = round($taxable * self::SERVICE_FEE_RATE, 2);
         $total           = round($taxable + $serviceFee, 2);
 
-        // Stripe requires a minimum charge of $0.50 — bypass for fully-discounted orders
+        // stripe rejects anything under $0.50 - go direct for free/near-free orders
         if ($total < 0.50) {
             try {
                 return $this->createOrderDirectly(
@@ -210,20 +181,17 @@ class CartController
             }
         }
 
-        // Save the current expiry so it can be restored if the user cancels from Stripe.
-        // Then extend to 30 minutes to survive the offsite payment flow.
+        // save expiry before we extend it - restored on cancel so the timer doesnt jump
         $_SESSION['cart_expires_at_pre_stripe'] = $_SESSION['cart_expires_at'] ?? null;
         Cart::extendExpiry(1800);
 
-        // Save a snapshot of everything the webhook will need to create the order.
-        // The webhook runs server-side with no PHP session, so it cannot read the cart.
         $pending                    = R::dispense('stripepending');
         $pending->user_id           = $userId;
         $pending->cart_json         = json_encode($rows);
         $pending->points_to_use     = $pointsToUse;
         $pending->total             = $total;
         $pending->created_at        = date('Y-m-d H:i:s');
-        $pending->stripe_session_id = ''; // filled in after the Stripe session is created below
+        $pending->stripe_session_id = '';
         $pendingId = (int) R::store($pending);
 
         $appUrl = rtrim($_ENV['APP_URL'] ?? '', '/');
@@ -238,7 +206,6 @@ class CartController
                 $appUrl . $this->basePath . '/checkout/cancel',
             );
         } catch (\Throwable $e) {
-            // Clean up the orphaned pending row and show the checkout page with an error
             R::trash($pending);
             error_log('Stripe session creation failed: ' . $e->getMessage());
 
@@ -252,26 +219,17 @@ class CartController
                 'error'         => 'Payment service temporarily unavailable. Please try again.',
             ]);
             $response->getBody()->write($html);
-            // 200 because the checkout page itself rendered correctly — the payment error is handled
             return $response->withStatus(200);
         }
 
-        // Save the Stripe session ID so the webhook can find this pending row by it
         $pending->stripe_session_id = $session['id'];
         R::store($pending);
 
         return $response->withHeader('Location', $session['url'])->withStatus(302);
     }
 
-    /**
-     * GET /checkout/success — Stripe redirects here after successful payment.
-     *
-     * The order itself is created by StripeWebhookController — this page only
-     * clears the session cart and confirms to the user that payment was received.
-     */
     public function checkoutSuccess(Request $request, Response $response): Response
     {
-        // Clear the session cart — the webhook already (or soon will) create the order
         Cart::clear();
         unset($_SESSION['cart_expires_at_pre_stripe']);
 
@@ -282,10 +240,6 @@ class CartController
         return $response;
     }
 
-    /**
-     * GET /checkout/cancel — Stripe redirects here when the user clicks Back.
-     * Cart is left intact so the user can try again.
-     */
     public function checkoutCancel(Request $request, Response $response): Response
     {
         return $response
@@ -293,10 +247,6 @@ class CartController
             ->withStatus(302);
     }
 
-    /**
-     * Creates an order directly (without Stripe) when the total is below $0.50.
-     * This handles the edge case where points cover the full order amount.
-     */
     private function createOrderDirectly(
         array    $rows,
         int      $userId,
@@ -305,9 +255,6 @@ class CartController
         int      $pointsToUse,
         Response $response,
     ): Response {
-        // 20% earn rate (20 pts per $1) on the pre-tax, pre-discount subtotal.
-        // Mirrors HomeController's cart preview and StripeWebhookController's
-        // paid-order credit so all three paths award identical points.
         $pointsEarned = (int) floor($subtotal * 0.20);
 
         R::begin();
@@ -319,7 +266,7 @@ class CartController
             $order->user_id           = $userId;
             $order->points_earned     = $pointsEarned;
             $order->points_spent      = $pointsToUse;
-            $order->stripe_session_id = ''; // no Stripe session for free orders
+            $order->stripe_session_id = '';
             $orderId = (int) R::store($order);
 
             foreach ($rows as $row) {
@@ -334,8 +281,7 @@ class CartController
 
             $user = R::load('users', $userId);
             if ($pointsToUse > 0) {
-                // Read from the freshly-loaded bean, not the session-cached value,
-                // to avoid a stale-read race if the user's points changed mid-request.
+                // load fresh from DB - session-cached value could be stale if points changed mid-request
                 $user->points = max(0, (int) ($user->points ?? 0) - $pointsToUse);
                 $this->pointsHistoryModel->addPoints(
                     $userId,
@@ -367,10 +313,6 @@ class CartController
             ->withStatus(302);
     }
 
-    /**
-     * Clamps a points value so it cannot exceed the user's balance or the
-     * maximum discount allowed (subtotal in cents). Ensures non-negative.
-     */
     private function clampPoints(int $points, int $available, int $maxDiscount): int
     {
         return min(max(0, $points), $available, $maxDiscount);

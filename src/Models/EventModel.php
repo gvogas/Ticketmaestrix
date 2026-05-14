@@ -59,11 +59,6 @@ class EventModel
         R::trash($bean);
     }
 
-    /**
-     * All future-or-now events ordered by date.
-     *
-     * Used by the home page "All Events" grid and the map sidebar.
-     */
     public function getUpcoming(): array
     {
         return BeanHelper::castBeanArray(
@@ -71,11 +66,7 @@ class EventModel
         );
     }
 
-    /**
-     * Events that currently have at least one ticket actively on sale.
-     * Drives both the home-page featured row and the /events/on-sale listing.
-     */
-    public function getWithOnSaleTickets(?int $limit = null): array
+    public function getWithOnSaleTickets(?int $limit = null, int $offset = 0): array
     {
         $sql = "SELECT DISTINCT e.*
                   FROM events e
@@ -91,8 +82,9 @@ class EventModel
 
         $bindings = [];
         if ($limit !== null) {
-            $sql .= ' LIMIT ?';
+            $sql .= ' LIMIT ? OFFSET ?';
             $bindings[] = $limit;
+            $bindings[] = $offset;
         }
 
         $rows = R::getAll($sql, $bindings);
@@ -103,7 +95,6 @@ class EventModel
             foreach ($row as $k => $v) {
                 $obj->$k = $v;
             }
-            // Cast FK fields to int so templates and controllers behave consistently.
             foreach (['id', 'category_id', 'venue_id'] as $field) {
                 if (isset($obj->$field)) {
                     $obj->$field = (int) $obj->$field;
@@ -114,10 +105,6 @@ class EventModel
         return $out;
     }
 
-    /**
-     * Count of events with at least one active sale ticket.
-     * Powers the "On Sale" hero badge on the home page.
-     */
     public function countWithOnSaleTickets(): int
     {
         return (int) R::getCell(
@@ -134,52 +121,37 @@ class EventModel
         );
     }
 
-    /**
-     * Count of events whose date is today or later. Drives the
-     * "Live Events" hero stat and the admin "Active Events" card.
-     */
     public function countActive(): int
     {
         return (int) R::getCell('SELECT COUNT(*) FROM events WHERE date >= NOW()');
     }
 
-    /**
-     * Decorate event beans with venue_name, venue_address, category_name, and min_price
-     * so listing templates have everything they need without per-row
-     * lookups in Twig. Returns a new array of stdClass objects with extra properties.
-     * 
-     * Note: Returns stdClass objects instead of modifying frozen beans directly.
-     */
+    // stdClass instead of modifying frozen beans directly - they cant take extra props
     public function hydrate(array $events, VenueModel $venues, TicketModel $tickets, ?CategoryModel $categories = null): array
     {
         $out = [];
         foreach ($events as $event) {
-            // Create a new stdClass to hold all properties (avoids frozen bean issues)
             $hydrated = new \stdClass();
-            
-            // Copy all existing bean properties
+
             foreach ($event as $key => $value) {
                 $hydrated->$key = $value;
             }
-            
-            // Add venue information
+
             $venue = $venues->getById((int) ($hydrated->venue_id ?? 0));
             $hydrated->venue_name    = $venue ? (string) $venue->name : '';
             $hydrated->venue_address = $venue ? (string) $venue->address : '';
             $hydrated->venue_lat     = $venue && isset($venue->lat) ? (float) $venue->lat : null;
             $hydrated->venue_lng     = $venue && isset($venue->lng) ? (float) $venue->lng : null;
-            
-            // Add ticket pricing
+
             $hydrated->min_price = $tickets->minPriceForEvent((int) ($hydrated->id ?? 0));
-            
-            // Add category name if category model is provided
+
             if ($categories !== null && isset($hydrated->category_id)) {
                 $category = $categories->getById((int) $hydrated->category_id);
                 $hydrated->category = $category ? (string) $category->name : 'Uncategorized';
             } elseif (!isset($hydrated->category)) {
                 $hydrated->category = 'Uncategorized';
             }
-            
+
             $out[] = $hydrated;
         }
         return $out;
@@ -196,16 +168,11 @@ class EventModel
         return (int) R::count('events');
     }
 
-/**
- * Search and filter events by query string, category, and venue.
- * Returns paginated results.
- */
 public function search(array $filters, int $limit, int $offset): array
 {
     $where = [];
     $bindings = [];
-    
-    // Search by event title, venue name, or venue address
+
     if (!empty($filters['q'])) {
         $searchTerm = '%' . $filters['q'] . '%';
         $where[] = '(events.title LIKE ? OR venue.name LIKE ? OR venue.address LIKE ?)';
@@ -214,13 +181,11 @@ public function search(array $filters, int $limit, int $offset): array
         $bindings[] = $searchTerm;
     }
 
-    // Filter by category
     if (!empty($filters['category'])) {
         $where[] = 'events.category_id = ?';
         $bindings[] = (int) $filters['category'];
     }
 
-    // Filter by venue
     if (!empty($filters['venue'])) {
         $where[] = 'events.venue_id = ?';
         $bindings[] = (int) $filters['venue'];
@@ -238,8 +203,7 @@ public function search(array $filters, int $limit, int $offset): array
     $bindings[] = $offset;
 
     $rawResults = R::getAll($query, $bindings);
-    
-    // Convert raw arrays to stdClass objects for compatibility with hydrate()
+
     $results = [];
     foreach ($rawResults as $row) {
         $obj = new \stdClass();
@@ -248,19 +212,15 @@ public function search(array $filters, int $limit, int $offset): array
         }
         $results[] = $obj;
     }
-    
+
     return $results;
 }
 
-/**
- * Count events matching the search criteria.
- */
 public function countSearch(array $filters): int
 {
     $where = [];
     $bindings = [];
-    
-    // Search by event title, venue name, or venue address 
+
     if (!empty($filters['q'])) {
         $searchTerm = '%' . $filters['q'] . '%';
         $where[] = '(events.title LIKE ? OR venue.name LIKE ? OR venue.address LIKE ?)';
@@ -269,13 +229,11 @@ public function countSearch(array $filters): int
         $bindings[] = $searchTerm;
     }
 
-    // Filter by category
     if (!empty($filters['category'])) {
         $where[] = 'events.category_id = ?';
         $bindings[] = (int) $filters['category'];
     }
 
-    // Filter by venue
     if (!empty($filters['venue'])) {
         $where[] = 'events.venue_id = ?';
         $bindings[] = (int) $filters['venue'];

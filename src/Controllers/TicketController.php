@@ -24,9 +24,15 @@ class TicketController
 
     public function index(Request $request, Response $response): Response
     {
+        $eventTitles = [];
+        foreach ($this->eventModel->getAll() as $event) {
+            $eventTitles[(int) $event->id] = (string) $event->title;
+        }
+
         $html = $this->twig->render('ticket/index.html.twig', [
-            'base_path' => $this->basePath,
-            'tickets'   => $this->ticketModel->getAll(),
+            'base_path'    => $this->basePath,
+            'tickets'      => $this->ticketModel->getAll(),
+            'event_titles' => $eventTitles,
         ]);
         $response->getBody()->write($html);
         return $response;
@@ -188,16 +194,16 @@ class TicketController
             return $response->withHeader('Location', $this->basePath . '/tickets')->withStatus(302);
         }
 
-        // Ticket detail page is admin-only for inventory management
-        // Regular users should not access this page directly
         if (!\App\Helpers\Auth::isAdmin()) {
-            // Redirect regular users to the event page instead
             return $response->withHeader('Location', $this->basePath . '/events/' . $ticket->event_id)->withStatus(302);
         }
+
+        $event = $this->eventModel->getById((int) $ticket->event_id);
 
         $html = $this->twig->render('ticket/ticket_detail.html.twig', [
             'base_path' => $this->basePath,
             'ticket'    => $ticket,
+            'event'     => $event,
             'is_admin'  => true,
         ]);
         $response->getBody()->write($html);
@@ -206,7 +212,6 @@ class TicketController
 
     public function byEvent(Request $request, Response $response, array $args): Response
     {
-        // Redirect admins from the seat-selection (purchase) page to the ticket inventory (management)
         if (Auth::isAdmin()) {
             return $response->withHeader('Location', $this->basePath . '/tickets')->withStatus(302);
         }
@@ -227,7 +232,7 @@ class TicketController
             'base_path' => $this->basePath,
             'tickets'   => $tickets,
             'event'     => $event,
-            'event_id'  => $eventId, // Fallback
+            'event_id'  => $eventId,
         ]);
         $response->getBody()->write($html);
         return $response;

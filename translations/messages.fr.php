@@ -476,6 +476,7 @@ return [
     'order.status_completed' => 'Terminée',
     'order.status_pending'   => 'En attente',
     'order.user_id'          => 'ID utilisateur',
+    'order.customer'         => 'Client',
     'order.total'            => 'Total',
     'order.view_items'       => 'Voir les articles',
     'order.delete'           => 'Supprimer',

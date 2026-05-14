@@ -1,10 +1,9 @@
 <?php
 declare(strict_types=1);
 
-// Suppress deprecation warnings for libraries not yet fully compatible with PHP 8.4+
+// supress deprecation warnings - libs not caught up to 8.4 yet
 error_reporting(E_ALL & ~E_DEPRECATED);
 
-// Prevent warnings from being prepended to JSON/HTML output
 ini_set('display_errors', '0');
 
 use App\Controllers\AdminController;
@@ -52,16 +51,14 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
 // ============== SESSION ==============
-// cookie_lifetime=0 — PHPSESSID expires when the browser closes.
-// Must start before any output and before Auth/Cart are first consulted.
 ini_set('session.cookie_lifetime', '0');
 session_start();
 
-// Consume flash message set by a previous redirect.
 $flashMessage = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 
 // ============== DATABASE ==============
+// dont foget charset or emoji in event names will breake things
 R::setup(
     'mysql:host=' . $_ENV['DB_SERVER']
         . ';port=' . ($_ENV['DB_PORT'] ?? '3306')
@@ -75,12 +72,11 @@ $debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
 R::freeze(!$debug);
 
 
+// required for begin/commit/rollback - freeze() disables implicit transactions otherwise
 R::setAllowFluidTransactions(true);
 
-// Restore session from auth_token cookie if no active session.
 Auth::checkRememberToken();
 
-// One-time CSRF token per session — protects the cart/expire endpoint.
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
 }
@@ -89,7 +85,6 @@ if (empty($_SESSION['csrf_token'])) {
 $loader = new FilesystemLoader(__DIR__ . '/templates');
 $twig   = new Environment($loader, ['cache' => false, 'auto_reload' => true]);
 
-// Globals available in every template (navbar, partials, etc.).
 $twig->addGlobal('current_user',        Auth::user());
 $twig->addGlobal('is_admin',            Auth::isAdmin());
 $twig->addGlobal('cart_count',          Cart::count());
@@ -99,7 +94,6 @@ $twig->addGlobal('google_maps_api_key', $_ENV['GOOGLE_MAPS_API_KEY'] ?? '');
 $twig->addGlobal('flash_message',       $flashMessage);
 
 // ============== I18N ==============
-// Locale captured once at bootstrap 
 $locale     = $_SESSION['lang'] ?? 'en';
 $translator = new Translator($locale);
 $translator->addLoader('array', new ArrayLoader());
@@ -110,7 +104,6 @@ $twig->addFunction(new TwigFunction('trans', function (string $key, array $param
     return $translator->trans($key, $params, null, $locale);
 }));
 
-// Translates a category name; falls back to the raw name if no key exists.
 $twig->addFunction(new TwigFunction('trans_cat', function ($name) use ($translator, $locale) {
     if (is_object($name) && method_exists($name, '__toString')) $name = (string) $name;
     if (!is_string($name) || $name === '') return is_string($name) ? $name : '';
@@ -122,7 +115,6 @@ $twig->addFunction(new TwigFunction('trans_cat', function ($name) use ($translat
 $twig->addGlobal('current_locale', $locale);
 
 // ============== DEPENDENCY INJECTION CONTAINER ==============
-// PHP-DI wires dependencies into controllers via constructor injection.
 $basePath = $_ENV['APP_BASE_PATH'] ?? '';
 
 $container = new \DI\Container();
@@ -206,6 +198,7 @@ $container->set(EventController::class, fn() => new EventController(
 $container->set(OrderController::class, fn() => new OrderController(
     $twig,
     new OrderModel(),
+    new UserModel(),
     $basePath,
 ));
 

@@ -52,7 +52,6 @@ class OrderItemController {
 
      }
 
-     // Hard-delete one order_item by id.
      public function delete(Request $request, Response $response, array $args): Response {
         $orderItem = $this->orderItemModel->load((int) ($args['id'] ?? 0));
 
@@ -66,7 +65,6 @@ class OrderItemController {
             ->withStatus(302);
      }
 
-     // Show one order_item's detail page.
      public function viewDetails(Request $request, Response $response, array $args): Response {
         $orderItem = $this->orderItemModel->load((int) ($args['id'] ?? 0));
 
@@ -85,7 +83,6 @@ class OrderItemController {
         return $response;
      }
 
-     // List all line items belonging to a given order id.
      public function byOrder(Request $request, Response $response, array $args): Response {
         $orderId    = (int) ($args['id'] ?? 0);
         $orderItems = $this->orderItemModel->findByOrder($orderId);

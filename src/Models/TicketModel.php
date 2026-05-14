@@ -59,7 +59,6 @@ class TicketModel
         R::store($bean);
     }
 
-    /** True when the ticket has an active sale right now. */
     public function isOnSale(object $ticket): bool
     {
         if (empty($ticket->sale_type) || empty($ticket->sale_start) || empty($ticket->sale_end)) {
@@ -70,7 +69,6 @@ class TicketModel
             && strtotime((string) $ticket->sale_end)   >= $now;
     }
 
-    /** Returns the price the buyer actually pays, applying any active sale. */
     public function effectivePrice(object $ticket): float
     {
         if (!$this->isOnSale($ticket)) {
@@ -94,10 +92,6 @@ class TicketModel
         R::trash($bean);
     }
 
-    /**
-     * Cheapest ticket for an event, or null if none exist yet. Used by
-     * EventModel::hydrate to populate min_price on listing cards.
-     */
     public function minPriceForEvent(int $eventId): ?float
     {
         $value = R::getCell(
@@ -117,11 +111,6 @@ class TicketModel
         return $value === null ? null : (float) $value;
     }
 
-    /**
-     * Count of tickets a user has actually purchased — sums quantity from
-     * order_items joined to that user's paid orders. Powers the "Tickets
-     * Purchased" stat on the profile page.
-     */
     public function countByOrderItemsForUser(int $userId): int
     {
         $sql = 'SELECT COALESCE(SUM(oi.quantity), 0)

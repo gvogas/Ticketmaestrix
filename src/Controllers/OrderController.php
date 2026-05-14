@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Helpers\Auth;
 use App\Models\OrderModel;
+use App\Models\UserModel;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Twig\Environment;
@@ -14,6 +15,7 @@ class OrderController {
     public function __construct(
         private Environment $twig,
         private OrderModel $orderModel,
+        private UserModel $userModel,
         private string $basePath,
     ) {}
 
@@ -52,7 +54,6 @@ class OrderController {
 
      }
 
-     // Hard-delete an order by id.
      public function delete(Request $request, Response $response, array $args): Response {
         $order = $this->orderModel->load((int) ($args['id'] ?? 0));
 
@@ -66,7 +67,6 @@ class OrderController {
             ->withStatus(302);
      }
 
-     // Show one order's detail page; bounce to /orders if id is unknown.
      public function viewDetails(Request $request, Response $response, array $args): Response {
         $order = $this->orderModel->load((int) ($args['id'] ?? 0));
 
@@ -76,16 +76,23 @@ class OrderController {
                 ->withStatus(302);
         }
 
+        $user = $this->userModel->load((int) $order->user_id);
+        $customerName = '';
+        if ($user && $user->id) {
+            $customerName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''))
+                ?: (string) ($user->email ?? '');
+        }
+
         $html = $this->twig->render('order/order_detail.html.twig', [
-            'base_path' => $this->basePath,
-            'order'     => $order,
+            'base_path'     => $this->basePath,
+            'order'         => $order,
+            'customer_name' => $customerName,
         ]);
 
         $response->getBody()->write($html);
         return $response;
      }
 
-     // List all orders belonging to a given user id.
      public function byUser(Request $request, Response $response, array $args): Response {
         $userId = (int) ($args['id'] ?? 0);
         $orders = $this->orderModel->findByUser($userId);

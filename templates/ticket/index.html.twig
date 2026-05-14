@@ -125,7 +125,7 @@
 
                         <div class="small text-muted mb-2">
                             <span class="badge bg-light text-dark border fw-normal px-3 py-2">
-                                <i class="bi bi-hash me-1 text-primary"></i> {{ trans('tadmin.event_id_label') }}: {{ ticket.event_id }}
+                                <i class="bi bi-calendar-event me-1 text-primary"></i> {{ event_titles[ticket.event_id] ?? (trans('tadmin.event_id_label') ~ ': ' ~ ticket.event_id) }}
                             </span>
                         </div>
                     </div>

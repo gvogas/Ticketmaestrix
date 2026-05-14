@@ -10,10 +10,6 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
-/**
- * AdminMiddleware
- *
- */
 class AdminMiddleware
 {
     public function __construct(
@@ -27,7 +23,6 @@ class AdminMiddleware
             return $handler->handle($request);
         }
 
-        // Logged in but not an admin → home; logged out → login.
         $target = Auth::isLoggedIn() ? '/' : '/login';
 
         return $this->responseFactory

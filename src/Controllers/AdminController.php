@@ -16,10 +16,6 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Twig\Environment;
 
-/**
- * Admin landing page. Aggregates site-wide stats, lists all events,
- * and manages administrative users.
- */
 class AdminController
 {
     public function __construct(
@@ -34,13 +30,8 @@ class AdminController
         private string          $basePath,
     ) {}
 
-    /**
-     * GET /admin — The main dashboard
-     * Displays stats, events, and the admin management list.
-     */
     public function showAdminDashboard(Request $request, Response $response): Response
     {
-        // 1. Aggregate site-wide stats
         $stats = [
             'revenue'       => $this->orderModel->getTotalRevenue(),
             'tickets_sold'  => $this->orderItemModel->totalQuantitySold(),
@@ -48,14 +39,12 @@ class AdminController
             'customers'     => $this->userModel->customerCount(),
         ];
 
-        // 2. Fetch and hydrate events for the "My Events" tab
         $events = $this->eventModel->hydrate(
             $this->eventModel->getAll(),
             $this->venueModel,
             $this->ticketModel
         );
 
-        // 3. Fetch all users for the "Manage Users" tab
         $users = $this->userModel->findAll();
 
         $html = $this->twig->render('admin/admin_dashboard.html.twig', [
