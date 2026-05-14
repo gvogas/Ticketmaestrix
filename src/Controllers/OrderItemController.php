@@ -17,7 +17,7 @@ class OrderItemController {
         private string $basePath,
     ) {}
 
-     public function store(Request $request, Response $response): Response {
+    public function store(Request $request, Response $response): Response {
        $data = $request->getParsedBody();
 
         $this->orderItemModel->create(
@@ -30,9 +30,9 @@ class OrderItemController {
         return $response
             ->withHeader('Location', $this->basePath . '/order-items')
             ->withStatus(302);
-     }
+    }
 
-     public function update(Request $request, Response $response, array $args): Response {
+    public function update(Request $request, Response $response, array $args): Response {
         $id = (int) $args['id'];
         $data = $request->getParsedBody();
 
@@ -49,10 +49,9 @@ class OrderItemController {
         return $response
             ->withHeader('Location', $this->basePath . '/order-items')
             ->withStatus(302);
+    }
 
-     }
-
-     public function delete(Request $request, Response $response, array $args): Response {
+    public function delete(Request $request, Response $response, array $args): Response {
         $orderItem = $this->orderItemModel->load((int) ($args['id'] ?? 0));
 
         if ($orderItem->id) {
@@ -63,9 +62,9 @@ class OrderItemController {
         return $response
             ->withHeader('Location', $this->basePath . '/order-items')
             ->withStatus(302);
-     }
+    }
 
-     public function viewDetails(Request $request, Response $response, array $args): Response {
+    public function viewDetails(Request $request, Response $response, array $args): Response {
         $orderItem = $this->orderItemModel->load((int) ($args['id'] ?? 0));
 
         if (!$orderItem->id) {
@@ -81,9 +80,9 @@ class OrderItemController {
 
         $response->getBody()->write($html);
         return $response;
-     }
+    }
 
-     public function byOrder(Request $request, Response $response, array $args): Response {
+    public function byOrder(Request $request, Response $response, array $args): Response {
         $orderId     = (int) ($args['id'] ?? 0);
         $queryParams = $request->getQueryParams();
         $page    = max(1, (int) ($queryParams['page'] ?? 1));
@@ -98,7 +97,6 @@ class OrderItemController {
             'base_path'    => $this->basePath,
             'order_items'  => $orderItems,
             'order_id'     => $orderId,
-            // Total separately so the "X item(s)" badge keeps showing the full count.
             'total_items'  => $total,
             'current_page' => $page,
             'total_pages'  => $totalPages,
@@ -107,5 +105,5 @@ class OrderItemController {
 
         $response->getBody()->write($html);
         return $response;
-     }
+    }
 }

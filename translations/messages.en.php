@@ -209,7 +209,7 @@ return [
     'tadmin.crud.row'   => 'Row Identifier',
     'tadmin.crud.seat'   => 'Seat Number',
     'tadmin.crud.price'   => 'Ticket Price',
-    'tadmin.crud.message'   => 'Set the base price in USD for this specific seat.',
+    'tadmin.crud.message'   => 'Set the base price in CAD for this specific seat.',
     'tadmin.crud.create'   => 'Create Ticket',
     'tadmin.crud.updatename'   => 'Edit Ticket',
     'tadmin.crud.updateid'   => 'Updating Ticket ID:',

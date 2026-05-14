@@ -14,11 +14,6 @@ class UserModel
         return BeanHelper::castBeanArray(R::findAll('users'));
     }
 
-    /**
-     * Paginated variant of findAll for admin /users and the admin dashboard
-     * Users tab. Ordered by id ASC for stable pagination — RedBean's default
-     * ordering is unspecified, which would cause rows to skip between pages.
-     */
     public function findAllPaginated(int $limit, int $offset): array
     {
         return BeanHelper::castBeanArray(
@@ -26,7 +21,6 @@ class UserModel
         );
     }
 
-    /** Row-count of every user — drives the admin users paginator. */
     public function countAll(): int
     {
         return (int) R::count('users');
@@ -76,7 +70,7 @@ class UserModel
             }
         }
 
-        // dont forget to wipe auth tokens too - they wont expire on thier own
+        // Wipe remember-me tokens too. They will not expire on their own.
         R::exec('DELETE FROM authtoken WHERE user_id = ?', [$id]);
 
         R::trash($user);

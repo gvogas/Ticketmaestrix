@@ -27,10 +27,9 @@ class EventController
     public function index(Request $request, Response $response): Response
     {
         $queryParams = $request->getQueryParams();
-        // max(1, …) clamps junk values like ?page=0 / ?page=-1 / ?page=abc.
+        // max(1, ...) blocks junk like ?page=0, ?page=-1, or ?page=abc.
         $page = max(1, (int) ($queryParams['page'] ?? 1));
 
-        // 30 per page (3 cols × 10 rows) — matches the site-wide pagination size.
         $perPage = 30;
         $offset = ($page - 1) * $perPage;
 
@@ -53,14 +52,7 @@ class EventController
         $totalPages = ceil($totalEvents / $perPage);
 
         if (\App\Helpers\Auth::isAdmin()) {
-            // Hydrate even for admins — the admin template reads `event.venue_name`
-            // (added 2026-05-14 to replace "Venue #<id>" fallbacks), which is a
-            // hydrate-only property and unset on raw beans.
-            //
-            // Both old (`currentPage`/`totalPages`) and new
-            // (`current_page`/`total_pages`) variable names are passed so the
-            // inline pagination block and the shared partial keep working
-            // during the template refactor.
+            // Hydrate even for admins. The admin template needs venue_name, which raw beans don't have.
             $events = $this->eventModel->hydrate($events, $this->venueModel, $this->ticketModel, $this->categoryModel);
             $html = $this->twig->render('event/index.html.twig', [
                 'base_path'    => $this->basePath,
@@ -104,7 +96,6 @@ class EventController
 
     public function store(Request $request, Response $response): Response
     {
-
         $data = (array) ($request->getParsedBody() ?? []);
 
         $errors = [];
@@ -159,7 +150,6 @@ class EventController
 
     public function update(Request $request, Response $response, array $args): Response
     {
-
         $id   = (int) $args['id'];
         $data = (array) ($request->getParsedBody() ?? []);
 
@@ -220,7 +210,7 @@ class EventController
 
         $isAdmin = \App\Helpers\Auth::isAdmin();
 
-        // hydrate even for admins - raw beans dont have venue_name/category props
+        // Hydrate even for admins. Raw beans don't carry venue_name or category.
         $event = $this->eventModel->hydrate([$event], $this->venueModel, $this->ticketModel, $this->categoryModel)[0];
 
         $html = $this->twig->render('event/event_detail.html.twig', [
@@ -241,9 +231,6 @@ class EventController
         $perPage = 30;
         $offset  = ($page - 1) * $perPage;
 
-        // Hydrate so each event carries venue_name / venue_address / min_price /
-        // category — without this, the template falls back to "Venue #<id>"
-        // because findByCategoryPaginated only returns raw event beans without joins.
         $events = $this->eventModel->hydrate(
             $this->eventModel->findByCategoryPaginated($categoryId, $perPage, $offset),
             $this->venueModel,
@@ -259,7 +246,6 @@ class EventController
             'current_route' => 'events',
             'events'        => $events,
             'category'      => $category,
-            // Pass total separately — events|length is now just the page count.
             'total_events'  => $totalEvents,
             'current_page'  => $page,
             'total_pages'   => $totalPages,
@@ -269,7 +255,6 @@ class EventController
         return $response;
     }
 
-    /** GET /api/search?q= — JSON live-search, used by the navbar typeahed */
     public function searchJson(Request $request, Response $response): Response
     {
         $params = $request->getQueryParams();
@@ -285,15 +270,15 @@ class EventController
 
         $data = array_map(function ($e) {
             return [
-                'id'         => $e->id,
-                'title'      => $e->title,
-                'date'       => $e->date,
-                'venue_name' => $e->venue_name ?? '',
-                'category'   => $e->category ?? '',
-                'image'      => $e->event_image ?? '',
-                'min_price'  => $e->min_price,
+                'id'            => $e->id,
+                'title'         => $e->title,
+                'date'          => $e->date,
+                'venue_name'    => $e->venue_name ?? '',
+                'category'      => $e->category ?? '',
+                'image'         => $e->event_image ?? '',
+                'min_price'     => $e->min_price,
                 'venue_address' => $e->venue_address ?? '',
-                'url'        => $this->basePath . '/events/' . $e->id,
+                'url'           => $this->basePath . '/events/' . $e->id,
             ];
         }, $events);
 

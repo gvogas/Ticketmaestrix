@@ -216,7 +216,7 @@ return [
     'tadmin.crud.row'   => 'Identifiant de la rangée',
     'tadmin.crud.seat'   => 'Numéro de siège',
     'tadmin.crud.price'   => 'Prix du billet',
-    'tadmin.crud.message'   => 'Définissez le prix de base en USD pour ce siège.',
+    'tadmin.crud.message'   => 'Définissez le prix de base en CAD pour ce siège.',
     'tadmin.crud.create'   => 'Créer le billet',
     'tadmin.crud.updatename'   => 'Modifier le billet',
     'tadmin.crud.updateid'   => 'Mise à jour du billet ID :',

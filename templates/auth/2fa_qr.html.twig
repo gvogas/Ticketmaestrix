@@ -217,6 +217,7 @@
         <hr class="mt-4 mb-4">
 
         <form action="{{ base_path }}/2fa/setup" method="POST">
+            {{ csrf_field() }}
             <div class="mb-3">
                 <label class="form-label fw-bold" for="otp-field">{{ trans('2fa.code_label') }}</label>
                 <input id="otp-field"

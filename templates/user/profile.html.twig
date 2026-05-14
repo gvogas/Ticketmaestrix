@@ -60,7 +60,6 @@
 
     <div class="container py-5">
 
-        <!-- User Banner -->
         <div class="profile-header d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-4">
             <div class="d-flex align-items-center gap-4 text-center text-md-start flex-column flex-md-row">
                 <div class="profile-avatar">
@@ -85,7 +84,6 @@
             </div>
         </div>
 
-        <!-- Stats Row -->
         <div class="row g-4 mb-5">
             <div class="col-md-4">
                 <div class="card custom-card p-3">
@@ -123,18 +121,15 @@
         </div>
 
         <div class="row g-4">
-            <!-- Main Content: History -->
+            
             <div class="col-lg-8">
-                <!-- Purchase History -->
+                
                 <div class="card custom-card p-4 mb-4">
                     <h5 class="fw-bold mb-4 d-flex align-items-center gap-2">
                         <i class="bi bi-clock-history text-muted"></i> {{ trans('profile.purchase_history') }}
                     </h5>
 
-                    {# `orders` is stdClass[] from OrderModel::findByUserWithItems —
-                       each entry carries an `items` array of line items already
-                       joined to ticket + event. Mirrors the points_history wiring below. #}
-                    {% if orders is empty %}
+{% if orders is empty %}
                     <div class="text-center py-5">
                         <i class="bi bi-ticket-perforated text-light mb-3" style="font-size: 5rem;"></i>
                         <h5 class="text-dark">{{ trans('profile.no_purchases') }}</h5>
@@ -192,7 +187,6 @@
                     {% endif %}
                 </div>
 
-                <!-- Points History -->
                 <div class="card custom-card p-4">
                     <h5 class="fw-bold mb-4 d-flex align-items-center gap-2">
                         <i class="bi bi-stars text-warning"></i> {{ trans('profile.points_history') }}
@@ -228,7 +222,6 @@
                 </div>
             </div>
 
-            <!-- Sidebar: Rewards -->
             <div class="col-lg-4">
                 <div class="card custom-card p-4">
                     <h5 class="fw-bold mb-4 d-flex align-items-center gap-2">
@@ -239,16 +232,11 @@
                         <span class="text-muted">{{ trans('profile.progress_label') }}</span>
                         <span class="text-primary fw-bold">{{ user.points|default('0') }} pts</span>
                     </div>
-                    {# Progress bar maxes out at 2,500 pts — the top reward tier. Halved
-                       from the old 5,000 to track the new 500 / 1,250 tier pacing. #}
+                    
                     <div class="progress mb-4">
                         <div class="progress-bar" style="width: {{ (user.points / 2500 * 100)|default(5) }}%"></div>
                     </div>
 
-                    {# $10 Off tier now unlocks at 500 points (was 1,000). At the 20% earn
-                       rate this means ~$25 of spend rather than ~$100, matching the new
-                       reward pacing. The actual discount is still applied via the cart's
-                       points slider at 1 pt = $0.01 — this card is purely a milestone display. #}
                     <div class="reward-item {% if user.points >= 500 %}reward-unlocked{% endif %}">
                         <div class="d-flex justify-content-between align-items-start mb-1">
                             <h6 class="fw-bold mb-0">$10 Off Next Purchase</h6>
@@ -259,9 +247,6 @@
                         <small class="text-muted">500 points</small>
                     </div>
 
-                    {# Free Service Fee tier halved from 2,500 → 1,250 to match the new
-                       reward pacing. Mirrors tier 1's unlock-badge structure so both
-                       cards behave consistently when the user crosses the threshold. #}
                     <div class="reward-item {% if user.points >= 1250 %}reward-unlocked{% endif %}">
                         <div class="d-flex justify-content-between align-items-start mb-1">
                             <h6 class="fw-bold mb-0 {% if user.points < 1250 %}text-muted{% endif %}">Free Service Fee (1 use)</h6>
@@ -281,7 +266,7 @@
                 </div>
             </div>
         </div>
-        <!-- Danger Zone -->
+        
         <div class="card custom-card p-4 mt-4 border border-danger">
             <h5 class="fw-bold mb-2 text-danger d-flex align-items-center gap-2">
                 <i class="bi bi-exclamation-triangle-fill"></i> Danger Zone
@@ -293,7 +278,6 @@
             </button>
         </div>
 
-        <!-- Delete confirmation modal -->
         <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -307,6 +291,7 @@
                     <div class="modal-footer border-0">
                         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
                         <form method="POST" action="{{ base_path }}/profile/delete" style="display:inline;">
+                            {{ csrf_field() }}
                             <button type="submit" class="btn btn-danger btn-sm">Yes, delete my account</button>
                         </form>
                     </div>

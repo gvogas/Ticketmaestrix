@@ -78,6 +78,7 @@
 
     <div class="card login-container shadow-lg border-0 rounded-4 p-5">
         <form action="{{ base_path }}/login" method="POST">
+            {{ csrf_field() }}
 
             {% if error %}
             <div class="alert alert-danger mb-4">{{ error }}</div>

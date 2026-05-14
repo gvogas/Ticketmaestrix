@@ -1,31 +1,10 @@
-{#
-  Reusable pagination bar — Prev / 1 2 3 ... / Next.
-
-  Variables (pass via `with ... only`):
-    current_page  (int)  — 1-based current page
-    total_pages   (int)  — total pages; <=1 hides the bar entirely
-    base_url      (str)  — URL prefix; the partial appends `?page=N&…`
-    query_params  (map)  — optional existing query string to preserve
-                          (e.g. ?q=foo&category=2). The `page` key is
-                          always overwritten with the target page number.
-    page_key      (str)  — optional name of the page query parameter
-                          (defaults to "page"). The admin dashboard uses
-                          "ev" and "u" so two paginators can coexist.
-    hash          (str)  — optional fragment appended *after* the query
-                          string (e.g. "myevents" → "?ev=2#myevents"),
-                          used by the admin dashboard to keep the active
-                          tab selected across page links.
-
-  Renders nothing when total_pages <= 1 so single-page lists stay clean.
-#}
 {% set page_key = page_key|default('page') %}
 {% set query_params = query_params|default({}) %}
-{# Fragment must come AFTER the query string per RFC 3986. The partial
-   composes the URL so callers cannot accidentally swap the order. #}
+
 {% set hash_suffix = hash is defined and hash ? '#' ~ hash : '' %}
 
 {% if total_pages > 1 %}
-<nav class="my-5">
+    <nav class="my-5">
     <ul class="pagination justify-content-center">
         {% set prev_qs = query_params|merge({(page_key): current_page - 1})|url_encode %}
         <li class="page-item {{ current_page <= 1 ? 'disabled' : '' }}">

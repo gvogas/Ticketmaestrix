@@ -58,7 +58,6 @@
 
     <div class="container">
 
-        <!-- Header -->
         <header class="admin-header">
             <div class="row align-items-center">
                 <div class="col-lg-5">
@@ -84,14 +83,13 @@
         </header>
 
         <div class="detail-container">
-            <!-- Visual Header -->
+            
             <div class="category-profile-header">
                 <div class="category-icon-circle">
                     <i class="bi bi-tags-fill" style="font-size: 2.5rem; color: var(--brand-purple);"></i>
                 </div>
             </div>
 
-            <!-- Content -->
             <div class="content-card">
                 <span class="category-id-pill">{{ trans('catadmin.db_id') }}: #{{ category.id }}</span>
                 <h2 class="display-6 fw-800 mb-4">{{ trans_cat(category.name) }}</h2>
@@ -102,7 +100,6 @@
                     </a>
                 </div>
 
-                <!-- Footer Actions -->
                 <div class="pt-4 border-top">
                     <div class="d-flex justify-content-between align-items-center">
                         <a href="{{ base_path }}/categories/{{ category.id }}/edit" class="btn btn-dark px-4 py-2 fw-bold" style="border-radius: 12px;">
@@ -111,6 +108,7 @@
 
                         <form action="{{ base_path }}/categories/{{ category.id }}/delete" method="POST"
                               onsubmit="return confirm('{{ trans('confirm.delete_category')|e('js') }}')">
+                            {{ csrf_field() }}
                             <button type="submit" class="btn btn-outline-danger px-4 py-2 fw-bold" style="border-radius: 12px;">
                                 <i class="bi bi-trash3 me-2"></i> {{ trans('catadmin.delete_cat') }}
                             </button>

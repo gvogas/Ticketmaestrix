@@ -93,6 +93,7 @@
         {% endif %}
 
         <form action="{{ base_path }}/2fa/login" method="POST">
+            {{ csrf_field() }}
             <div class="mb-4">
                 <label class="form-label fw-bold" for="otp-field">{{ trans('2fa.code_label') }}</label>
                 <input id="otp-field"

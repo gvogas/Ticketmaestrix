@@ -14,11 +14,11 @@ class Auth
 
     public static function login(int $userId): void
     {
-        // regenerate id on login - prevents session fixation attacks
+        // New session id stops a stolen old cookie from being used.
         session_regenerate_id(true);
 
         $_SESSION['user_id'] = $userId;
-        self::$cachedUser = null; // force reload on next user() call
+        self::$cachedUser = null;
     }
 
     public static function logout(): void
@@ -28,7 +28,6 @@ class Auth
         $_SESSION = [];
         if (ini_get('session.use_cookies')) {
             $params = session_get_cookie_params();
-            // options-array form needed to preseve the samesite attribute
             setcookie(session_name(), '', [
                 'expires'  => time() - 42000,
                 'path'     => $params['path'],
@@ -42,13 +41,10 @@ class Auth
         self::$cachedUser = null;
     }
 
-    // ──────────────────────────────────────────────
-    //  Remember-me token (persistent cookie after 2FA)
-    // ──────────────────────────────────────────────
-
     public static function setRememberToken(int $userId): void
     {
         $token = bin2hex(random_bytes(32));
+        // Store the hashed token, not the real one. If the database leaks, real cookies still don't work.
         $hash  = hash('sha256', $token);
 
         $bean = R::dispense('authtoken');
@@ -97,12 +93,9 @@ class Auth
         self::expireRememberCookie();
     }
 
-    // ──────────────────────────────────────────────
-    //  2FA device-trust token (skip 2FA for same account on same browser)
-    // ──────────────────────────────────────────────
-
     private const TFA_TRUST_COOKIE = 'tfa_token';
-    private const TFA_TRUST_TTL    = 2592000; // 30 days
+    // 30 days.
+    private const TFA_TRUST_TTL    = 2592000;
 
     public static function set2faTrustToken(int $userId): void
     {

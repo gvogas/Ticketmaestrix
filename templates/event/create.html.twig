@@ -73,10 +73,8 @@
 {% endblock %}
 {% block content %}
 
-    <!-- If you have a real navbar, it would go here -->
     <div class="navbar-placeholder"></div>
 
-    <!-- Header Banner -->
     <div class="page-banner">
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
@@ -96,9 +94,9 @@
             <div class="col-lg-8">
                 <div class="card form-card">
                     <form action="{{ base_path }}/events" method="post">
+                        {{ csrf_field() }}
                         <div class="row g-4">
 
-                            <!-- Title -->
                             <div class="col-12">
                                 <label for="title" class="form-label">{{ trans('evadmin.crud.title') }}</label>
                                 <input type="text" id="title" name="title" required
@@ -110,7 +108,6 @@
                                 {% endif %}
                             </div>
 
-                            <!-- Category & Venue -->
                             <div class="col-md-6">
                                 <label for="category_id" class="form-label">{{ trans('evadmin.crud.category') }}</label>
                                 <select id="category_id" name="category_id" required
@@ -139,7 +136,6 @@
                                 {% endif %}
                             </div>
 
-                            <!-- Date -->
                             <div class="col-md-6">
                                 <label for="date" class="form-label">{{ trans('evadmin.crud.date') }}</label>
                                 <input type="datetime-local" id="date" name="date" required
@@ -150,13 +146,11 @@
                                 {% endif %}
                             </div>
 
-                            <!-- Image URL -->
                             <div class="col-md-6">
                                 <label for="event_image" class="form-label">{{ trans('evadmin.crud.image') }}</label>
                                 <input type="url" id="event_image" name="event_image" class="form-control" placeholder="{{ trans('ph.event_image') }}">
                             </div>
 
-                            <!-- Description -->
                             <div class="col-12">
                                 <label for="description" class="form-label">{{ trans('evadmin.crud.description') }}</label>
                                 <textarea id="description" name="description" required
@@ -168,7 +162,6 @@
                                 {% endif %}
                             </div>
 
-                            <!-- Form Actions -->
                             <div class="col-12 mt-5 border-top pt-4">
                                 <div class="d-flex gap-3">
                                     <button type="submit" class="btn btn-create flex-grow-1">

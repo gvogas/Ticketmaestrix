@@ -14,12 +14,6 @@ class OrderItemModel
         return BeanHelper::castBeanArray(R::find('order_items', 'order_id = ?', [$orderId]));
     }
 
-    /**
-     * Paginated variant of findByOrder for admin /order-items/order/{id}.
-     * Ordered by id ASC so pagination is stable; LIMIT ? OFFSET ? appended.
-     * R::find (read) is safe on the underscored `order_items` table — the
-     * CLAUDE.md ban only applies to R::dispense / inserts.
-     */
     public function findByOrderPaginated(int $orderId, int $limit, int $offset): array
     {
         return BeanHelper::castBeanArray(
@@ -27,11 +21,6 @@ class OrderItemModel
         );
     }
 
-    /**
-     * Count of items on a single order. Uses raw SQL via R::getCell to mirror
-     * the rest of this model (the create() method also uses raw SQL because
-     * R::dispense rejects underscored bean types — see CLAUDE.md).
-     */
     public function countByOrder(int $orderId): int
     {
         return (int) R::getCell(
@@ -47,7 +36,7 @@ class OrderItemModel
 
     public function create(int $quantity, int $orderId, int $ticketId): void
     {
-        
+        // The table name has an underscore, so RedBean's dispense throws. Use raw SQL instead.
         R::exec(
             'INSERT INTO order_items (quantity, order_id, ticket_id) VALUES (?, ?, ?)',
             [$quantity, $orderId, $ticketId]

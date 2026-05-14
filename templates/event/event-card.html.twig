@@ -42,7 +42,7 @@
 </style>
 
 <div class="card h-100 event-card border-0 shadow-sm rounded-4 overflow-hidden">
-    {# Image Section #}
+    
     <div class="position-relative overflow-hidden">
         <img
             src="{{ event.event_image ?: event.image }}"
@@ -65,9 +65,8 @@
         {% endif %}
     </div>
 
-    {# Body Section #}
     <div class="card-body p-4">
-        {# Category Chip #}
+        
         <span class="badge-custom d-inline-block mb-2"
               style="{{ cat_colors[event.category] is defined ? cat_colors[event.category] : 'background-color: #f3f4f6; color: #374151;' }}">
             {{ trans_cat(event.category) }}

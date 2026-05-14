@@ -98,9 +98,10 @@
         </div>
 
         <form action="{{ base_path }}/checkout" method="POST">
+            {{ csrf_field() }}
             <input type="hidden" name="points_to_use" value="{{ points_to_use }}">
             <button type="submit" class="btn-stripe">
-                {# Stripe "S" wordmark #}
+                
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 28 28" fill="white" aria-hidden="true">
                     <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305
                              2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0

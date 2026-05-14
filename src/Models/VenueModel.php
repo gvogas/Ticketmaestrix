@@ -19,10 +19,6 @@ class VenueModel
         return $this->findAll();
     }
 
-    /**
-     * Paginated variant of getAll for the admin /venues index.
-     * Same ORDER BY name as findAll() with LIMIT ? OFFSET ? appended.
-     */
     public function getAllPaginated(int $limit, int $offset): array
     {
         return BeanHelper::castBeanArray(
@@ -30,7 +26,6 @@ class VenueModel
         );
     }
 
-    /** Row-count of every venue — drives the admin /venues paginator. */
     public function countAll(): int
     {
         return (int) R::count('venue');

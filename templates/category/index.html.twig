@@ -74,7 +74,6 @@
 
     <div class="container">
 
-        <!-- Admin Dashboard Header -->
         <header class="admin-header">
             <div class="row align-items-center">
                 <div class="col-lg-5">
@@ -100,24 +99,20 @@
             </div>
         </header>
 
-        <!-- Categories Grid -->
         <div class="row g-4 mb-5">
             {% for category in categories %}
             <div class="col-md-6 col-lg-4 col-xl-3">
                 <article class="category-card" data-name="{{ category.name|e('html_attr') }}">
 
-                    <!-- Header Visual -->
                     <div class="category-visual">
                         <span class="id-badge">ID: {{ category.id }}</span>
                         <i class="bi bi-tags-fill category-icon"></i>
                     </div>
 
-                    <!-- Info Content -->
                     <div class="card-content">
                         <h3>{{ category.name|e('html') }}</h3>
                     </div>
 
-                    <!-- Actions -->
                     <div class="admin-footer">
                         <a href="{{ base_path }}/categories/{{ category.id }}/edit" class="btn btn-sm btn-outline-secondary px-3 rounded-pill fw-bold">
                             <i class="bi bi-pencil-square"></i> {{ trans('catadmin.crud.edit') }}
@@ -131,7 +126,6 @@
                 </article>
             </div>
 
-            <!-- Delete Confirmation Modal -->
             <div class="modal fade" id="deleteCategoryModal-{{ category.id }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content rounded-4 border-0 shadow">
@@ -145,6 +139,7 @@
                         <div class="modal-footer border-0 pb-4 px-4">
                             <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">{{ trans('catadmin.crud.cancel') }}</button>
                             <form action="{{ base_path }}/categories/{{ category.id }}/delete" method="post" class="m-0">
+                                {{ csrf_field() }}
                                 <button type="submit" class="btn btn-danger px-4">{{ trans('catadmin.crud.delete') }}</button>
                             </form>
                         </div>

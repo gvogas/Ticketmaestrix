@@ -9,8 +9,8 @@ The app is built on **Slim 4** (PHP 8.4), **Twig 3** templates, **RedBeanPHP 5.7
 ### Browsing and discovery
 
 - Public event grid on the home page with featured "On Sale" row and full upcoming-events grid
-- Map view at `/map` with Google Maps markers, sidebar event list, and infinite-scroll batching (20 events per page, more load as the user scrolls)
-- "All on sale" listing at `/events/on-sale`
+- Map view at `/map` with Google Maps markers, a sidebar event list with a **pinned header** (title + search box + "Use my location" stay in place while cards scroll), and infinite-scroll batching (20 events per page, more load as the user scrolls — duplicate-page guard prevents double-fetches under fast scroll)
+- "All on sale" listing at `/events/on-sale` with the same `?q=` / `?category=` / `?venue=` filter parity as `/events` (debounced AJAX, URL updates via `history.replaceState`)
 - Browse-by-category at `/events/category/{id}`
 - Filter and search on `/events` by query string, category, and venue
 - Live AJAX search dropdown at `/api/search` (used by the home page navbar and `/events` filter)
@@ -19,28 +19,29 @@ The app is built on **Slim 4** (PHP 8.4), **Twig 3** templates, **RedBeanPHP 5.7
 
 ### Cart and checkout
 
-- Session-backed cart (`$_SESSION['cart']`) with a 5-minute expiry timer surfaced in the navbar
-- 1 point = $0.01 discount, capped at the subtotal so points can zero the bill but never go negative
-- Users earn 20 points per $1 of pre-tax, pre-discount subtotal
-- 15 % service fee applied to the *post-discount* subtotal — applying points also reduces the tax
-- Sub-$0.50 orders skip Stripe and complete server-side (Stripe rejects sub-$0.50 charges)
-- Stripe Checkout integration; the points discount rides on a one-shot Stripe `Coupon`, line items stay positive
-- Stripe webhook (`/stripe/webhook`) creates the `orders` + `order_items` rows, marks tickets sold, and updates the user's point balance — all inside one transaction with an idempotency check
+- All prices are denominated in **Canadian dollars (CAD)** — the Stripe Checkout session, line items, and coupons all use `currency: cad`
+- Session-backed cart (`$_SESSION['cart']`) with a 5-minute expiry timer surfaced in the navbar; the cart auto-extends to 30 minutes before the redirect to Stripe so it survives the off-site payment step
+- 1 point = CAD $0.01 discount, capped at the subtotal so points can zero the bill but never go negative
+- Users earn 20 points per CAD $1 of pre-tax, pre-discount subtotal
+- 15 % service fee applied to the *post-discount* subtotal — applying points also reduces the tax. The rate lives in one place as `Cart::SERVICE_FEE_RATE` and is consumed by both `HomeController::showCart` and `CartController` so the cart, checkout, and Stripe Session always agree
+- Pricing formula: `discount = points × $0.01` → `taxable = max(0, subtotal − discount)` → `service_fee = round(taxable × 0.15, 2)` → `total = taxable + service_fee`
+- Sub-CAD-$0.50 orders skip Stripe and complete server-side via `CartController::createOrderDirectly` (Stripe rejects sub-$0.50 charges)
+- Stripe Checkout integration; the points discount rides on a one-shot Stripe `Coupon` with `amount_off` in CAD cents, line items stay positive (Stripe rejects negative `unit_amount`)
+- Stripe webhook (`/stripe/webhook`) creates the `orders` + `order_items` rows, marks tickets sold, and updates the user's point balance — all inside one transaction with an idempotency check keyed off `stripe_session_id`
 
 ### Accounts
 
-- Email + password signup
-- TOTP-based two-factor authentication (`robthree/twofactorauth`); the secret is captured during signup and stored on the user record
-- Per-device "trust this browser" cookie that skips 2FA for 30 days on the same browser + account
-- Remember-me cookie (`auth_token`, 2-hour expiry) keeps users logged in across browser restarts inside the window
+- Email + password signup with mandatory TOTP enrolment — the secret is captured during signup, the QR code is rendered on the `/2fa/setup` page, and the account isn't created until a valid 6-digit code is verified. A `/2fa/setup` replay or stale session redirects to `/login` instead of completing the signup
+- TOTP-based two-factor authentication (`robthree/twofactorauth`); the secret is stored on the user record
+- Per-device "trust this browser" cookie that skips 2FA for 30 days on the same browser + account, persisted in the `tfatoken` table
+- Remember-me cookie (`auth_token`, 2-hour expiry) keeps users logged in across browser restarts inside the window; each login on each device gets its own SHA-256 token row in `authtoken`, so logging in on a new device never invalidates older devices, and logging out only revokes the current device's token
 - Login rate limiting (5 failed attempts → 15-minute lockout, tracked in the session)
-- Forgot-password flow that responds identically whether the email exists or not (anti-enumeration), with a resend-code path
-- Self-service profile editing, avatar upload (JPG / PNG / GIF / WebP, ≤ 5 MB, validated with `getimagesize`), and account deletion
-- Loyalty point history visible on `/profile` alongside paginated purchase history
+- Self-service profile editing, avatar upload (JPG / PNG / GIF / WebP, ≤ 5 MB, validated with `getimagesize`, random-hex filename so two uploads in the same second don't collide, old avatar only deleted after the DB update succeeds), and account deletion
+- Loyalty point history visible on `/profile` alongside paginated purchase history (orders + their line items collapsed in a single SQL pass to avoid N+1 hydration)
 
 ### Admin
 
-- Single dashboard at `/admin` with site-wide stats (revenue, tickets sold, active events, customer count) and two independently-paginated tabs ("My Events" via `?ev=N`, "Manage Users" via `?u=N`)
+- Single dashboard at `/admin` with site-wide stats (revenue, tickets sold, active events, customer count) and two independently-paginated tabs
 - Full CRUD for categories, venues, events, tickets, users, orders, and order items
 - Role toggle (admin ↔ user) per account
 - Server-side geocoding on venue create/update: the Google Geocoding API runs once at save time and the lat/lng pair is cached back to the `venue` row so the map page never blocks on outbound calls
@@ -51,7 +52,7 @@ The app is built on **Slim 4** (PHP 8.4), **Twig 3** templates, **RedBeanPHP 5.7
 - Per-request access log appended to `var/app.log` (method, path, status, elapsed ms)
 - Security headers middleware (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-XSS-Protection: 1; mode=block`)
 - Uploads directory hardened: an `.htaccess` denies execution of any `.php*` file under `uploads/avatars/`
-- CSRF token bootstrapped once per session and required as `X-CSRF-Token` for AJAX mutations (e.g. `/cart/expire`)
+- CSRF protection on every state-changing route via `CsrfMiddleware`: one random token per session, every POST form embeds it with `{{ csrf_field() }}`, AJAX paths send it as `X-CSRF-Token`. `/stripe/webhook` is the only allow-listed path (Stripe signs the body instead).
 - English and French translations (`translations/messages.en.php`, `messages.fr.php`), per-language switching at `/lang/{locale}`
 
 ## Tech stack
@@ -70,8 +71,6 @@ The app is built on **Slim 4** (PHP 8.4), **Twig 3** templates, **RedBeanPHP 5.7
 | Front-end | Bootstrap 5 + Bootstrap Icons (CDN), hand-written CSS in `css/site.css` and `css/forms.css`, plain JavaScript |
 | Maps | Google Maps JS API + Google Geocoding API |
 
-`package.json` lists Tailwind 4 as a devDependency, but the live UI does not ship with a compiled Tailwind bundle — all styling is the hand-written CSS above plus per-template `<style>` blocks. Adding Tailwind is optional and not required to run or develop the app.
-
 ## Requirements
 
 - PHP 8.4 with Composer
@@ -79,8 +78,6 @@ The app is built on **Slim 4** (PHP 8.4), **Twig 3** templates, **RedBeanPHP 5.7
 - Apache (WampServer / XAMPP) or another PHP-capable web server with `mod_rewrite`-style routing if you serve from a virtual host
 - A Stripe account for real checkout flows (test keys work in development)
 - A Google Maps JS API key with the **Maps JavaScript**, **Places**, and **Geocoding** APIs enabled, for the `/map` page and admin venue geocoding
-
-Node.js / npm are only needed if you want to extend the front-end tooling — the app runs without it.
 
 ## Setup
 
@@ -95,8 +92,8 @@ Node.js / npm are only needed if you want to extend the front-end tooling — th
    ```env
    DB_SERVER=127.0.0.1
    DB_PORT=3306
-   DB_USERNAME=root
-   DB_PASSWORD=
+   DB_USERNAME= DB_USERNAME
+   DB_PASSWORD= DB_PASSWORD
    DB_NAME=ticketmaestrix_ecomdb
 
    APP_BASE_PATH=/Ticketmaestrix
@@ -106,16 +103,14 @@ Node.js / npm are only needed if you want to extend the front-end tooling — th
    STRIPE_SECRET_KEY=sk_test_xxx
    STRIPE_WEBHOOK_SECRET=whsec_xxx
 
-   GOOGLE_MAPS_API_KEY=AIza...
+   GOOGLE_MAPS_API_KEY=......
    ```
 
-3. Create the database, then run the migration scripts in `database/` in order. They were authored as drop-in patches against the underlying schema:
+3. Create the `ticketmaestrix_ecomdb` database in MySQL, then import the full dump in `database/ticketmaestrix_ecomdb.sql`. The dump contains every table the app needs (`users`, `events`, `ticket`, `orders`, `order_items`, `categories`, `venue`, `points_history`, `authtoken`, `tfatoken`, `stripepending`) plus seed data so the UI has something to browse.
 
-   - `database/fix_post_merge.sql` — creates the `stripepending` table the Stripe webhook depends on, adds the `ticket.sold` flag, and widens `orders.stripe_session_id` to `VARCHAR(255)` so it can store strings like `cs_test_...`.
-   - `database/add_category_name_fr.sql` — adds a `name_fr` column to `categories` for the French translations.
-   - `database/add_150_demo_data.sql` *(optional)* — inserts 30 venues, 150 events, and 600 tickets so the UI has something to browse.
-
-   These scripts assume the base schema (`users`, `events`, `ticket`, `orders`, `order_items`, `categories`, `venue`, `points_history`, `authtoken`, `tfatoken`) already exists. If you are starting from a fresh database, restore your own dump first and then apply the patches above.
+   ```bash
+   mysql -u root ticketmaestrix_ecomdb < database/ticketmaestrix_ecomdb.sql
+   ```
 
 4. Serve through Apache / WampServer. With the default WampServer subfolder layout:
 
@@ -147,7 +142,7 @@ Node.js / npm are only needed if you want to extend the front-end tooling — th
 
 ## Routes overview
 
-All routes live in `index.php`. Controllers are wired into the PHP-DI container in the same file (no autowiring).
+All routes live in `index.php`. Controllers are wired into the PHP-DI container in the same file
 
 ### Public
 
@@ -185,11 +180,11 @@ All routes live in `index.php`. Controllers are wired into the PHP-DI container 
 | GET / POST | `/checkout` | Order summary → Stripe Checkout session |
 | GET | `/checkout/success`, `/checkout/cancel` | Stripe return pages |
 
-### Webhook (no middleware — Stripe-signed)
+### Webhook (allow-listed by `CsrfMiddleware`, Stripe-signed)
 
 | Method | Path | Handler |
 |---|---|---|
-| POST | `/stripe/webhook` | `StripeWebhookController::handle` |
+| POST | `/stripe/webhook` | `StripeWebhookController::handle` — the Stripe-Signature header proves it really came from Stripe, so the CSRF check is skipped here only |
 
 ### Admin (`AdminMiddleware`)
 
@@ -202,18 +197,17 @@ All routes live in `index.php`. Controllers are wired into the PHP-DI container 
 
 ```text
 index.php                Slim bootstrap, container wiring, middleware, and routes
-src/Controllers/         Slim route handlers
-src/Models/              RedBeanPHP data access wrappers
+src/Controllers/         Slim route handlers (Admin, Auth, Cart, Category, Event, Home, Order, OrderItem, StripeWebhook, Ticket, User, Venue)
+src/Models/              RedBeanPHP data access wrappers (Category, Event, Order, OrderItem, PointsHistory, Ticket, User, Venue)
 src/Helpers/             Auth, Cart (session-backed), BeanHelper (type casting)
-src/Middleware/          AuthMiddleware, AdminMiddleware, MaintenanceMiddleware, SecurityHeadersMiddleware
+src/Middleware/          AuthMiddleware, AdminMiddleware, CsrfMiddleware, MaintenanceMiddleware, SecurityHeadersMiddleware
 src/Services/            OtpService (TOTP), StripeService (Checkout + Coupon)
 templates/               Twig views, layout.html.twig is the shell, partials/ holds the pagination + flash + navbar
 translations/            messages.en.php and messages.fr.php (flat key → value arrays)
 css/                     site.css (brand + shared components, including .pagination), forms.css (form states)
-assets/                  Static images (logo)
+assets/img/              Static images (logo)
 uploads/avatars/         User avatar uploads (PHP execution denied via .htaccess)
-database/                One-shot migration / patch SQL files
-docs/superpowers/        Project specs and implementation plans (.md)
+database/                Full schema + seed-data dump (ticketmaestrix_ecomdb.sql)
 var/                     Runtime data (app.log, maintenance.flag) — git-ignored
 ```
 
@@ -225,9 +219,14 @@ var/                     Runtime data (app.log, maintenance.flag) — git-ignore
 - After `R::freeze(!$debug)`, `index.php` calls `R::setAllowFluidTransactions(true)` — without it `R::begin/commit/rollback` are silent no-ops in fluid mode, which would break the Stripe webhook's all-or-nothing order creation. Do not remove this line.
 - Protected controller actions use `Auth::requireLogin()` and `Auth::requireAdmin()` redirect helpers (they return a 302 or `null`).
 - Every controller receives `$basePath` and passes it to Twig as `base_path` so links survive both subfolder and virtual-host installs.
+- Every state-changing form must include `{{ csrf_field() }}` as the first child. `CsrfMiddleware` rejects POST/PUT/PATCH/DELETE requests without a valid token. JS-driven mutations (e.g. `/cart/expire` from `cart_expiry_flash.html.twig`) send the token via the `X-CSRF-Token` header instead — both paths are accepted.
 - Add new translation keys to **both** `translations/messages.en.php` and `messages.fr.php`. The Twig `trans('key')` function resolves against the session locale; `trans_cat(name)` translates category names.
 - Use `BeanHelper::castBeanProperties()` (or `castBeanArray`) before handing RedBeanPHP beans to Twig so foreign-key fields render as integers.
 - Use transactions for multi-table writes. The Stripe webhook is the canonical example.
+
+### Currency
+
+- All money is **Canadian dollars**. `StripeService` hard-codes `'currency' => 'cad'` for line items, the service-fee line item, and the points-discount `Coupon::create`. The `$` symbol in templates is the standard CAD glyph, so prices render without a code suffix. If you ever need multi-currency, parameterise the value instead of hard-coding a new one.
 
 ### Pagination
 
@@ -255,12 +254,6 @@ Refresh Composer autoloading after adding classes:
 composer dump-autoload
 ```
 
-Run the placeholder npm test script (the project does not include an automated test suite yet):
-
-```bash
-npm test
-```
-
 Enable maintenance mode (Windows / cmd.exe):
 
 ```bash
@@ -276,9 +269,7 @@ del var\maintenance.flag
 
 ## Deployment
 
-`.cpanel.yml` rsyncs the repository to `$HOME/public_html/`, excluding `.git`, `.github`, `.gitignore`, `.gitattributes`, `.cpanel.yml`, `.env`, `.env.*`, `node_modules`, `package*.json`, `update.bat`, `README.md`, `LICENSE`, `.well-known/`, and `var/`. After deploy it normalises permissions (644 for files, 755 for directories) and re-creates `var/` with mode 700 so it remains writable for logs and the maintenance flag.
-
-Configure your production `.env` separately on the server — it is intentionally not deployed.
+The app is a plain PHP project: copy `index.php`, `src/`, `templates/`, `translations/`, `css/`, `assets/`, `uploads/`, `vendor/`, and `composer.*` to your web server's document root. Configure your production `.env` separately on the server — it is intentionally not version-controlled. Make sure `var/` is writable for the request log and the maintenance flag.
 
 ## Authors
 
@@ -292,5 +283,4 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 
 ## Acknowledgments
 
-- Built from the Slim MVC template by [frostybee/slim-mvc](https://github.com/frostybee/slim-mvc)
 - README structure inspired by [DomPizzie/README-Template](https://gist.github.com/DomPizzie/7a5ff55ffa9081f2de27c315f5018afc)

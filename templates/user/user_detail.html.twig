@@ -39,6 +39,7 @@
                     <i class="bi bi-pencil"></i> {{ trans('useradmin.edit') }}
                 </a>
                 <form action="{{ base_path }}/users/{{ user.id }}/delete" method="POST" class="d-inline">
+                    {{ csrf_field() }}
                     <button type="submit" class="btn btn-sm btn-outline-danger"
                             onclick="return confirm('{{ trans('confirm.delete_user')|e('js') }}')">
                         <i class="bi bi-trash"></i> {{ trans('useradmin.delete') }}

@@ -50,7 +50,6 @@
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteOrderModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow">
@@ -64,6 +63,7 @@
                 <div class="modal-footer border-0 pb-4 px-4">
                     <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">{{ trans('evadmin.crud.cancel') }}</button>
                     <form action="{{ base_path }}/orders/{{ order.id }}/delete" method="POST" class="m-0">
+                        {{ csrf_field() }}
                         <button type="submit" class="btn btn-danger px-4">{{ trans('order.delete') }}</button>
                     </form>
                 </div>

@@ -147,7 +147,6 @@
 {% endblock %}
 {% block content %}
 
-    <!-- Admin Header -->
     <div class="admin-banner mb-5">
         <div class="container">
             <div class="d-flex align-items-center gap-4">
@@ -163,7 +162,7 @@
     </div>
 
     <div class="container pb-5">
-        <!-- Dashboard Navigation Tabs -->
+        
         <ul class="nav nav-tabs nav-tabs-custom mb-5" id="adminTabs" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button">{{ trans('dashboard.tab_overview') }}</button>
@@ -181,7 +180,6 @@
 
         <div class="tab-content" id="adminTabsContent">
 
-            <!-- Tab 1: Overview -->
             <div class="tab-pane fade show active" id="overview" role="tabpanel">
                 <div class="row g-4 mb-4">
                     <div class="col-md-3">
@@ -220,7 +218,6 @@
                 </div>
             </div>
 
-            <!-- Tab 2: My Events -->
             <div class="tab-pane fade" id="myevents" role="tabpanel">
                 <div class="card form-card p-4">
                     <h5 class="fw-bold mb-4">{{ trans('dashboard.manage') }}</h5>
@@ -254,6 +251,7 @@
                                                 <a href="{{ base_path }}/events/{{ event.id }}/edit" class="btn btn-sm btn-outline-secondary me-1">{{ trans('dashboard.edit') }}</a>
                                                 <form method="POST" action="{{ base_path }}/events/{{ event.id }}/delete" class="d-inline"
                                                       onsubmit="return confirm('{{ trans('confirm.delete_event')|e('js') }}');">
+                                                    {{ csrf_field() }}
                                                     <button type="submit" class="btn btn-sm btn-outline-danger">{{ trans('dashboard.delete') }}</button>
                                                 </form>
                                             </td>
@@ -263,10 +261,7 @@
                             </table>
                         </div>
 
-                        {# Events-tab paginator. Uses `ev` as the page param so it doesn't
-                           collide with the users-tab paginator (`u`). The hash keeps the
-                           events tab open across navigation (partial composes ?ev=N#myevents). #}
-                        {% include 'partials/pagination.html.twig' with {
+{% include 'partials/pagination.html.twig' with {
                             current_page: events_page,
                             total_pages:  events_pages,
                             base_url:     base_path ~ '/admin',
@@ -278,11 +273,11 @@
                 </div>
             </div>
 
-            <!-- Tab 3: Create Event -->
             <div class="tab-pane fade" id="create" role="tabpanel">
                 <div class="card form-card p-4 p-md-5">
                     <h5 class="fw-bold mb-4">{{ trans('dashboard.tab_create') }}</h5>
                     <form method="POST" action="{{ base_path }}/events">
+                        {{ csrf_field() }}
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label">{{ trans('evadmin.crud.title') }}</label>
@@ -327,7 +322,6 @@
                 </div>
             </div>
 
-            <!-- Tab 4: Manage Users -->
             <div class="tab-pane fade" id="users" role="tabpanel">
                 <div class="card form-card p-4">
                     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -360,6 +354,7 @@
                                         <td class="text-end">
                                             {% if u.id != admin_user.id %}
                                                 <form method="POST" action="{{ base_path }}/users/{{ u.id }}/role" class="d-inline toggle-role-form">
+                                                    {{ csrf_field() }}
                                                     <label class="toggle-switch mb-0">
                                                         <input type="checkbox" class="toggle-role-input" {% if u.role == 'admin' %}checked{% endif %}>
                                                         <span class="toggle-slider"></span>
@@ -370,6 +365,7 @@
                                                 </button>
                                                 <form method="POST" action="{{ base_path }}/users/{{ u.id }}/delete" class="d-inline"
                                                       onsubmit="return confirm('{{ trans('confirm.delete_user')|e('js') }}');">
+                                                    {{ csrf_field() }}
                                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="{{ trans('dashboard.delete') }}">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
@@ -384,10 +380,7 @@
                         </table>
                     </div>
 
-                    {# Users-tab paginator. Uses `u` as the page param so it doesn't
-                       collide with the events-tab paginator (`ev`). The hash keeps
-                       the users tab open across page navigation. #}
-                    {% include 'partials/pagination.html.twig' with {
+{% include 'partials/pagination.html.twig' with {
                         current_page: users_page,
                         total_pages:  users_pages,
                         base_url:     base_path ~ '/admin',
@@ -401,8 +394,7 @@
         </div>
     </div>
 
-    <!-- Edit User Modals -->
-    {% for u in users %}
+{% for u in users %}
     <div class="modal fade" id="editUserModal{{ u.id }}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow">
@@ -411,6 +403,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="{{ base_path }}/users/{{ u.id }}" method="POST">
+                    {{ csrf_field() }}
                     <div class="modal-body p-4">
                         <div class="row g-3">
                             <div class="col-md-6">

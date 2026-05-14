@@ -21,7 +21,6 @@ use Twig\Environment;
 class CartController
 {
     private const ORDER_STATUS_PAID = 1;
-    private const SERVICE_FEE_RATE = 0.15;
 
     public function __construct(
         private Environment        $twig,
@@ -35,7 +34,6 @@ class CartController
         private string             $basePath,
     ) {}
 
-    /** GET /checkout — display the order summary and "Pay with Stripe" button. */
     public function showCheckout(Request $request, Response $response): Response
     {
         if (Auth::isAdmin()) {
@@ -57,7 +55,7 @@ class CartController
         $pointsToUse     = $this->clampPoints($pointsToUse, $availablePoints, (int) floor($subtotal * 100));
         $discount        = $pointsToUse * 0.01;
         $taxable         = max(0, $subtotal - $discount);
-        $serviceFee      = round($taxable * self::SERVICE_FEE_RATE, 2);
+        $serviceFee      = round($taxable * Cart::SERVICE_FEE_RATE, 2);
         $total           = round($taxable + $serviceFee, 2);
 
         $html = $this->twig->render('home/checkout.html.twig', [
@@ -73,7 +71,6 @@ class CartController
         return $response;
     }
 
-    /** POST /cart/add — add a ticket id to the session cart. */
     public function add(Request $request, Response $response): Response
     {
         if (Auth::isAdmin()) {
@@ -89,13 +86,13 @@ class CartController
             return $response->withHeader('Location', $this->basePath . '/cart')->withStatus(302);
         }
 
+        // max(1, ...) blocks negative or zero quantities so a tampered form can't lower the price.
         Cart::add($ticketId, max(1, $qty));
 
         $_SESSION['flash'] = ['type' => 'success', 'key' => 'flash.cart_added'];
         return $response->withHeader('Location', $this->basePath . '/cart')->withStatus(302);
     }
 
-    /** POST /cart/remove/{ticket_id} — remove a single line. */
     public function remove(Request $request, Response $response, array $args): Response
     {
         Cart::remove((int) ($args['ticket_id'] ?? 0));
@@ -106,7 +103,6 @@ class CartController
             ->withStatus(302);
     }
 
-    /** POST /cart/clear — empty the cart entirely. */
     public function clear(Request $request, Response $response): Response
     {
         Cart::clear();
@@ -117,9 +113,9 @@ class CartController
             ->withStatus(302);
     }
 
-    /** POST /cart/expire — client countdown fires this when timer hits zero. */
     public function expire(Request $request, Response $response): Response
     {
+        // Belt-and-braces. The CsrfMiddleware also checks this, but keep the explicit check so the AJAX path can't lose its guard.
         $token = $request->getHeaderLine('X-CSRF-Token');
         if ($token === '' || $token !== ($_SESSION['csrf_token'] ?? '')) {
             return $response->withStatus(403);
@@ -156,10 +152,10 @@ class CartController
         $pointsToUse     = $this->clampPoints($pointsToUse, $availablePoints, (int) floor($subtotal * 100));
         $discount        = $pointsToUse * 0.01;
         $taxable         = max(0, $subtotal - $discount);
-        $serviceFee      = round($taxable * self::SERVICE_FEE_RATE, 2);
+        $serviceFee      = round($taxable * Cart::SERVICE_FEE_RATE, 2);
         $total           = round($taxable + $serviceFee, 2);
 
-        // stripe rejects anything under $0.50 - go direct for free/near-free orders
+        // Stripe won't accept payments under 50 cents, so handle free or near-free orders here instead.
         if ($total < 0.50) {
             try {
                 return $this->createOrderDirectly(
@@ -181,7 +177,7 @@ class CartController
             }
         }
 
-        // save expiry before we extend it - restored on cancel so the timer doesnt jump
+        // Give the cart 30 more minutes so it survives the trip to Stripe and back.
         $_SESSION['cart_expires_at_pre_stripe'] = $_SESSION['cart_expires_at'] ?? null;
         Cart::extendExpiry(1800);
 
@@ -255,6 +251,7 @@ class CartController
         int      $pointsToUse,
         Response $response,
     ): Response {
+        // Each $1 spent gives back 20 points.
         $pointsEarned = (int) floor($subtotal * 0.20);
 
         R::begin();
@@ -270,7 +267,6 @@ class CartController
             $orderId = (int) R::store($order);
 
             foreach ($rows as $row) {
-              
                 $this->orderItemModel->create(
                     (int) $row['quantity'],
                     $orderId,
@@ -279,9 +275,9 @@ class CartController
                 $this->ticketModel->markSold((int) $row['ticket_id']);
             }
 
+            // Fresh-load the user. The cached one might have a stale points balance.
             $user = R::load('users', $userId);
             if ($pointsToUse > 0) {
-                // load fresh from DB - session-cached value could be stale if points changed mid-request
                 $user->points = max(0, (int) ($user->points ?? 0) - $pointsToUse);
                 $this->pointsHistoryModel->addPoints(
                     $userId,
@@ -297,7 +293,7 @@ class CartController
             $this->pointsHistoryModel->addPoints(
                 $userId,
                 $pointsEarned,
-                "Earned {$pointsEarned} points (10%) from order #{$orderId}",
+                "Earned {$pointsEarned} points (20%) from order #{$orderId}",
                 $orderId
             );
 

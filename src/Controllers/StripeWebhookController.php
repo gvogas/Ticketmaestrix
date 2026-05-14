@@ -15,7 +15,7 @@ use RedBeanPHP\R;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Webhook;
 
-// no PHP session here - stripe calls this directly, cart data comes from stripepending table
+// No PHP session here. Stripe calls this from their server, and the cart data comes from the stripepending table.
 class StripeWebhookController
 {
     private const ORDER_STATUS_PAID = 1;
@@ -30,7 +30,7 @@ class StripeWebhookController
 
     public function handle(Request $request, Response $response): Response
     {
-        // must read raw body before any framework parsing - sig covers the exact bytes
+        // Read the raw body before any parsing. Stripe signs the exact bytes.
         $payload   = (string) $request->getBody();
         $sigHeader = $request->getHeaderLine('Stripe-Signature');
 
@@ -54,7 +54,7 @@ class StripeWebhookController
                 return $response->withStatus(200);
             }
 
-            // stripe can send the same event twice - dont create a duplicate order
+            // Stripe sometimes sends the same event twice. Don't make two orders.
             if (R::findOne('orders', 'stripe_session_id = ?', [$sessionId])) {
                 $response->getBody()->write('ok');
                 return $response->withStatus(200);
@@ -65,6 +65,7 @@ class StripeWebhookController
             $total        = (float) $pending->total;
             $rows         = json_decode($pending->cart_json, true);
             $subtotal     = (float) array_sum(array_column($rows, 'total'));
+            // Each $1 spent gives back 20 points.
             $pointsEarned = (int) floor($subtotal * 0.20);
 
             R::begin();
@@ -88,6 +89,7 @@ class StripeWebhookController
                     $this->ticketModel->markSold((int) $row['ticket_id']);
                 }
 
+                // Fresh-load the user. The cached one might have a stale points balance.
                 $user = R::load('users', $userId);
 
                 if ($pointsToUse > 0) {
@@ -106,7 +108,7 @@ class StripeWebhookController
                 $this->pointsHistoryModel->addPoints(
                     $userId,
                     $pointsEarned,
-                    "Earned {$pointsEarned} points (10%) from order #{$orderId}",
+                    "Earned {$pointsEarned} points (20%) from order #{$orderId}",
                     $orderId
                 );
 
@@ -115,7 +117,7 @@ class StripeWebhookController
                 R::commit();
             } catch (\Throwable $e) {
                 R::rollback();
-                // 500 tells stripe to retry - importent for reliablity
+                // Return 500 so Stripe retries. The retry sees the existing order and short-circuits above.
                 error_log('Stripe webhook: order creation failed — ' . $e->getMessage());
                 return $response->withStatus(500);
             }

@@ -39,10 +39,7 @@ class AdminController
             'customers'     => $this->userModel->customerCount(),
         ];
 
-        // Two tabs paginate independently via two distinct query params so a
-        // navigation click on one tab does not reset the other.
-        //   ?ev=N — events tab page
-        //   ?u=N  — users tab page
+        // Each tab uses its own page param (?ev= for events, ?u= for users) so flipping pages on one tab doesn't reset the other.
         $queryParams = $request->getQueryParams();
         $perPage     = 30;
 
@@ -52,7 +49,6 @@ class AdminController
         $uPage   = max(1, (int) ($queryParams['u'] ?? 1));
         $uOffset = ($uPage - 1) * $perPage;
 
-        // 2. Fetch and hydrate events for the "My Events" tab
         $events = $this->eventModel->hydrate(
             $this->eventModel->getPaginated($perPage, $evOffset),
             $this->venueModel,
@@ -61,7 +57,6 @@ class AdminController
         $eventsTotal = $this->eventModel->countAll();
         $eventsPages = (int) ceil($eventsTotal / $perPage);
 
-        // 3. Fetch users for the "Manage Users" tab
         $users      = $this->userModel->findAllPaginated($perPage, $uOffset);
         $usersTotal = $this->userModel->countAll();
         $usersPages = (int) ceil($usersTotal / $perPage);
@@ -77,8 +72,6 @@ class AdminController
             'venues'           => $this->venueModel->getAll(),
             'events_page'      => $evPage,
             'events_pages'     => $eventsPages,
-            // Pass totals separately so the tab badges and "X total" labels
-            // keep showing the full count, not just the current page.
             'events_total'     => $eventsTotal,
             'users_page'       => $uPage,
             'users_pages'      => $usersPages,
@@ -89,5 +82,4 @@ class AdminController
         $response->getBody()->write($html);
         return $response;
     }
-
 }

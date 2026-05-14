@@ -20,12 +20,5 @@
   "bugs": {
     "url": "https://github.com/Terminator320/Ticketmaestrix/issues"
   },
-  "homepage": "https://github.com/Terminator320/Ticketmaestrix#readme",
-  "devDependencies": {
-    "tailwindcss": "^4.2.2"
-  },
-  "dependencies": {
-    "@tailwindcss/cli": "^4.2.2",
-    "@tailwindcss/vite": "^4.2.2"
-  }
+  "homepage": "https://github.com/Terminator320/Ticketmaestrix#readme"
 }

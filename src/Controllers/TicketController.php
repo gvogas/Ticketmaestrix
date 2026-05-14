@@ -33,9 +33,7 @@ class TicketController
         $total      = $this->ticketModel->countAll();
         $totalPages = (int) ceil($total / $perPage);
 
-        // event_titles maps event_id → title so the admin ticket list can show
-        // titles instead of bare numeric ids. Built once across all events
-        // rather than N times per ticket.
+        // Build a map of event id to title once so the ticket list can show titles instead of raw ids.
         $eventTitles = [];
         foreach ($this->eventModel->getAll() as $event) {
             $eventTitles[(int) $event->id] = (string) $event->title;
@@ -65,7 +63,6 @@ class TicketController
 
     public function store(Request $request, Response $response): Response
     {
-
         $data = (array) ($request->getParsedBody() ?? []);
 
         $errors     = [];
@@ -135,7 +132,6 @@ class TicketController
 
     public function update(Request $request, Response $response, array $args): Response
     {
-
         $id   = (int) $args['id'];
         $data = (array) ($request->getParsedBody() ?? []);
 
@@ -237,6 +233,7 @@ class TicketController
         $perPage = 30;
         $offset  = ($page - 1) * $perPage;
 
+        // Stamp on_sale and effective_price onto each ticket so the template can show the discount without doing the math itself.
         $tickets = array_map(function ($ticket) {
             $ticket->on_sale         = $this->ticketModel->isOnSale($ticket);
             $ticket->effective_price = $this->ticketModel->effectivePrice($ticket);
@@ -252,16 +249,14 @@ class TicketController
         $totalPages   = (int) ceil($totalTickets / $perPage);
 
         $html = $this->twig->render('ticket/tickets_by_event.html.twig', [
-            'base_path'    => $this->basePath,
-            'tickets'      => $tickets,
-            'event'        => $event,
-            'event_id'     => $eventId, // Fallback when $event load fails
-            // Pass the total so the "X tickets" header stays accurate after
-            // pagination — tickets|length is now just the page count.
+            'base_path'     => $this->basePath,
+            'tickets'       => $tickets,
+            'event'         => $event,
+            'event_id'      => $eventId,
             'total_tickets' => $totalTickets,
-            'current_page' => $page,
-            'total_pages'  => $totalPages,
-            'query_params' => $queryParams,
+            'current_page'  => $page,
+            'total_pages'   => $totalPages,
+            'query_params'  => $queryParams,
         ]);
         $response->getBody()->write($html);
         return $response;

@@ -110,7 +110,7 @@
             </a>
 
             <div class="ticket-card">
-                <!-- Header / Stub Section -->
+                
                 <div class="ticket-header d-flex justify-content-between align-items-center">
                     <div>
                         <span class="info-label">{{ trans('tadmin.detail_ref') }}</span>
@@ -121,7 +121,6 @@
                     </div>
                 </div>
 
-                <!-- Body Section -->
                 <div class="p-4 ps-5">
                     <div class="row g-4">
                         <div class="col-12">
@@ -147,7 +146,6 @@
                         </div>
                     </div>
 
-                    <!-- Actions Area -->
                     <div class="mt-5 pt-4 border-top d-flex gap-2">
                         <a href="{{ base_path }}/tickets/{{ ticket.id }}/edit" class="btn btn-purple-outline flex-grow-1">
                             <i class="bi bi-pencil-square me-2"></i> {{ trans('tadmin.detail_edit') }}
@@ -161,14 +159,12 @@
                 </div>
             </div>
 
-            <!-- Footer Meta -->
             <p class="text-center text-muted small mt-4">
                 <i class="bi bi-shield-check me-1"></i> {{ trans('tadmin.detail_footer') }}
             </p>
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteTicketDetailModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow">
@@ -182,6 +178,7 @@
                 <div class="modal-footer border-0 pb-4 px-4">
                     <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">{{ trans('tadmin.crud.cancel') }}</button>
                     <form action="{{ base_path }}/tickets/{{ ticket.id }}/delete" method="POST" class="m-0">
+                        {{ csrf_field() }}
                         <button type="submit" class="btn btn-danger px-4">{{ trans('tadmin.crud.delete') }}</button>
                     </form>
                 </div>

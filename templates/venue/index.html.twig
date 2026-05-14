@@ -88,7 +88,6 @@
 
     <div class="container">
 
-        <!-- Admin Dashboard Header -->
         <header class="admin-header">
             <div class="row align-items-center">
                 <div class="col-lg-5">
@@ -114,13 +113,11 @@
             </div>
         </header>
 
-        <!-- Venues Grid -->
         <div class="row g-4 mb-5">
             {% for venue in venues %}
             <div class="col-md-6 col-lg-4">
                 <article class="venue-card" data-name="{{ venue.name|e('html_attr') }}">
 
-                    <!-- Header Visual -->
                     <div class="venue-visual">
                         <span class="capacity-badge">
                             <i class="bi bi-people-fill me-1"></i> {{ venue.capacity|number_format }}
@@ -128,7 +125,6 @@
                         <i class="bi bi-building-check venue-icon"></i>
                     </div>
 
-                    <!-- Info Content -->
                     <div class="card-content">
                         <h3>{{ venue.name|e('html') }}</h3>
                         <div class="venue-meta">
@@ -137,7 +133,6 @@
                         </div>
                     </div>
 
-                    <!-- Actions -->
                     <div class="admin-footer">
                         <a href="{{ base_path }}/venues/{{ venue.id }}/edit" class="btn btn-sm btn-outline-secondary px-4 rounded-pill fw-bold">
                             <i class="bi bi-pencil-square me-1"></i> {{ trans('vadmin.crud.edit') }}
@@ -151,7 +146,6 @@
                 </article>
             </div>
 
-            <!-- Delete Confirmation Modal -->
             <div class="modal fade" id="deleteVenueModal-{{ venue.id }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content rounded-4 border-0 shadow">
@@ -165,6 +159,7 @@
                         <div class="modal-footer border-0 pb-4 px-4">
                             <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">{{ trans('vadmin.crud.cancel') }}</button>
                             <form action="{{ base_path }}/venues/{{ venue.id }}/delete" method="post" class="m-0">
+                                {{ csrf_field() }}
                                 <button type="submit" class="btn btn-danger px-4">{{ trans('vadmin.crud.delete') }}</button>
                             </form>
                         </div>

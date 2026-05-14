@@ -42,7 +42,6 @@
 
     <div class="container">
 
-        <!-- Header -->
         <header class="admin-header">
             <div class="row align-items-center">
                 <div class="col-lg-5">
@@ -68,12 +67,11 @@
             </div>
         </header>
 
-        <!-- Form Section -->
         <div class="form-container">
             <form action="{{ base_path }}/categories" method="post">
+                {{ csrf_field() }}
                 <div class="row g-4">
 
-                    <!-- Category Name -->
                     <div class="col-12">
                         <label for="name" class="form-label">{{ trans('catadmin.crud.name') }}</label>
                         <div class="input-group">
@@ -89,7 +87,6 @@
                         <div class="form-text mt-2">{{ trans('catadmin.crud.message') }}</div>
                     </div>
 
-                    <!-- Actions -->
                     <div class="col-12 mt-5">
                         <div class="d-flex gap-3 pt-4 border-top">
                             <button type="submit" class="btn-purple px-5">
