@@ -232,23 +232,37 @@
                         <span class="text-muted">{{ trans('profile.progress_label') }}</span>
                         <span class="text-primary fw-bold">{{ user.points|default('0') }} pts</span>
                     </div>
+                    {# Progress bar maxes out at 2,500 pts — the top reward tier. Halved
+                       from the old 5,000 to track the new 500 / 1,250 tier pacing. #}
                     <div class="progress mb-4">
-                        <div class="progress-bar" style="width: {{ (user.points / 5000 * 100)|default(5) }}%"></div>
+                        <div class="progress-bar" style="width: {{ (user.points / 2500 * 100)|default(5) }}%"></div>
                     </div>
 
-                    <div class="reward-item {% if user.points >= 1000 %}reward-unlocked{% endif %}">
+                    {# $10 Off tier now unlocks at 500 points (was 1,000). At the 20% earn
+                       rate this means ~$25 of spend rather than ~$100, matching the new
+                       reward pacing. The actual discount is still applied via the cart's
+                       points slider at 1 pt = $0.01 — this card is purely a milestone display. #}
+                    <div class="reward-item {% if user.points >= 500 %}reward-unlocked{% endif %}">
                         <div class="d-flex justify-content-between align-items-start mb-1">
                             <h6 class="fw-bold mb-0">$10 Off Next Purchase</h6>
-                            {% if user.points >= 1000 %}
+                            {% if user.points >= 500 %}
                                 <span class="badge bg-success rounded-pill">Unlocked</span>
                             {% endif %}
                         </div>
-                        <small class="text-muted">1,000 points</small>
+                        <small class="text-muted">500 points</small>
                     </div>
 
-                    <div class="reward-item">
-                        <h6 class="fw-bold mb-1 text-muted">Free Service Fee (1 use)</h6>
-                        <small class="text-muted">2,500 points</small>
+                    {# Free Service Fee tier halved from 2,500 → 1,250 to match the new
+                       reward pacing. Mirrors tier 1's unlock-badge structure so both
+                       cards behave consistently when the user crosses the threshold. #}
+                    <div class="reward-item {% if user.points >= 1250 %}reward-unlocked{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <h6 class="fw-bold mb-0 {% if user.points < 1250 %}text-muted{% endif %}">Free Service Fee (1 use)</h6>
+                            {% if user.points >= 1250 %}
+                                <span class="badge bg-success rounded-pill">Unlocked</span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">1,250 points</small>
                     </div>
 
                     <div class="mt-4 p-3 bg-light rounded-3 text-center border">

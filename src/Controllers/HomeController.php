@@ -131,7 +131,10 @@ class HomeController
             'subtotal'          => $subtotal,
             'service_fee'       => $serviceFee,
             'total'             => $total,
-            'points_earned'     => (int) floor($subtotal * 0.10),
+            // Earn rate is 20% of subtotal (20 points per $1). Keep this in sync with
+            // CartController::createOrderDirectly() and StripeWebhookController so the
+            // cart preview matches what actually credits to the user post-purchase.
+            'points_earned'     => (int) floor($subtotal * 0.20),
             'user_points'       => $userPoints,
             'max_discount'      => min($userPoints, $maxDiscount),
             'seconds_remaining' => Cart::secondsRemaining(),

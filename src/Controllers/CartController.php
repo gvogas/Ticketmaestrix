@@ -303,7 +303,10 @@ class CartController
         int      $pointsToUse,
         Response $response,
     ): Response {
-        $pointsEarned = (int) floor($subtotal * 0.10);
+        // 20% earn rate (20 pts per $1) on the pre-tax, pre-discount subtotal.
+        // Mirrors HomeController's cart preview and StripeWebhookController's
+        // paid-order credit so all three paths award identical points.
+        $pointsEarned = (int) floor($subtotal * 0.20);
 
         R::begin();
         try {

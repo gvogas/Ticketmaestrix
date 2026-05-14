@@ -82,7 +82,11 @@ class StripeWebhookController
             $total        = (float) $pending->total;
             $rows         = json_decode($pending->cart_json, true);
             $subtotal     = (float) array_sum(array_column($rows, 'total'));
-            $pointsEarned = (int) floor($subtotal * 0.10);
+            // 20% earn rate on the pre-tax, pre-discount subtotal (snapshot from
+            // stripepending.cart_json). Must match HomeController's cart preview
+            // and CartController::createOrderDirectly so the user sees the same
+            // points number on every surface.
+            $pointsEarned = (int) floor($subtotal * 0.20);
 
             R::begin();
             try {
