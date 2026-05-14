@@ -169,7 +169,7 @@
                 <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button">{{ trans('dashboard.tab_overview') }}</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" id="myevents-tab" data-bs-toggle="tab" data-bs-target="#myevents" type="button">{{ trans('dashboard.tab_my_events') }} ({{ events|length }})</button>
+                <button class="nav-link" id="myevents-tab" data-bs-toggle="tab" data-bs-target="#myevents" type="button">{{ trans('dashboard.tab_my_events') }} ({{ events_total|default(events|length) }})</button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" id="create-tab" data-bs-toggle="tab" data-bs-target="#create" type="button"><i class="bi bi-plus"></i> {{ trans('dashboard.tab_create') }}</button>
@@ -249,7 +249,7 @@
                                             <td><a href="{{ base_path }}/events/{{ event.id }}" class="fw-bold text-decoration-none">{{ event.title }}</a></td>
                                             <td>{{ event.date }}</td>
                                             <td>{{ event.venue_name }}</td>
-                                            <td>{% if event.min_price is not null %}${{ event.min_price|number_format(2) }}{% else %}—{% endif %}</td>
+                                            <td>{% if event.min_price is not null %}${{ event.min_price|number_format(2) }}{% else %}â€”{% endif %}</td>
                                             <td class="text-end">
                                                 <a href="{{ base_path }}/events/{{ event.id }}/edit" class="btn btn-sm btn-outline-secondary me-1">{{ trans('dashboard.edit') }}</a>
                                                 <form method="POST" action="{{ base_path }}/events/{{ event.id }}/delete" class="d-inline"
@@ -262,6 +262,18 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        {# Events-tab paginator. Uses `ev` as the page param so it doesn't
+                           collide with the users-tab paginator (`u`). The hash keeps the
+                           events tab open across navigation (partial composes ?ev=N#myevents). #}
+                        {% include 'partials/pagination.html.twig' with {
+                            current_page: events_page,
+                            total_pages:  events_pages,
+                            base_url:     base_path ~ '/admin',
+                            query_params: query_params,
+                            page_key:     'ev',
+                            hash:         'myevents'
+                        } only %}
                     {% endif %}
                 </div>
             </div>
@@ -320,7 +332,7 @@
                 <div class="card form-card p-4">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h5 class="fw-bold mb-0">{{ trans('dashboard.tab_users') }}</h5>
-                        <span class="text-muted">{{ users|length }} total</span>
+                        <span class="text-muted">{{ users_total|default(users|length) }} total</span>
                     </div>
                     <div class="table-responsive">
                         <table class="table align-middle">
@@ -371,6 +383,18 @@
                             </tbody>
                         </table>
                     </div>
+
+                    {# Users-tab paginator. Uses `u` as the page param so it doesn't
+                       collide with the events-tab paginator (`ev`). The hash keeps
+                       the users tab open across page navigation. #}
+                    {% include 'partials/pagination.html.twig' with {
+                        current_page: users_page,
+                        total_pages:  users_pages,
+                        base_url:     base_path ~ '/admin',
+                        query_params: query_params,
+                        page_key:     'u',
+                        hash:         'users'
+                    } only %}
                 </div>
             </div>
 

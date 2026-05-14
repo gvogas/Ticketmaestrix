@@ -15,6 +15,26 @@ class OrderModel
     }
 
     /**
+     * Paginated variant of findByUser for the admin /orders/user/{id} page.
+     * Newest-first ordering matches findByUser; LIMIT ? OFFSET ? appended.
+     */
+    public function findByUserPaginated(int $userId, int $limit, int $offset): array
+    {
+        return BeanHelper::castBeanArray(
+            R::find('orders', 'user_id = ? ORDER BY order_time DESC LIMIT ? OFFSET ?', [$userId, $limit, $offset])
+        );
+    }
+
+    /**
+     * Count of orders for a user. Shared between findByUserPaginated and
+     * findByUserWithItemsPaginated since they pull from the same orders rows.
+     */
+    public function countByUser(int $userId): int
+    {
+        return (int) R::count('orders', 'user_id = ?', [$userId]);
+    }
+
+    /**
      * Orders for a user with their line items + ticket + event already joined,
      * in a single query. Returns an array of stdClass orders (newest first),
      * each carrying an `items` array of stdClass line items. Used by the
@@ -25,6 +45,58 @@ class OrderModel
      * mirrors the stdClass-from-raw-SQL pattern used by
      * EventModel::getWithOnSaleTickets (see CLAUDE.md "OODBBean vs stdClass").
      */
+    /**
+     * Paginated variant of findByUserWithItems for the /profile purchase
+     * history card. LIMIT/OFFSET are applied to the *orders* (not the joined
+     * items), so a page always contains exactly $limit orders even when each
+     * order has many line items.
+     *
+     * Two-step query: first fetch the page of order IDs, then re-use the
+     * existing join logic restricted to that set. This avoids the bug where
+     * `LIMIT N` on a flat JOIN would cut off in the middle of an order's
+     * items.
+     */
+    public function findByUserWithItemsPaginated(int $userId, int $limit, int $offset): array
+    {
+        $idRows = R::getCol(
+            'SELECT id FROM orders WHERE user_id = ? ORDER BY order_time DESC LIMIT ? OFFSET ?',
+            [$userId, $limit, $offset]
+        );
+        if (empty($idRows)) {
+            return [];
+        }
+        $orderIds = array_map('intval', $idRows);
+
+        // Build placeholder list (?,?,?…) for the IN clause; R::getAll only
+        // binds positional params, so we expand the array explicitly.
+        $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+
+        $sql = "SELECT o.id            AS order_id,
+                       o.total_price   AS total_price,
+                       o.status        AS status,
+                       o.order_time    AS order_time,
+                       o.points_earned AS points_earned,
+                       o.points_spent  AS points_spent,
+                       oi.id           AS item_id,
+                       oi.quantity     AS quantity,
+                       t.id            AS ticket_id,
+                       t.`row`         AS ticket_row,
+                       t.seat          AS ticket_seat,
+                       t.price         AS ticket_price,
+                       e.id            AS event_id,
+                       e.title         AS event_title,
+                       e.event_image   AS event_image,
+                       e.date          AS event_date
+                  FROM orders o
+             LEFT JOIN order_items oi ON oi.order_id = o.id
+             LEFT JOIN ticket       t ON t.id        = oi.ticket_id
+             LEFT JOIN events       e ON e.id        = t.event_id
+                 WHERE o.id IN ($placeholders)
+              ORDER BY o.order_time DESC, oi.id ASC";
+
+        return $this->collapseOrderRows(R::getAll($sql, $orderIds));
+    }
+
     public function findByUserWithItems(int $userId): array
     {
         // `t`.`row` is backticked because `row` is a MySQL reserved word —
@@ -52,9 +124,17 @@ class OrderModel
                  WHERE o.user_id = ?
               ORDER BY o.order_time DESC, oi.id ASC';
 
-        $rows = R::getAll($sql, [$userId]);
+        return $this->collapseOrderRows(R::getAll($sql, [$userId]));
+    }
 
-        // Collapse the join result into one entry per order with embedded items.
+    /**
+     * Collapse a join result (orders LEFT JOIN order_items …) into one
+     * stdClass per order, each carrying an items[] array. Shared by
+     * findByUserWithItems and findByUserWithItemsPaginated so the two stay
+     * shape-compatible (the /profile template reads from this exact shape).
+     */
+    private function collapseOrderRows(array $rows): array
+    {
         $byOrder = [];
         foreach ($rows as $r) {
             $oid = (int) $r['order_id'];

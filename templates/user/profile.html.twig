@@ -182,6 +182,13 @@
                         </div>
                         {% endfor %}
                     </div>
+
+                    {% include 'partials/pagination.html.twig' with {
+                        current_page: current_page,
+                        total_pages:  total_pages,
+                        base_url:     base_path ~ '/profile',
+                        query_params: query_params
+                    } only %}
                     {% endif %}
                 </div>
 

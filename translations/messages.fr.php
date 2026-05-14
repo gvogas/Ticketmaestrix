@@ -60,6 +60,10 @@ return [
     'events.previous' => 'Précédent',
     'events.next'     => 'Suivant',
 
+    // Bandeau de pagination partagé (templates/partials/pagination.html.twig)
+    'pagination.previous' => 'Précédent',
+    'pagination.next'     => 'Suivant',
+
     // Map
     'map.header'      => 'Événements près de vous',
     'map.search_placeholder' => 'Rechercher un lieu',

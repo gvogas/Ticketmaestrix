@@ -87,13 +87,25 @@ class OrderController {
 
      // List all orders belonging to a given user id.
      public function byUser(Request $request, Response $response, array $args): Response {
-        $userId = (int) ($args['id'] ?? 0);
-        $orders = $this->orderModel->findByUser($userId);
+        $userId      = (int) ($args['id'] ?? 0);
+        $queryParams = $request->getQueryParams();
+        $page    = max(1, (int) ($queryParams['page'] ?? 1));
+        $perPage = 30;
+        $offset  = ($page - 1) * $perPage;
+
+        $orders     = $this->orderModel->findByUserPaginated($userId, $perPage, $offset);
+        $total      = $this->orderModel->countByUser($userId);
+        $totalPages = (int) ceil($total / $perPage);
 
         $html = $this->twig->render('order/orders_by_user.html.twig', [
-            'base_path' => $this->basePath,
-            'orders'    => $orders,
-            'user_id'   => $userId,
+            'base_path'    => $this->basePath,
+            'orders'       => $orders,
+            'user_id'      => $userId,
+            // Total separately so the "X order(s)" badge keeps showing the full count.
+            'total_orders' => $total,
+            'current_page' => $page,
+            'total_pages'  => $totalPages,
+            'query_params' => $queryParams,
         ]);
 
         $response->getBody()->write($html);

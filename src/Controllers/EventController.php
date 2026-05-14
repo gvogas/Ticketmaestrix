@@ -27,9 +27,11 @@ class EventController
     public function index(Request $request, Response $response): Response
     {
         $queryParams = $request->getQueryParams();
-        $page = isset($queryParams['page']) ? (int)$queryParams['page'] : 1;
+        // max(1, …) clamps junk values like ?page=0 / ?page=-1 / ?page=abc.
+        $page = max(1, (int) ($queryParams['page'] ?? 1));
 
-        $perPage = 9;
+        // 30 per page (3 cols × 10 rows) — matches the site-wide pagination size.
+        $perPage = 30;
         $offset = ($page - 1) * $perPage;
 
         // Check if there are any search/filter parameters
@@ -55,12 +57,19 @@ class EventController
 
         // Check if user is admin - render admin dashboard or user-friendly page
         if (\App\Helpers\Auth::isAdmin()) {
-            // Admin sees the management console with edit/delete capabilities
+            // Admin sees the management console with edit/delete capabilities.
+            // Pass both old (`currentPage`/`totalPages`) and new
+            // (`current_page`/`total_pages`) variable names so the inline
+            // pagination block and the shared partial both keep working
+            // during the template refactor.
             $html = $this->twig->render('event/index.html.twig', [
-                'base_path'   => $this->basePath,
-                'events'      => $events,
-                'currentPage' => $page,
-                'totalPages'  => $totalPages,
+                'base_path'    => $this->basePath,
+                'events'       => $events,
+                'currentPage'  => $page,
+                'totalPages'   => $totalPages,
+                'current_page' => $page,
+                'total_pages'  => $totalPages,
+                'query_params' => $queryParams,
             ]);
         } else {
             // Regular users see a clean events listing page
@@ -72,6 +81,8 @@ class EventController
                 'events'       => $events,
                 'currentPage'  => $page,
                 'totalPages'   => $totalPages,
+                'current_page' => $page,
+                'total_pages'  => $totalPages,
                 'categories'   => $this->categoryModel->getAll(),
                 'venues'       => $this->venueModel->getAll(),
                 'query_params' => $queryParams,
@@ -230,15 +241,35 @@ class EventController
 
     public function byCategory(Request $request, Response $response, array $args): Response
     {
-        $categoryId = (int) $args['id'];
-        $events     = $this->eventModel->findByCategory($categoryId);
-        $category   = $this->categoryModel->getById($categoryId);
+        $categoryId  = (int) $args['id'];
+        $queryParams = $request->getQueryParams();
+        $page    = max(1, (int) ($queryParams['page'] ?? 1));
+        $perPage = 30;
+        $offset  = ($page - 1) * $perPage;
+
+        // Hydrate so each event carries venue_name / venue_address / min_price /
+        // category — without this, the template falls back to "Venue #<id>"
+        // because findByCategoryPaginated only returns raw event beans without joins.
+        $events = $this->eventModel->hydrate(
+            $this->eventModel->findByCategoryPaginated($categoryId, $perPage, $offset),
+            $this->venueModel,
+            $this->ticketModel,
+            $this->categoryModel
+        );
+        $category    = $this->categoryModel->getById($categoryId);
+        $totalEvents = $this->eventModel->countByCategory($categoryId);
+        $totalPages  = (int) ceil($totalEvents / $perPage);
 
         $html = $this->twig->render('event/events_by_category.html.twig', [
             'base_path'     => $this->basePath,
             'current_route' => 'events',
             'events'        => $events,
             'category'      => $category,
+            // Pass total separately — events|length is now just the page count.
+            'total_events'  => $totalEvents,
+            'current_page'  => $page,
+            'total_pages'   => $totalPages,
+            'query_params'  => $queryParams,
         ]);
         $response->getBody()->write($html);
         return $response;

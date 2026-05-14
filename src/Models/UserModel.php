@@ -14,6 +14,24 @@ class UserModel
         return BeanHelper::castBeanArray(R::findAll('users'));
     }
 
+    /**
+     * Paginated variant of findAll for admin /users and the admin dashboard
+     * Users tab. Ordered by id ASC for stable pagination — RedBean's default
+     * ordering is unspecified, which would cause rows to skip between pages.
+     */
+    public function findAllPaginated(int $limit, int $offset): array
+    {
+        return BeanHelper::castBeanArray(
+            R::findAll('users', 'ORDER BY id ASC LIMIT ? OFFSET ?', [$limit, $offset])
+        );
+    }
+
+    /** Row-count of every user — drives the admin users paginator. */
+    public function countAll(): int
+    {
+        return (int) R::count('users');
+    }
+
     public function load(int $id): mixed
     {
         return R::load('users', $id);

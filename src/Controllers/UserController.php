@@ -128,12 +128,24 @@ class UserController
     /** GET /users — admin-only listing of all users. */
     public function index(Request $request, Response $response): Response
     {
-        $users = $this->userModel->findAll();
+        $queryParams = $request->getQueryParams();
+        $page    = max(1, (int) ($queryParams['page'] ?? 1));
+        $perPage = 30;
+        $offset  = ($page - 1) * $perPage;
+
+        $users      = $this->userModel->findAllPaginated($perPage, $offset);
+        $total      = $this->userModel->countAll();
+        $totalPages = (int) ceil($total / $perPage);
 
         $html = $this->twig->render('user/index.html.twig', [
             'base_path'     => $this->basePath,
             'current_route' => 'admin',
             'users'         => $users,
+            // Pass total so the "X total" header keeps showing the full count.
+            'total_users'   => $total,
+            'current_page'  => $page,
+            'total_pages'   => $totalPages,
+            'query_params'  => $queryParams,
         ]);
 
         $response->getBody()->write($html);
@@ -146,6 +158,17 @@ class UserController
         $user = Auth::user();
         $id   = (int) $user->id;
 
+        // Paginate the Purchase History card. The points-history card is
+        // already capped at 50 rows by PointsHistoryModel::findByUser, so it
+        // stays unpaginated.
+        $queryParams = $request->getQueryParams();
+        $page    = max(1, (int) ($queryParams['page'] ?? 1));
+        $perPage = 30;
+        $offset  = ($page - 1) * $perPage;
+
+        $totalOrders = $this->orderModel->countByUser($id);
+        $totalPages  = (int) ceil($totalOrders / $perPage);
+
         $html = $this->twig->render('user/profile.html.twig', [
             'base_path'       => $this->basePath,
             'current_route'   => 'profile',
@@ -155,8 +178,11 @@ class UserController
             'events_attended' => $this->orderModel->eventsAttendedByUser($id),
             // Orders + line items + event titles for the Purchase History card,
             // shaped as stdClass[] with embedded items[] (single SQL query).
-            'orders'          => $this->orderModel->findByUserWithItems($id),
+            'orders'          => $this->orderModel->findByUserWithItemsPaginated($id, $perPage, $offset),
             'points_history'  => $this->pointsHistoryModel->findByUser($id),
+            'current_page'    => $page,
+            'total_pages'     => $totalPages,
+            'query_params'    => $queryParams,
         ]);
 
         $response->getBody()->write($html);

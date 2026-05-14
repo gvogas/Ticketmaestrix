@@ -20,9 +20,21 @@ class CategoryController
 
     public function index(Request $request, Response $response): Response
     {
+        $queryParams = $request->getQueryParams();
+        $page    = max(1, (int) ($queryParams['page'] ?? 1));
+        $perPage = 30;
+        $offset  = ($page - 1) * $perPage;
+
+        $categories = $this->categoryModel->getAllPaginated($perPage, $offset);
+        $total      = $this->categoryModel->countAll();
+        $totalPages = (int) ceil($total / $perPage);
+
         $html = $this->twig->render('category/index.html.twig', [
-            'base_path'  => $this->basePath,
-            'categories' => $this->categoryModel->getAll(),
+            'base_path'    => $this->basePath,
+            'categories'   => $categories,
+            'current_page' => $page,
+            'total_pages'  => $totalPages,
+            'query_params' => $queryParams,
         ]);
         $response->getBody()->write($html);
         return $response;

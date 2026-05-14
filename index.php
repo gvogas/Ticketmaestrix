@@ -370,7 +370,9 @@ $app->group('/order-items', function ($group) {
 })->add(AdminMiddleware::class);
 
 // --- API ---
-$app->get('/api/search', [EventController::class, 'searchJson']);
+$app->get('/api/search',      [EventController::class, 'searchJson']);
+// Map page sidebar uses this to lazy-load events as the user scrolls.
+$app->get('/api/map-events',  [HomeController::class, 'mapEventsJson']);
 
 // --- Cart (auth required) ---
 $app->group('/cart', function ($group) {

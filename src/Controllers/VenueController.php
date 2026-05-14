@@ -20,9 +20,21 @@ class VenueController
 
     public function index(Request $request, Response $response): Response
     {
+        $queryParams = $request->getQueryParams();
+        $page    = max(1, (int) ($queryParams['page'] ?? 1));
+        $perPage = 30;
+        $offset  = ($page - 1) * $perPage;
+
+        $venues     = $this->venueModel->getAllPaginated($perPage, $offset);
+        $total      = $this->venueModel->countAll();
+        $totalPages = (int) ceil($total / $perPage);
+
         $html = $this->twig->render('venue/index.html.twig', [
-            'base_path' => $this->basePath,
-            'venues'    => $this->venueModel->getAll(),
+            'base_path'    => $this->basePath,
+            'venues'       => $venues,
+            'current_page' => $page,
+            'total_pages'  => $totalPages,
+            'query_params' => $queryParams,
         ]);
         $response->getBody()->write($html);
         return $response;

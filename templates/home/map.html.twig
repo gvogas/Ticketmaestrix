@@ -44,6 +44,21 @@
     @keyframes card-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
     .card-in { animation:card-in 0.2s ease both; }
 
+    /* Infinite-scroll loader row — appears at the bottom of the sidebar
+       while the next page is being fetched. */
+    @keyframes map-loader-spin { to { transform: rotate(360deg); } }
+    .map-loader-spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid #ede2ff;
+        border-top-color: #9b51e0;
+        border-radius: 50%;
+        animation: map-loader-spin 0.7s linear infinite;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+    .map-loader { background: #fbf8ff; border: 1px dashed #e0d3f5; border-radius: 10px; margin-top: 6px; }
+
     /* Mobile */
     @media (max-width: 767.98px) {
         .content-area { flex-direction: column; }
@@ -129,7 +144,15 @@
 {% block scripts %}
     {% if google_maps_api_key is not empty %}
     <script>
-        const EVENTS = {{ events_json|raw }};
+        // EVENTS grows over time as the sidebar's infinite scroll loads more
+        // pages. markers/infoWindows are indexed in lock-step with EVENTS,
+        // so a sidebar card's data-event-index always maps to the right marker.
+        let EVENTS = {{ events_json|raw }};
+        const MAP_PER_PAGE = {{ map_per_page|default(20) }};
+        const MAP_TOTAL    = {{ map_total|default(events|length) }};
+        let mapCurrentPage = 1;
+        let mapHasMore     = EVENTS.length < MAP_TOTAL;
+        let mapLoading     = false;
 
         let map;
         let markers = [];
@@ -397,14 +420,167 @@
 
         var input = document.getElementById('mapSearch');
         var eventsList = document.getElementById('mapEventsList');
+        var sidebar    = document.querySelector('.map-sidebar');
         var originalHTML = eventsList.innerHTML;
         var timer, controller;
+
+        // === Infinite-scroll: load 20 more events when the sidebar nears the bottom ===
+        // Holds a reference to the temporary loader row while a fetch is in flight,
+        // so we can remove it once the new cards land.
+        var loaderRow = null;
+
+        function buildLoaderRow() {
+            // A small shimmering pill with a spinner — visible while the next
+            // page is being fetched. Uses the same shimmer keyframe as the
+            // initial-load skeletons for a consistent loading feel.
+            var row = document.createElement('div');
+            row.className = 'map-loader card-in';
+            row.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;color:#9b51e0;font-weight:600;font-size:0.9rem;';
+            var spinner = document.createElement('span');
+            spinner.className = 'map-loader-spinner';
+            var label = document.createElement('span');
+            label.textContent = 'Loading more…';
+            row.appendChild(spinner);
+            row.appendChild(label);
+            return row;
+        }
+
+        // Build a sidebar card for an event that just arrived from the API,
+        // tagging it with its EVENTS-array index so sidebar↔marker clicks work.
+        function buildLoadedCard(ev, index) {
+            var card = document.createElement('div');
+            card.className = 'event-card-mini card-in';
+            card.dataset.eventIndex = String(index);
+
+            if (ev.event_image) {
+                var img = document.createElement('img');
+                img.setAttribute('src', ev.event_image);
+                img.setAttribute('alt', ev.title || '');
+                img.className = 'event-img';
+                card.appendChild(img);
+            } else {
+                var ph = document.createElement('div');
+                ph.className = 'event-img';
+                card.appendChild(ph);
+            }
+
+            var info = document.createElement('div');
+            var h6 = document.createElement('h6');
+            h6.className = 'fw-bold mb-0';
+            h6.style.fontSize = '0.95rem';
+            h6.textContent = ev.title || '';
+            var venue = document.createElement('small');
+            venue.className = 'text-muted d-block';
+            venue.textContent = ev.venue_name || '';
+            var priceEl = document.createElement('small');
+            priceEl.className = 'fw-bold text-primary';
+            priceEl.textContent = (ev.min_price === null || ev.min_price === undefined)
+                ? '{{ trans('home.tba')|e('js') }}'
+                : (ev.min_price > 0 ? '$' + parseFloat(ev.min_price).toFixed(2) : 'Free');
+            var dateEl = document.createElement('small');
+            dateEl.className = 'text-muted';
+            dateEl.textContent = ' · ' + (ev.date || '');
+
+            info.appendChild(h6);
+            info.appendChild(venue);
+            info.appendChild(priceEl);
+            info.appendChild(dateEl);
+            card.appendChild(info);
+
+            // Sidebar card → focus marker (same behavior as the static cards).
+            card.addEventListener('click', function () {
+                var idx = parseInt(this.dataset.eventIndex);
+                document.querySelectorAll('.event-card-mini').forEach(function (c) { c.classList.remove('active'); });
+                this.classList.add('active');
+                var marker = markers[idx];
+                if (typeof map !== 'undefined' && marker) {
+                    map.panTo(marker.getPosition());
+                    map.setZoom(14);
+                    if (activeInfoWindow) activeInfoWindow.close();
+                    infoWindows[idx].open(map, marker);
+                    activeInfoWindow = infoWindows[idx];
+                }
+            });
+            return card;
+        }
+
+        function placeMarkerForNewEvent(ev, index) {
+            // Mirror initMap's logic for the newly-arrived event so it lands
+            // on the map alongside the existing markers.
+            if (typeof map === 'undefined') return;
+            if (ev.venue_lat && ev.venue_lng) {
+                var lat = parseFloat(ev.venue_lat);
+                var lng = parseFloat(ev.venue_lng);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    addMarker(ev, { lat: lat, lng: lng }, index);
+                    return;
+                }
+            }
+            if (ev.venue_address && geocoder) {
+                geocoder.geocode({ address: ev.venue_address }, function (results, status) {
+                    if (status === 'OK' && results[0] && results[0].geometry) {
+                        addMarker(ev, results[0].geometry.location, index);
+                    }
+                });
+            }
+        }
+
+        function loadNextMapPage() {
+            // Bail if we're already loading, there's nothing left, or the user
+            // is in search-mode (the sidebar isn't showing the paginated list).
+            if (mapLoading || !mapHasMore) return;
+            if (input.value.trim()) return;
+
+            mapLoading = true;
+            loaderRow  = buildLoaderRow();
+            eventsList.appendChild(loaderRow);
+
+            var nextPage = mapCurrentPage + 1;
+            fetch('{{ base_path }}/api/map-events?page=' + nextPage)
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (loaderRow && loaderRow.parentNode) loaderRow.parentNode.removeChild(loaderRow);
+                    loaderRow = null;
+                    var batch = data.events || [];
+                    batch.forEach(function (ev, i) {
+                        var index = EVENTS.length;
+                        EVENTS.push(ev);
+                        placeMarkerForNewEvent(ev, index);
+                        var card = buildLoadedCard(ev, index);
+                        card.style.animationDelay = (i * 40) + 'ms';
+                        eventsList.appendChild(card);
+                    });
+                    mapCurrentPage = data.page || nextPage;
+                    mapHasMore     = !!data.has_more;
+                    // Capture the new, fuller list so clearing search restores it.
+                    originalHTML = eventsList.innerHTML;
+                    mapLoading = false;
+                })
+                .catch(function () {
+                    if (loaderRow && loaderRow.parentNode) loaderRow.parentNode.removeChild(loaderRow);
+                    loaderRow = null;
+                    mapLoading = false;
+                });
+        }
+
+        // Trigger a load when the sidebar's scrollable area is within 200px of
+        // the bottom. 200px gives us a head start so the new cards appear
+        // before the user hits the very end. `passive: true` lets the browser
+        // skip preventDefault checks for smoother mobile scrolling.
+        if (sidebar) {
+            sidebar.addEventListener('scroll', function () {
+                var remaining = sidebar.scrollHeight - sidebar.scrollTop - sidebar.clientHeight;
+                if (remaining < 200) loadNextMapPage();
+            }, { passive: true });
+        }
 
         input.addEventListener('input', function () {
             var q = input.value.trim();
             clearTimeout(timer);
             if (controller) controller.abort();
             if (!q) {
+                // Restore the (possibly-already-extended) paginated list and
+                // resume infinite scroll where we left off.
                 eventsList.innerHTML = originalHTML;
                 return;
             }

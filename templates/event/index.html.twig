@@ -42,19 +42,7 @@
         justify-content: space-between;
     }
 
-    /* Pagination */
-    .pagination .page-link {
-        color: var(--brand-purple);
-        border-radius: 8px;
-        margin: 0 3px;
-        font-weight: 600;
-    }
-
-    .pagination .page-item.active .page-link {
-        background-color: var(--brand-purple) !important;
-        border-color: var(--brand-purple) !important;
-        color: #ffffff !important; /* Forces the text to be visible */
-    }
+    /* Pagination styles live in css/site.css — shared across every list page. */
 </style>
 {% endblock %}
 {% block content %}
@@ -166,24 +154,12 @@
             {% endfor %}
         </div>
 
-        <!-- Pagination -->
-        {% if totalPages > 1 %}
-        <nav class="my-5">
-            <ul class="pagination justify-content-center">
-                <li class="page-item {{ currentPage <= 1 ? 'disabled' : '' }}">
-                    <a class="page-link" href="?page={{ currentPage - 1 }}">{{ trans('evadmin.previous') }}</a>
-                </li>
-                {% for i in 1..totalPages %}
-                <li class="page-item {{ i == currentPage ? 'active' : '' }}">
-                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
-                </li>
-                {% endfor %}
-                <li class="page-item {{ currentPage >= totalPages ? 'disabled' : '' }}">
-                    <a class="page-link" href="?page={{ currentPage + 1 }}">{{ trans('evadmin.next') }}</a>
-                </li>
-            </ul>
-        </nav>
-        {% endif %}
+        {% include 'partials/pagination.html.twig' with {
+            current_page: current_page,
+            total_pages:  total_pages,
+            base_url:     base_path ~ '/events',
+            query_params: query_params
+        } only %}
 
     </div>
 

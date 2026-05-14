@@ -35,6 +35,26 @@ class EventModel
         return BeanHelper::castBeanArray(R::find('events', 'category_id = ? ORDER BY date ASC', [$categoryId]));
     }
 
+    /**
+     * Paginated variant of findByCategory for the /events/category/{id} page.
+     * Mirrors getPaginated's LIMIT ? OFFSET ? convention.
+     */
+    public function findByCategoryPaginated(int $categoryId, int $limit, int $offset): array
+    {
+        return BeanHelper::castBeanArray(
+            R::find('events', 'category_id = ? ORDER BY date ASC LIMIT ? OFFSET ?', [$categoryId, $limit, $offset])
+        );
+    }
+
+    /**
+     * Count of events in a single category — pairs with findByCategoryPaginated
+     * to drive the page count for the partial.
+     */
+    public function countByCategory(int $categoryId): int
+    {
+        return (int) R::count('events', 'category_id = ?', [$categoryId]);
+    }
+
     public function create(string $title, string $description, string $date,
                            int $venueId, int $categoryId, string $eventImage): mixed
     {
@@ -72,10 +92,31 @@ class EventModel
     }
 
     /**
+     * Paginated variant of getUpcoming for the home page main grid.
+     * Same WHERE/ORDER as getUpcoming with LIMIT ? OFFSET ? appended.
+     */
+    public function getUpcomingPaginated(int $limit, int $offset): array
+    {
+        return BeanHelper::castBeanArray(
+            R::find('events', 'date >= NOW() ORDER BY date ASC LIMIT ? OFFSET ?', [$limit, $offset])
+        );
+    }
+
+    /**
+     * Count of upcoming events — pairs with getUpcomingPaginated to drive
+     * the home-page paginator. Same WHERE as countActive(), kept under a
+     * dedicated name for symmetry with the paginated fetcher.
+     */
+    public function countUpcoming(): int
+    {
+        return (int) R::count('events', 'date >= NOW()');
+    }
+
+    /**
      * Events that currently have at least one ticket actively on sale.
      * Drives both the home-page featured row and the /events/on-sale listing.
      */
-    public function getWithOnSaleTickets(?int $limit = null): array
+    public function getWithOnSaleTickets(?int $limit = null, int $offset = 0): array
     {
         $sql = "SELECT DISTINCT e.*
                   FROM events e
@@ -89,10 +130,13 @@ class EventModel
                    AND (t.sold IS NULL OR t.sold = 0)
                  ORDER BY e.date ASC";
 
+        // Offset is only meaningful with a limit — MySQL rejects OFFSET without LIMIT.
+        // Existing callers that pass only $limit (home-featured row) keep working.
         $bindings = [];
         if ($limit !== null) {
-            $sql .= ' LIMIT ?';
+            $sql .= ' LIMIT ? OFFSET ?';
             $bindings[] = $limit;
+            $bindings[] = $offset;
         }
 
         $rows = R::getAll($sql, $bindings);

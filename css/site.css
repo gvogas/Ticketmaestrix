@@ -91,3 +91,117 @@ body {
 .tm-gradient {
     background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-purple) 100%);
 }
+
+/*
+ * Shared pagination bar (templates/partials/pagination.html.twig).
+ * Lives here so every paginated page renders identically — page templates
+ * must NOT override these rules. The selectors are scoped to .pagination
+ * so they only affect the partial, not other lists.
+ */
+.pagination .page-link {
+    color: var(--brand-purple);
+    border: 1px solid #eee;
+    border-radius: 8px !important;
+    margin: 0 3px;
+    font-weight: 600;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.pagination .page-link:hover {
+    background-color: #f3e8ff;
+    border-color: var(--brand-purple);
+    color: var(--brand-purple);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--brand-purple) !important;
+    border-color: var(--brand-purple) !important;
+    color: #ffffff !important;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #adb5bd;
+    background-color: #fff;
+    border-color: #eee;
+    pointer-events: none;
+}
+
+/* Mobile: let the page numbers wrap to a second row so they don't overflow,
+   and keep tap targets at ~44px per Apple/Google a11y guidelines. */
+.pagination {
+    flex-wrap: wrap;
+    gap: 4px 0;
+}
+
+@media (max-width: 575.98px) {
+    .pagination .page-link {
+        min-width: 44px;
+        padding: 0.5rem 0.6rem;
+        font-size: 0.9rem;
+        margin: 0 2px;
+    }
+}
+
+/*
+ * Pagination loading affordance.
+ *
+ * Two pieces working together (wired by the matching script in layout.html.twig):
+ *
+ * 1. Top-of-page progress bar — slides across the viewport as soon as the
+ *    user clicks any pagination link, so the gap before the new page paints
+ *    feels intentional rather than dead.
+ * 2. The clicked link itself dims and shows a tiny inline spinner, so the
+ *    user gets a local "I heard you" cue even before the bar starts.
+ */
+.tm-loading-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0;
+    background: linear-gradient(90deg, var(--brand-purple) 0%, var(--brand-accent) 100%);
+    z-index: 2147483647;
+    pointer-events: none;
+    transition: width 0.25s ease-out, opacity 0.4s ease;
+    opacity: 0;
+}
+
+.tm-loading-bar.is-active {
+    opacity: 1;
+    /* Ease towards 90% during the request; the page navigation finishes the run. */
+    width: 90%;
+    transition: width 8s cubic-bezier(0.1, 0.6, 0.2, 1), opacity 0.15s ease;
+}
+
+.tm-loading-bar.is-done {
+    opacity: 1;
+    width: 100%;
+    transition: width 0.15s ease-out, opacity 0.4s ease;
+}
+
+@keyframes tm-link-spin { to { transform: rotate(360deg); } }
+
+.pagination .page-link.is-loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+}
+
+.pagination .page-link.is-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    border: 2px solid rgba(94, 36, 110, 0.25);
+    border-top-color: var(--brand-purple);
+    border-radius: 50%;
+    animation: tm-link-spin 0.6s linear infinite;
+}
+
+.pagination .page-item.active .page-link.is-loading::after {
+    border-color: rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+}

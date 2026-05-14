@@ -14,6 +14,23 @@ class TicketModel
         return BeanHelper::castBeanArray(R::findAll('ticket', 'ORDER BY event_id, `row`, seat'));
     }
 
+    /**
+     * Paginated variant of getAll for the admin /tickets index.
+     * Same ORDER as getAll with LIMIT ? OFFSET ? appended.
+     */
+    public function getAllPaginated(int $limit, int $offset): array
+    {
+        return BeanHelper::castBeanArray(
+            R::findAll('ticket', 'ORDER BY event_id, `row`, seat LIMIT ? OFFSET ?', [$limit, $offset])
+        );
+    }
+
+    /** Row-count of every ticket — drives the admin /tickets paginator. */
+    public function countAll(): int
+    {
+        return (int) R::count('ticket');
+    }
+
     public function getById(int $id): mixed
     {
         $bean = R::load('ticket', $id);
@@ -25,6 +42,25 @@ class TicketModel
         return BeanHelper::castBeanArray(
             R::find('ticket', 'event_id = ? AND (sold IS NULL OR sold = 0) ORDER BY `row`, seat', [$eventId])
         );
+    }
+
+    /**
+     * Paginated variant of findByEvent for the user-facing seat-selection page.
+     * Excludes already-sold tickets, same as findByEvent.
+     */
+    public function findByEventPaginated(int $eventId, int $limit, int $offset): array
+    {
+        return BeanHelper::castBeanArray(
+            R::find('ticket',
+                'event_id = ? AND (sold IS NULL OR sold = 0) ORDER BY `row`, seat LIMIT ? OFFSET ?',
+                [$eventId, $limit, $offset])
+        );
+    }
+
+    /** Count of unsold tickets for an event — pairs with findByEventPaginated. */
+    public function countByEvent(int $eventId): int
+    {
+        return (int) R::count('ticket', 'event_id = ? AND (sold IS NULL OR sold = 0)', [$eventId]);
     }
 
     public function markSold(int $ticketId): void

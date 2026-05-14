@@ -11,7 +11,6 @@ var/app.log
 
 vendor/
 
-# User-uploaded avatars 
+# User-uploaded avatars
 uploads/avatars/*
 !uploads/avatars/.htaccess
-

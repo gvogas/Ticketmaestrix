@@ -53,6 +53,10 @@ return [
     'events.previous' => 'Previous',
     'events.next'     => 'Next',
 
+    // Shared pagination partial (templates/partials/pagination.html.twig)
+    'pagination.previous' => 'Previous',
+    'pagination.next'     => 'Next',
+
     // Map
     'map.header'      => 'Events Near You',
     'map.search_placeholder' => 'Search location',

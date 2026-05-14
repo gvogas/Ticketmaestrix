@@ -181,7 +181,7 @@
                     <div class="col-md-4 text-md-end mt-3 mt-md-0">
                         <div class="p-3 border-start border-4 border-purple bg-white shadow-sm">
                             <span class="d-block text-muted small fw-bold">{{ trans('evtickets.total') }}</span>
-                            <span class="h4 fw-800 mb-0">{{ tickets|length }} {{ trans('evtickets.tickets') }}</span>
+                            <span class="h4 fw-800 mb-0">{{ total_tickets|default(tickets|length) }} {{ trans('evtickets.tickets') }}</span>
                         </div>
                     </div>
                 </div>
@@ -234,6 +234,13 @@
                 </div>
                 {% endfor %}
             </div>
+
+            {% include 'partials/pagination.html.twig' with {
+                current_page: current_page,
+                total_pages:  total_pages,
+                base_url:     base_path ~ '/tickets/event/' ~ event_id,
+                query_params: query_params
+            } only %}
             {% endif %}
         </div>
 

@@ -160,13 +160,7 @@
     }
     .card-in { animation: card-in 0.2s ease both; }
 
-    /* Pagination */
-    .pagination .page-link { color: var(--brand-purple); border-radius: 8px !important; margin: 0 2px; font-weight: 600; }
-    .pagination .page-item.active .page-link {
-        background-color: var(--brand-purple) !important;
-        border-color: var(--brand-purple) !important;
-        color: white !important;
-    }
+    /* Pagination styles live in css/site.css — shared across every list page. */
 </style>
 {% endblock %}
 {% block content %}
@@ -252,23 +246,14 @@
             {% endfor %}
         </div>
 
-        {% if totalPages > 1 %}
-        <nav class="my-5" id="evPagination">
-            <ul class="pagination justify-content-center">
-                <li class="page-item {{ currentPage <= 1 ? 'disabled' : '' }}">
-                    <a class="page-link" href="{{ base_path }}/events?page={{ currentPage - 1 }}&q={{ query_params.q }}&category={{ query_params.category }}&venue={{ query_params.venue }}">{{ trans('events.previous') }}</a>
-                </li>
-                {% for i in 1..totalPages %}
-                <li class="page-item {{ i == currentPage ? 'active' : '' }}">
-                    <a class="page-link" href="{{ base_path }}/events?page={{ i }}&q={{ query_params.q }}&category={{ query_params.category }}&venue={{ query_params.venue }}">{{ i }}</a>
-                </li>
-                {% endfor %}
-                <li class="page-item {{ currentPage >= totalPages ? 'disabled' : '' }}">
-                    <a class="page-link" href="{{ base_path }}/events?page={{ currentPage + 1 }}&q={{ query_params.q }}&category={{ query_params.category }}&venue={{ query_params.venue }}">{{ trans('events.next') }}</a>
-                </li>
-            </ul>
-        </nav>
-        {% endif %}
+        <div id="evPagination">
+            {% include 'partials/pagination.html.twig' with {
+                current_page: current_page,
+                total_pages:  total_pages,
+                base_url:     base_path ~ '/events',
+                query_params: query_params
+            } only %}
+        </div>
     </div>
 
 {% endblock %}

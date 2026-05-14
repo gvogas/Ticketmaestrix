@@ -87,13 +87,25 @@ class OrderItemController {
 
      // List all line items belonging to a given order id.
      public function byOrder(Request $request, Response $response, array $args): Response {
-        $orderId    = (int) ($args['id'] ?? 0);
-        $orderItems = $this->orderItemModel->findByOrder($orderId);
+        $orderId     = (int) ($args['id'] ?? 0);
+        $queryParams = $request->getQueryParams();
+        $page    = max(1, (int) ($queryParams['page'] ?? 1));
+        $perPage = 30;
+        $offset  = ($page - 1) * $perPage;
+
+        $orderItems = $this->orderItemModel->findByOrderPaginated($orderId, $perPage, $offset);
+        $total      = $this->orderItemModel->countByOrder($orderId);
+        $totalPages = (int) ceil($total / $perPage);
 
         $html = $this->twig->render('order-item/order_items_by_order.html.twig', [
-            'base_path'   => $this->basePath,
-            'order_items' => $orderItems,
-            'order_id'    => $orderId,
+            'base_path'    => $this->basePath,
+            'order_items'  => $orderItems,
+            'order_id'     => $orderId,
+            // Total separately so the "X item(s)" badge keeps showing the full count.
+            'total_items'  => $total,
+            'current_page' => $page,
+            'total_pages'  => $totalPages,
+            'query_params' => $queryParams,
         ]);
 
         $response->getBody()->write($html);

@@ -24,9 +24,21 @@ class TicketController
 
     public function index(Request $request, Response $response): Response
     {
+        $queryParams = $request->getQueryParams();
+        $page    = max(1, (int) ($queryParams['page'] ?? 1));
+        $perPage = 30;
+        $offset  = ($page - 1) * $perPage;
+
+        $tickets    = $this->ticketModel->getAllPaginated($perPage, $offset);
+        $total      = $this->ticketModel->countAll();
+        $totalPages = (int) ceil($total / $perPage);
+
         $html = $this->twig->render('ticket/index.html.twig', [
-            'base_path' => $this->basePath,
-            'tickets'   => $this->ticketModel->getAll(),
+            'base_path'    => $this->basePath,
+            'tickets'      => $tickets,
+            'current_page' => $page,
+            'total_pages'  => $totalPages,
+            'query_params' => $queryParams,
         ]);
         $response->getBody()->write($html);
         return $response;
@@ -211,23 +223,37 @@ class TicketController
             return $response->withHeader('Location', $this->basePath . '/tickets')->withStatus(302);
         }
 
-        $eventId = (int) $args['id'];
+        $eventId     = (int) $args['id'];
+        $queryParams = $request->getQueryParams();
+        $page    = max(1, (int) ($queryParams['page'] ?? 1));
+        $perPage = 30;
+        $offset  = ($page - 1) * $perPage;
+
         $tickets = array_map(function ($ticket) {
-            $ticket->on_sale        = $this->ticketModel->isOnSale($ticket);
+            $ticket->on_sale         = $this->ticketModel->isOnSale($ticket);
             $ticket->effective_price = $this->ticketModel->effectivePrice($ticket);
             return $ticket;
-        }, $this->ticketModel->findByEvent($eventId));
-        $event   = $this->eventModel->getById($eventId);
+        }, $this->ticketModel->findByEventPaginated($eventId, $perPage, $offset));
+        $event = $this->eventModel->getById($eventId);
 
         if ($event) {
             $event = $this->eventModel->hydrate([$event], $this->venueModel, $this->ticketModel)[0];
         }
 
+        $totalTickets = $this->ticketModel->countByEvent($eventId);
+        $totalPages   = (int) ceil($totalTickets / $perPage);
+
         $html = $this->twig->render('ticket/tickets_by_event.html.twig', [
-            'base_path' => $this->basePath,
-            'tickets'   => $tickets,
-            'event'     => $event,
-            'event_id'  => $eventId, // Fallback
+            'base_path'    => $this->basePath,
+            'tickets'      => $tickets,
+            'event'        => $event,
+            'event_id'     => $eventId, // Fallback
+            // Pass the total so the "X tickets" header stays accurate after
+            // pagination — tickets|length is now just the page count.
+            'total_tickets' => $totalTickets,
+            'current_page' => $page,
+            'total_pages'  => $totalPages,
+            'query_params' => $queryParams,
         ]);
         $response->getBody()->write($html);
         return $response;

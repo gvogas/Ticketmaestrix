@@ -13,7 +13,7 @@
                 <i class="bi bi-receipt me-2" style="color:var(--brand-purple)"></i>
                 {{ trans('order.my_orders') }}
             </h4>
-            <span class="text-muted small">{{ orders|length }} order(s)</span>
+            <span class="text-muted small">{{ total_orders|default(orders|length) }} order(s)</span>
         </div>
 
         {% if orders is empty %}
@@ -45,6 +45,13 @@
             </div>
             {% endfor %}
         </div>
+
+        {% include 'partials/pagination.html.twig' with {
+            current_page: current_page,
+            total_pages:  total_pages,
+            base_url:     base_path ~ '/orders/user/' ~ user_id,
+            query_params: query_params
+        } only %}
         {% endif %}
     </div>
 

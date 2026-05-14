@@ -48,25 +48,51 @@ class AdminController
             'customers'     => $this->userModel->customerCount(),
         ];
 
+        // Two tabs paginate independently via two distinct query params so a
+        // navigation click on one tab does not reset the other.
+        //   ?ev=N — events tab page
+        //   ?u=N  — users tab page
+        $queryParams = $request->getQueryParams();
+        $perPage     = 30;
+
+        $evPage   = max(1, (int) ($queryParams['ev'] ?? 1));
+        $evOffset = ($evPage - 1) * $perPage;
+
+        $uPage   = max(1, (int) ($queryParams['u'] ?? 1));
+        $uOffset = ($uPage - 1) * $perPage;
+
         // 2. Fetch and hydrate events for the "My Events" tab
         $events = $this->eventModel->hydrate(
-            $this->eventModel->getAll(),
+            $this->eventModel->getPaginated($perPage, $evOffset),
             $this->venueModel,
             $this->ticketModel
         );
+        $eventsTotal = $this->eventModel->countAll();
+        $eventsPages = (int) ceil($eventsTotal / $perPage);
 
-        // 3. Fetch all users for the "Manage Users" tab
-        $users = $this->userModel->findAll();
+        // 3. Fetch users for the "Manage Users" tab
+        $users      = $this->userModel->findAllPaginated($perPage, $uOffset);
+        $usersTotal = $this->userModel->countAll();
+        $usersPages = (int) ceil($usersTotal / $perPage);
 
         $html = $this->twig->render('admin/admin_dashboard.html.twig', [
-            'base_path'     => $this->basePath,
-            'current_route' => 'admin',
-            'admin_user'    => Auth::user(),
-            'stats'         => $stats,
-            'events'        => $events,
-            'users'         => $users,
-            'categories'    => $this->categoryModel->getAll(),
-            'venues'        => $this->venueModel->getAll(),
+            'base_path'        => $this->basePath,
+            'current_route'    => 'admin',
+            'admin_user'       => Auth::user(),
+            'stats'            => $stats,
+            'events'           => $events,
+            'users'            => $users,
+            'categories'       => $this->categoryModel->getAll(),
+            'venues'           => $this->venueModel->getAll(),
+            'events_page'      => $evPage,
+            'events_pages'     => $eventsPages,
+            // Pass totals separately so the tab badges and "X total" labels
+            // keep showing the full count, not just the current page.
+            'events_total'     => $eventsTotal,
+            'users_page'       => $uPage,
+            'users_pages'      => $usersPages,
+            'users_total'      => $usersTotal,
+            'query_params'     => $queryParams,
         ]);
 
         $response->getBody()->write($html);

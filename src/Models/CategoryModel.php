@@ -19,6 +19,23 @@ class CategoryModel
         return $this->findAll();
     }
 
+    /**
+     * Paginated variant of getAll for the admin /categories index.
+     * Same ORDER BY name as findAll() with LIMIT ? OFFSET ? appended.
+     */
+    public function getAllPaginated(int $limit, int $offset): array
+    {
+        return BeanHelper::castBeanArray(
+            R::findAll('categories', 'ORDER BY name ASC LIMIT ? OFFSET ?', [$limit, $offset])
+        );
+    }
+
+    /** Row-count of every category — drives the admin /categories paginator. */
+    public function countAll(): int
+    {
+        return (int) R::count('categories');
+    }
+
     public function load(int $id): mixed
     {
         return BeanHelper::castBeanProperties(R::load('categories', $id));

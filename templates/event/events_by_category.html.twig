@@ -88,7 +88,7 @@
                 <!-- Restored Count Badge -->
                 <div class="results-badge">
                     <i class="bi bi-ticket-perforated me-2"></i>
-                    {{ events|length }}
+                    {{ total_events|default(events|length) }}
                 </div>
             </div>
         </header>
@@ -121,6 +121,13 @@
                 </div>
                 {% endfor %}
             </div>
+
+            {% include 'partials/pagination.html.twig' with {
+                current_page: current_page,
+                total_pages:  total_pages,
+                base_url:     base_path ~ '/events/category/' ~ category.id,
+                query_params: query_params
+            } only %}
         {% endif %}
     </div>
 
