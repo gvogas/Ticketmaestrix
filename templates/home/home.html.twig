@@ -133,7 +133,7 @@
             <div class="col-md-4">
                 <div class="event-card">
                     <div class="event-img-container">
-                        <span class="badge-sale">{{ trans('home.badge_sale') }}</span>
+                        <span class="badge-sale">{{ event.badge|default(trans('home.badge_sale')) }}</span>
                         {% if event.event_image %}
                             <img src="{{ event.event_image }}" alt="{{ event.title }}" class="event-img">
                         {% else %}
@@ -148,7 +148,10 @@
                             <span class="event-price">
                                 {% if event.min_price is not null %}${{ event.min_price|number_format(2) }}{% else %}{{ trans('home.tba') }}{% endif %}
                             </span>
-                            <a href="{{ base_path }}/events/{{ event.id }}" class="btn-details">{{ trans('home.details') }}</a>
+                            {% if event.original_price is defined and event.original_price and event.original_price > event.min_price %}
+                                <span class="text-decoration-line-through text-muted small ms-1">${{ event.original_price|number_format(2) }}</span>
+                            {% endif %}
+                            <a href="{{ base_path }}/tickets/event/{{ event.id }}" class="btn-details">{{ trans('home.details') }}</a>
                         </div>
                     </div>
                 </div>

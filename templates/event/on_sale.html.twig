@@ -98,14 +98,23 @@
     }
     .venue-panel.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
-    .venue-option { padding: 9px 16px; font-size: 0.85rem; font-weight: 500; color: #333; cursor: pointer; transition: background 0.1s; }
-    .venue-option:hover { background: #f5f0fc; }
+    .venue-option {
+        display: block; width: 100%; text-align: left;
+        padding: 9px 16px; font-size: 0.85rem; font-weight: 500; color: #333;
+        background: white; border: 0; cursor: pointer; transition: background 0.1s;
+    }
+    .venue-option:hover, .venue-option:focus-visible { background: #f5f0fc; outline: none; }
     .venue-option.active { color: var(--brand-purple); font-weight: 700; background: #faf5ff; }
     .venue-option + .venue-option { border-top: 1px solid #f5f0fa; }
 
     .filter-summary { font-size: 0.8rem; color: #888; }
-    .filter-summary .clear-link { color: #9b51e0; font-weight: 600; cursor: pointer; text-decoration: none; }
-    .filter-summary .clear-link:hover { text-decoration: underline; }
+    .filter-summary .clear-link {
+        background: none; border: 0; padding: 0;
+        color: #9b51e0; font-weight: 600; cursor: pointer; text-decoration: none;
+        font-size: inherit;
+    }
+    .filter-summary .clear-link:hover,
+    .filter-summary .clear-link:focus-visible { text-decoration: underline; outline: none; }
 
     .section-title {
         font-weight: 700; font-size: 1.1rem;
@@ -121,6 +130,25 @@
     .card-in { animation: card-in 0.2s ease both; }
 
     /* Pagination styles live in css/site.css — shared across every list page. */
+
+    @media (max-width: 575.98px) {
+        .sale-hero { padding: 2.5rem 0 5rem; }
+        .filter-wrapper { margin-top: -3rem; }
+        .filter-card { padding: 1.25rem 1rem; }
+        .venue-panel { left: 0; right: 0; min-width: 0; }
+        .venue-btn { width: 100%; justify-content: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .sk-block { animation: none; background: #ececec; }
+        .card-in { animation: none; }
+        .event-card,
+        .event-card:hover,
+        .event-card .card-img-top,
+        .event-card:hover .card-img-top { transition: none !important; transform: none !important; }
+        .venue-panel { transition: none; }
+        .venue-btn .chevron { transition: none; }
+    }
 </style>
 {% endblock %}
 {% block content %}
@@ -142,26 +170,31 @@
         <div class="filter-card">
 
             <div class="row g-2 align-items-center">
-                <div class="col">
+                <div class="col-12 col-md">
                     <div class="search-wrap">
                         <i class="bi bi-search"></i>
                         <input type="text" id="evSearch" class="form-control"
                                placeholder="{{ trans('events.search_placeholder') }}"
                                value="{{ query_params.q|default('') }}"
-                               autocomplete="off">
+                               autocomplete="off"
+                               aria-label="{{ trans('events.search_placeholder') }}">
                     </div>
                 </div>
-                <div class="col-auto">
+                <div class="col-12 col-md-auto">
                     <div class="venue-dd" id="venueDd">
-                        <button type="button" class="venue-btn {{ query_params.venue is not empty ? 'has-value' : '' }}" id="venueBtn">
-                            <i class="bi bi-geo-alt"></i>
+                        <button type="button" class="venue-btn {{ query_params.venue is not empty ? 'has-value' : '' }}"
+                                id="venueBtn"
+                                aria-haspopup="listbox"
+                                aria-expanded="false"
+                                aria-controls="venuePanel">
+                            <i class="bi bi-geo-alt" aria-hidden="true"></i>
                             <span id="venueBtnLabel">{{ query_params.venue is not empty ? venues|filter(v => v.id == query_params.venue)|first.name|default(trans('events.all_venues')) : trans('events.all_venues') }}</span>
-                            <i class="bi bi-chevron-down chevron"></i>
+                            <i class="bi bi-chevron-down chevron" aria-hidden="true"></i>
                         </button>
-                        <div class="venue-panel" id="venuePanel">
-                            <div class="venue-option active" data-id="">{{ trans('events.all_venues') }}</div>
+                        <div class="venue-panel" id="venuePanel" role="listbox" aria-label="{{ trans('events.all_venues') }}">
+                            <button type="button" class="venue-option active" role="option" data-id="">{{ trans('events.all_venues') }}</button>
                             {% for v in venues %}
-                            <div class="venue-option {{ query_params.venue == v.id ? 'active' : '' }}" data-id="{{ v.id }}">{{ v.name }}</div>
+                            <button type="button" class="venue-option {{ query_params.venue == v.id ? 'active' : '' }}" role="option" data-id="{{ v.id }}">{{ v.name }}</button>
                             {% endfor %}
                         </div>
                     </div>
@@ -171,18 +204,22 @@
             <div class="filter-divider"></div>
 
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                <div class="cat-pills" id="catPills">
-                    <button class="cat-pill {{ query_params.category is empty ? 'active' : '' }}" data-cat="">
+                <div class="cat-pills" id="catPills" role="group" aria-label="{{ trans('events.all_cats') }}">
+                    <button type="button" class="cat-pill {{ query_params.category is empty ? 'active' : '' }}"
+                            data-cat=""
+                            aria-pressed="{{ query_params.category is empty ? 'true' : 'false' }}">
                         {{ trans('events.all_cats') }}
                     </button>
                     {% for cat in categories %}
-                    <button class="cat-pill {{ query_params.category == cat.id ? 'active' : '' }}" data-cat="{{ cat.id }}">
-                        <span class="dot"></span>{{ trans_cat(cat.name) }}
+                    <button type="button" class="cat-pill {{ query_params.category == cat.id ? 'active' : '' }}"
+                            data-cat="{{ cat.id }}"
+                            aria-pressed="{{ query_params.category == cat.id ? 'true' : 'false' }}">
+                        <span class="dot" aria-hidden="true"></span>{{ trans_cat(cat.name) }}
                     </button>
                     {% endfor %}
                 </div>
                 <div class="filter-summary" id="filterSummary" style="display:none;">
-                    <a class="clear-link" id="clearFilters">{{ trans('events.clear_filters')|default('Clear filters') }}</a>
+                    <button type="button" class="clear-link" id="clearFilters">{{ trans('events.clear_filters')|default('Clear filters') }}</button>
                 </div>
             </div>
 
@@ -198,7 +235,7 @@
         <div class="row g-4" id="evGrid">
             {% for event in events %}
             <div class="col-md-6 col-lg-4 card-in" style="animation-delay:{{ loop.index0 * 40 }}ms">
-                {% include 'event/event-card.html.twig' with { 'event': event, 'base_path': base_path } %}
+                {% include 'event/event-card.html.twig' with { 'event': event, 'base_path': base_path, 'link_url': base_path ~ '/tickets/event/' ~ event.id } %}
             </div>
             {% else %}
             <div class="col-12">
@@ -240,10 +277,15 @@
         var selectedVenue  = '{{ query_params.venue|default('')|e('js') }}';
         var allVenuesLabel = '{{ trans('events.all_venues')|e('js') }}';
 
+        function setVenueOpen(open) {
+            venuePanel.classList.toggle('open', open);
+            venueBtn.classList.toggle('open', open);
+            venueBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
         venueBtn.addEventListener('click', function (e) {
             e.stopPropagation();
-            var open = venuePanel.classList.toggle('open');
-            venueBtn.classList.toggle('open', open);
+            setVenueOpen(!venuePanel.classList.contains('open'));
         });
 
         venuePanel.querySelectorAll('.venue-option').forEach(function (opt) {
@@ -252,8 +294,7 @@
                 venueBtnLabel.textContent = selectedVenue ? opt.textContent.trim() : allVenuesLabel;
                 venuePanel.querySelectorAll('.venue-option').forEach(function (o) { o.classList.remove('active'); });
                 opt.classList.add('active');
-                venueBtn.classList.remove('open');
-                venuePanel.classList.remove('open');
+                setVenueOpen(false);
                 venueBtn.classList.toggle('has-value', !!selectedVenue);
                 doSearch();
             });
@@ -261,8 +302,14 @@
 
         document.addEventListener('click', function (e) {
             if (!venueBtn.parentElement.contains(e.target)) {
-                venueBtn.classList.remove('open');
-                venuePanel.classList.remove('open');
+                setVenueOpen(false);
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && venuePanel.classList.contains('open')) {
+                setVenueOpen(false);
+                venueBtn.focus();
             }
         });
 
@@ -354,11 +401,19 @@
             debounceTimer = setTimeout(doSearch, 300);
         }
 
+        function syncCatPills() {
+            catPills.querySelectorAll('.cat-pill').forEach(function (p) {
+                var active = p.classList.contains('active');
+                p.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+        }
+
         catPills.querySelectorAll('.cat-pill').forEach(function (pill) {
             pill.addEventListener('click', function () {
                 catPills.querySelectorAll('.cat-pill').forEach(function (p) { p.classList.remove('active'); });
                 pill.classList.add('active');
                 selectedCat = pill.dataset.cat;
+                syncCatPills();
                 doSearch();
             });
         });
@@ -374,6 +429,7 @@
                 venuePanel.querySelector('[data-id=""]').classList.add('active');
                 catPills.querySelectorAll('.cat-pill').forEach(function (p) { p.classList.remove('active'); });
                 catPills.querySelector('[data-cat=""]').classList.add('active');
+                syncCatPills();
                 doSearch();
             });
         }

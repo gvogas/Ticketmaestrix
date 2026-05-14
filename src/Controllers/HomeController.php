@@ -41,6 +41,17 @@ class HomeController
             $this->ticketModel
         );
 
+        foreach ($featured as $event) {
+            $sale = $this->ticketModel->cheapestSaleForEvent((int) $event->id);
+            if ($sale && $sale['pct_off'] > 0) {
+                $event->original_price = $sale['original'];
+                $event->min_price      = $sale['effective'];
+                $event->badge          = '-' . $sale['pct_off'] . '% OFF';
+            } else {
+                $event->badge          = 'SALE';
+            }
+        }
+
         $rest = $this->eventModel->hydrate(
             $this->eventModel->getUpcomingPaginated($perPage, $offset),
             $this->venueModel,
@@ -98,7 +109,14 @@ class HomeController
         );
 
         foreach ($events as $event) {
-            $event->badge = 'SALE';
+            $sale = $this->ticketModel->cheapestSaleForEvent((int) $event->id);
+            if ($sale && $sale['pct_off'] > 0) {
+                $event->original_price = $sale['original'];
+                $event->min_price      = $sale['effective'];
+                $event->badge          = '-' . $sale['pct_off'] . '% OFF';
+            } else {
+                $event->badge          = 'SALE';
+            }
         }
 
         $totalPages = (int) ceil($totalEvents / $perPage);

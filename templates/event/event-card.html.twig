@@ -100,7 +100,7 @@
                     <span class="text-decoration-line-through text-muted small ms-1">${{ event.original_price|number_format(2) }}</span>
                 {% endif %}
             </div>
-            <a href="{{ base_path }}/events/{{ event.id }}" class="btn px-3 py-2 rounded-pill"
+            <a href="{{ link_url|default(base_path ~ '/events/' ~ event.id) }}" class="btn px-3 py-2 rounded-pill"
                style="background-color: var(--brand-purple); color: white; font-size: 0.875rem;">
                 {{ trans('events.details') }}
             </a>

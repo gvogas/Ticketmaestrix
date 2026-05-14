@@ -10,7 +10,7 @@ The app is built on **Slim 4** (PHP 8.4), **Twig 3** templates, **RedBeanPHP 5.7
 
 - Public event grid on the home page with featured "On Sale" row and full upcoming-events grid
 - Map view at `/map` with Google Maps markers, a sidebar event list with a **pinned header** (title + search box + "Use my location" stay in place while cards scroll), and infinite-scroll batching (20 events per page, more load as the user scrolls — duplicate-page guard prevents double-fetches under fast scroll)
-- "All on sale" listing at `/events/on-sale` with the same `?q=` / `?category=` / `?venue=` filter parity as `/events` (debounced AJAX, URL updates via `history.replaceState`)
+- "All on sale" listing at `/events/on-sale` with the same `?q=` / `?category=` / `?venue=` filter parity as `/events` (debounced AJAX, URL updates via `history.replaceState`). Every on-sale card carries a real **`-NN% OFF`** badge (computed from the cheapest on-sale ticket's discount) plus a struck-through original price beside the bold sale price, and clicking the card jumps straight to seat selection (`/tickets/event/{id}`) rather than the event detail page. Filter controls are keyboard-accessible (real buttons, `aria-expanded` / `aria-pressed`, Escape closes the venue panel) and the page respects `prefers-reduced-motion`.
 - Browse-by-category at `/events/category/{id}`
 - Filter and search on `/events` by query string, category, and venue
 - Live AJAX search dropdown at `/api/search` (used by the home page navbar and `/events` filter)
@@ -42,9 +42,11 @@ The app is built on **Slim 4** (PHP 8.4), **Twig 3** templates, **RedBeanPHP 5.7
 ### Admin
 
 - Single dashboard at `/admin` with site-wide stats (revenue, tickets sold, active events, customer count) and two independently-paginated tabs
+- **Event Performance** table on the dashboard's Overview tab: top-10 events ranked by completed-order revenue, with tickets sold, dollar revenue, and a sell-through progress bar per event (sourced from a single `events → ticket → order_items → orders` aggregate, no chart libraries)
 - Full CRUD for categories, venues, events, tickets, users, orders, and order items
 - Role toggle (admin ↔ user) per account
 - Server-side geocoding on venue create/update: the Google Geocoding API runs once at save time and the lat/lng pair is cached back to the `venue` row so the map page never blocks on outbound calls
+- Branded confirmation modal for every destructive action (Delete event / user / venue / category / order item) — no native `confirm()` "localhost says…" popups anywhere in the UI
 
 ### Operations
 
@@ -152,7 +154,7 @@ All routes live in `index.php`. Controllers are wired into the PHP-DI container 
 | GET | `/map` | `HomeController::showMap` — initial 20 events; sidebar streams more via `/api/map-events` |
 | GET | `/cart` | `HomeController::showCart` (no login required to view) |
 | GET | `/events` | `EventController::index` — list + filter + search |
-| GET | `/events/on-sale` | `HomeController::showOnSale` |
+| GET | `/events/on-sale` | `HomeController::showOnSale` — cards carry `-NN% OFF` badge + strikethrough price; clicking jumps to `/tickets/event/{id}` |
 | GET | `/events/category/{id}` | `EventController::byCategory` |
 | GET | `/events/{id}` | `EventController::viewDetails` |
 | GET | `/tickets/event/{id}` | `TicketController::byEvent` — seat selection (user-facing) |
@@ -165,7 +167,7 @@ All routes live in `index.php`. Controllers are wired into the PHP-DI container 
 | Method | Path | Handler |
 |---|---|---|
 | GET/POST | `/signup`, `/login` | Account creation and login |
-| POST | `/logout` | Session + remember-me teardown |
+| POST | `/logout` | Session + remember-me teardown; redirects to `/` |
 | GET/POST | `/2fa/setup` | QR code + first-time TOTP verification |
 | GET/POST | `/2fa/login` | TOTP challenge on login |
 
@@ -223,6 +225,7 @@ var/                     Runtime data (app.log, maintenance.flag) — git-ignore
 - Add new translation keys to **both** `translations/messages.en.php` and `messages.fr.php`. The Twig `trans('key')` function resolves against the session locale; `trans_cat(name)` translates category names.
 - Use `BeanHelper::castBeanProperties()` (or `castBeanArray`) before handing RedBeanPHP beans to Twig so foreign-key fields render as integers.
 - Use transactions for multi-table writes. The Stripe webhook is the canonical example.
+- **Confirming destructive actions:** put `data-confirm="{{ trans('confirm.delete_x') }}"` on the `<form>` element. The shared modal in `templates/partials/confirm-modal.html.twig` (wired up in `layout.html.twig`) intercepts the submit, shows the message, and resubmits on Confirm. Do not add inline `onsubmit="return confirm(...)"` — native `confirm()` is banned because it renders as "localhost says…".
 
 ### Currency
 

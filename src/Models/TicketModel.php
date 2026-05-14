@@ -138,6 +138,37 @@ class TicketModel
         return $value === null ? null : (float) $value;
     }
 
+    public function cheapestSaleForEvent(int $eventId): ?array
+    {
+        $row = R::getRow(
+            "SELECT
+                price AS original,
+                CASE
+                    WHEN sale_type = 'percent' THEN GREATEST(0, price * (1 - sale_amount / 100))
+                    WHEN sale_type = 'fixed'   THEN GREATEST(0, price - sale_amount)
+                    ELSE price
+                END AS effective
+             FROM ticket
+             WHERE event_id = ?
+               AND sale_type   IS NOT NULL
+               AND sale_start  IS NOT NULL
+               AND sale_end    IS NOT NULL
+               AND sale_start <= NOW()
+               AND sale_end   >= NOW()
+               AND (sold IS NULL OR sold = 0)
+             ORDER BY effective ASC
+             LIMIT 1",
+            [$eventId]
+        );
+        if (!$row || (float) $row['original'] <= 0) {
+            return null;
+        }
+        $original  = (float) $row['original'];
+        $effective = (float) $row['effective'];
+        $pct       = (int) round(($original - $effective) / $original * 100);
+        return ['original' => $original, 'effective' => $effective, 'pct_off' => $pct];
+    }
+
     public function countByOrderItemsForUser(int $userId): int
     {
         $sql = 'SELECT COALESCE(SUM(oi.quantity), 0)
