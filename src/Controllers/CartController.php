@@ -210,8 +210,9 @@ class CartController
             }
         }
 
-        // Extend cart expiry so it survives the Stripe redirect
-        // (the normal 5-minute window is too short for an offsite payment flow)
+        // Save the current expiry so it can be restored if the user cancels from Stripe.
+        // Then extend to 30 minutes to survive the offsite payment flow.
+        $_SESSION['cart_expires_at_pre_stripe'] = $_SESSION['cart_expires_at'] ?? null;
         Cart::extendExpiry(1800);
 
         // Save a snapshot of everything the webhook will need to create the order.
@@ -272,6 +273,7 @@ class CartController
     {
         // Clear the session cart — the webhook already (or soon will) create the order
         Cart::clear();
+        unset($_SESSION['cart_expires_at_pre_stripe']);
 
         $html = $this->twig->render('home/checkout_success.html.twig', [
             'base_path' => $this->basePath,

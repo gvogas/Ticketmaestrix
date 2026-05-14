@@ -100,6 +100,17 @@ class HomeController
      */
     public function showCart(Request $request, Response $response): Response
     {
+        // If the user is returning from the Stripe redirect (cancel button or browser
+        // back button — bfcache means back button never hits showCheckout), restore
+        // the original expiry so the timer doesn't jump to 30 minutes.
+        $pre = $_SESSION['cart_expires_at_pre_stripe'] ?? null;
+        if ($pre !== null) {
+            unset($_SESSION['cart_expires_at_pre_stripe']);
+            if ($pre > time()) {
+                $_SESSION['cart_expires_at'] = $pre;
+            }
+        }
+
         Cart::checkExpiry();
 
         $cart     = Cart::hydrate($this->ticketModel, $this->eventModel, $this->venueModel);
