@@ -268,22 +268,15 @@ $app->get('/map',  [HomeController::class, 'showMap']);
 
 // --- Auth ---
 $app->group('', function ($group) {
-    $group->get('/signup',            [AuthController::class, 'showSignup']);
-    $group->post('/signup',           [AuthController::class, 'signup']);
-    $group->get('/login',             [AuthController::class, 'showLogin']);
-    $group->post('/login',            [AuthController::class, 'login']);
-    $group->post('/logout',           [AuthController::class, 'logout']);
-    $group->get('/forgotpassword',    [AuthController::class, 'showForgotPassword']);
-    $group->post('/forgotpassword',   [AuthController::class, 'forgotPassword']);
-    $group->get('/verificationcode',  [AuthController::class, 'showVerificationCode']);
-    $group->post('/verificationcode', [AuthController::class, 'verifyCode']);
-    $group->get('/resend-code',       [AuthController::class, 'resendCode']);
-    $group->get('/newpassword',       [AuthController::class, 'showNewPassword']);
-    $group->post('/newpassword',      [AuthController::class, 'resetPassword']);
-    $group->get('/2fa/setup',         [AuthController::class, 'show2faSetup']);
-    $group->post('/2fa/setup',        [AuthController::class, 'verify2faSetup']);
-    $group->get('/2fa/login',         [AuthController::class, 'show2faLogin']);
-    $group->post('/2fa/login',        [AuthController::class, 'verify2faLogin']);
+    $group->get('/signup',           [AuthController::class, 'showSignup']);
+    $group->post('/signup',          [AuthController::class, 'signup']);
+    $group->get('/login',            [AuthController::class, 'showLogin']);
+    $group->post('/login',           [AuthController::class, 'login']);
+    $group->post('/logout',          [AuthController::class, 'logout']);
+    $group->get('/2fa/setup',        [AuthController::class, 'show2faSetup']);
+    $group->post('/2fa/setup',       [AuthController::class, 'verify2faSetup']);
+    $group->get('/2fa/login',        [AuthController::class, 'show2faLogin']);
+    $group->post('/2fa/login',       [AuthController::class, 'verify2faLogin']);
 });
 
 // --- Admin ---

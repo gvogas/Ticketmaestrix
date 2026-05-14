@@ -11,9 +11,6 @@ return [
     'app.map'         => 'Map',
 
     // Auth
-    'app.forgotpass'  => 'Forgot password?',
-    'app.verifycode'  => 'Verification code',
-    'app.newpass'     => 'New password',
     'app.password'    => 'Password',
     'app.confirmpass' => 'Confirm password',
     'app.submit'      => 'Submit',
@@ -86,7 +83,6 @@ return [
     'login.email'    => 'Email Address',
     'login.password' => 'Password',
     'login.remember' => 'Remember Me',
-    'login.forgot'   => 'Forgot Password?',
     'login.button'   => 'Sign In',
     'login.account'  => 'Don\'t have an account?',
     'login.signup'   => 'Sign Up',
@@ -109,28 +105,6 @@ return [
     'signup.button'   => 'Create Account',
     'signup.account'  => 'Already have an account?',
     'signup.login'   => 'Login',
-
-    // Forgot Password
-    'forgot.header'   => 'Forgot Password',
-    'forgot.subheader' => 'Enter your email address and we will send you a verification code to reset your password',
-    'forgot.email'    => 'Email Address',
-    'forgot.button'   => 'Submit',
-    'forgot.remember' => 'Remember your password?',
-    'forgot.back'     => 'Back to Login',
-
-    // Verification Code
-    'verify.header'   => 'Verification Code',
-    'verify.subheader' => 'Enter the 6-digit code we sent to your email address',
-    'verify.button'   => 'Continue',
-    'verify.code'     => 'Didn\'t receive a code?',
-    'verify.resend'   => 'Resend Code',
-
-    // New Password
-    'newpass.header'   => 'Enter New Password',
-    'newpass.subheader' => 'please enter and confirm your new password below',
-    'newpass.password' => 'NEW PASSWORD',
-    'newpass.confirm'  => 'CONFIRM PASSWORD',
-    'newpass.button'   => 'Continue',
 
     // Events details
     'evdetails.header'   => 'About This Event',

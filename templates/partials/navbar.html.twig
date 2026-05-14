@@ -501,5 +501,17 @@
             toggler.classList.remove('is-open');
             nav.classList.remove('drawer-open');
         });
+
+        // If the drawer is open when the viewport expands past the md breakpoint
+        // (e.g. rotating a tablet from portrait to landscape), close it so the
+        // offcanvas panel doesn't keep sitting on top of the desktop nav items.
+        window.addEventListener('resize', function () {
+            if (window.innerWidth >= 768 && nav.classList.contains('show')) {
+                var bsOffcanvas = typeof bootstrap !== 'undefined'
+                    ? bootstrap.Offcanvas.getInstance(nav)
+                    : null;
+                if (bsOffcanvas) bsOffcanvas.hide();
+            }
+        });
     })();
 </script>

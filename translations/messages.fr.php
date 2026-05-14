@@ -18,9 +18,6 @@ return [
     'app.map'         => 'Carte',
 
     // Auth
-    'app.forgotpass'  => 'Mot de passe oublié ?',
-    'app.verifycode'  => 'Code de vérification',
-    'app.newpass'     => 'Nouveau mot de passe',
     'app.password'    => 'Mot de passe',
     'app.confirmpass' => 'Confirmer le mot de passe',
     'app.submit'      => 'Soumettre',
@@ -93,7 +90,6 @@ return [
     'login.email'    => 'Adresse e-mail',
     'login.password' => 'Mot de passe',
     'login.remember' => 'Se souvenir de moi',
-    'login.forgot'   => 'Mot de passe oublié ?',
     'login.button'   => 'Se connecter',
     'login.account'  => 'Pas encore de compte ?',
     'login.signup'   => 'S\'inscrire',
@@ -116,28 +112,6 @@ return [
     'signup.button'   => 'Créer un compte',
     'signup.account'  => 'Vous avez déjà un compte ?',
     'signup.login'   => 'Connexion',
-
-    // Forgot Password
-    'forgot.header'   => 'Mot de passe oublié',
-    'forgot.subheader' => 'Entrez votre adresse e-mail et nous vous enverrons un code de vérification',
-    'forgot.email'    => 'Adresse e-mail',
-    'forgot.button'   => 'Soumettre',
-    'forgot.remember' => 'Vous vous souvenez de votre mot de passe ?',
-    'forgot.back'     => 'Retour à la connexion',
-
-    // Verification Code
-    'verify.header'   => 'Code de vérification',
-    'verify.subheader' => 'Entrez le code à 6 chiffres envoyé à votre adresse e-mail',
-    'verify.button'   => 'Continuer',
-    'verify.code'     => 'Vous n\'avez pas reçu de code ?',
-    'verify.resend'   => 'Renvoyer le code',
-
-    // New Password
-    'newpass.header'   => 'Entrer un nouveau mot de passe',
-    'newpass.subheader' => 'Veuillez saisir et confirmer votre nouveau mot de passe ci-dessous',
-    'newpass.password' => 'NOUVEAU MOT DE PASSE',
-    'newpass.confirm'  => 'CONFIRMER LE MOT DE PASSE',
-    'newpass.button'   => 'Continuer',
 
     // Event details
     'evdetails.header'   => 'À propos de cet événement',
