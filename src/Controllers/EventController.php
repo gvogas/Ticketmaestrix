@@ -212,11 +212,11 @@ class EventController
         // Check if user is admin to show different views
         $isAdmin = \App\Helpers\Auth::isAdmin();
 
-        // For admin view, show basic event info (admin can manage from index page)
-        // For user view, hydrate with venue, category, and ticket information
-        if (!$isAdmin) {
-            $event = $this->eventModel->hydrate([$event], $this->venueModel, $this->ticketModel, $this->categoryModel)[0];
-        }
+        // Always hydrate so the detail page can show the venue name, category
+        // name, and min price. Without this, admins fall through to the
+        // template's "Venue #N" / "Category #N" id-fallbacks because the
+        // hydrate-only properties (venue_name, category) are unset on raw beans.
+        $event = $this->eventModel->hydrate([$event], $this->venueModel, $this->ticketModel, $this->categoryModel)[0];
 
         $html = $this->twig->render('event/event_detail.html.twig', [
             'base_path'     => $this->basePath,
