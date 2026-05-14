@@ -153,6 +153,9 @@ class UserController
             'tickets_count'   => $this->ticketModel->countByOrderItemsForUser($id),
             'total_spent'     => number_format($this->orderModel->totalSpentByUser($id), 2, '.', ''),
             'events_attended' => $this->orderModel->eventsAttendedByUser($id),
+            // Orders + line items + event titles for the Purchase History card,
+            // shaped as stdClass[] with embedded items[] (single SQL query).
+            'orders'          => $this->orderModel->findByUserWithItems($id),
             'points_history'  => $this->pointsHistoryModel->findByUser($id),
         ]);
 
