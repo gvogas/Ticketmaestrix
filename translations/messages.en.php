@@ -249,6 +249,9 @@ return [
     '2fa.back'              => 'Back to Login',
 
     // Confirm dialogs (inline JS)
+    'confirm.title'             => 'Confirm',
+    'confirm.ok'                => 'Confirm',
+    'confirm.cancel'            => 'Cancel',
     'confirm.delete_event'      => 'Permanently delete this event?',
     'confirm.delete_order'      => 'Delete this order?',
     'confirm.revoke_admin'      => 'Revoke admin access?',

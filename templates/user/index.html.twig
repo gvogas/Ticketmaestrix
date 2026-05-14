@@ -42,7 +42,7 @@
                                         {{ csrf_field() }}
                                         <button type="submit" class="btn btn-sm btn-outline-secondary">{{ trans('useradmin.toggle_role') }}</button>
                                     </form>
-                                    <form method="POST" action="{{ base_path }}/users/{{ u.id }}/delete" class="d-inline" onsubmit="return confirm('{{ trans('confirm.delete_user')|e('js') }}');">
+                                    <form method="POST" action="{{ base_path }}/users/{{ u.id }}/delete" class="d-inline" data-confirm="{{ trans('confirm.delete_user') }}">
                                         {{ csrf_field() }}
                                         <button type="submit" class="btn btn-sm btn-outline-danger">{{ trans('useradmin.delete') }}</button>
                                     </form>

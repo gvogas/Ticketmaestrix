@@ -317,7 +317,7 @@ class UserController
         Auth::logout();
 
         return $response
-            ->withHeader('Location', $this->basePath . '/login')
+            ->withHeader('Location', $this->basePath . '/')
             ->withStatus(302);
     }
 }

@@ -293,7 +293,7 @@
                                             <td class="text-end">
                                                 <a href="{{ base_path }}/events/{{ event.id }}/edit" class="btn btn-sm btn-outline-secondary me-1">{{ trans('dashboard.edit') }}</a>
                                                 <form method="POST" action="{{ base_path }}/events/{{ event.id }}/delete" class="d-inline"
-                                                      onsubmit="return confirm('{{ trans('confirm.delete_event')|e('js') }}');">
+                                                      data-confirm="{{ trans('confirm.delete_event') }}">
                                                     {{ csrf_field() }}
                                                     <button type="submit" class="btn btn-sm btn-outline-danger">{{ trans('dashboard.delete') }}</button>
                                                 </form>
@@ -407,7 +407,7 @@
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
                                                 <form method="POST" action="{{ base_path }}/users/{{ u.id }}/delete" class="d-inline"
-                                                      onsubmit="return confirm('{{ trans('confirm.delete_user')|e('js') }}');">
+                                                      data-confirm="{{ trans('confirm.delete_user') }}">
                                                     {{ csrf_field() }}
                                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="{{ trans('dashboard.delete') }}">
                                                         <i class="bi bi-trash"></i>

@@ -30,10 +30,10 @@
                 </li>
             </ul>
 
-            <form action="{{ base_path }}/order-items/{{ orderItem.id }}/delete" method="POST" class="d-inline">
+            <form action="{{ base_path }}/order-items/{{ orderItem.id }}/delete" method="POST" class="d-inline"
+                  data-confirm="{{ trans('confirm.delete_order_item') }}">
                 {{ csrf_field() }}
-                <button type="submit" class="btn btn-sm btn-outline-danger"
-                        onclick="return confirm('{{ trans('confirm.delete_order_item')|e('js') }}')">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
                     <i class="bi bi-trash"></i> {{ trans('order.delete') }}
                 </button>
             </form>

@@ -144,7 +144,7 @@
                             </div>
 
                             <form action="{{ base_path }}/venues/{{ venue.id }}/delete" method="POST"
-                                  onsubmit="return confirm('{{ trans('confirm.delete_venue')|e('js') }}')">
+                                  data-confirm="{{ trans('confirm.delete_venue') }}">
                                 {{ csrf_field() }}
                                 <button type="submit" class="btn btn-outline-danger px-4 py-2 fw-bold" style="border-radius: 12px;">
                                     <i class="bi bi-trash3 me-2"></i> {{ trans('vadmin.delete_btn') }}

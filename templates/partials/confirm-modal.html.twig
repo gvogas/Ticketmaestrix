@@ -1,0 +1,17 @@
+<div class="modal fade" id="tmConfirmModal" tabindex="-1" aria-hidden="true" aria-labelledby="tmConfirmModalLabel">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="tmConfirmModalLabel">{{ trans('confirm.title') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ trans('confirm.cancel') }}"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <p id="tmConfirmModalBody" class="mb-0"></p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ trans('confirm.cancel') }}</button>
+                <button type="button" class="btn btn-danger" id="tmConfirmModalOk">{{ trans('confirm.ok') }}</button>
+            </div>
+        </div>
+    </div>
+</div>

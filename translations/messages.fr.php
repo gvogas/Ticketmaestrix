@@ -256,6 +256,9 @@ return [
     '2fa.back'              => 'Retour à la connexion',
 
     // Confirm dialogs (inline JS)
+    'confirm.title'             => 'Confirmer',
+    'confirm.ok'                => 'Confirmer',
+    'confirm.cancel'            => 'Annuler',
     'confirm.delete_event'      => 'Supprimer définitivement cet événement ?',
     'confirm.delete_order'      => 'Supprimer cette commande ?',
     'confirm.revoke_admin'      => 'Révoquer l\'accès administrateur ?',

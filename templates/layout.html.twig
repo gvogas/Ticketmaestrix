@@ -34,6 +34,8 @@
     </footer>
     {% endblock %}
 
+    {% include 'partials/confirm-modal.html.twig' %}
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
@@ -69,6 +71,44 @@
                 document.querySelectorAll('.page-link.is-loading').forEach(function (el) {
                     el.classList.remove('is-loading');
                 });
+            }
+        });
+    })();
+
+    (function () {
+        var modalEl = document.getElementById('tmConfirmModal');
+        var bodyEl  = document.getElementById('tmConfirmModalBody');
+        var okBtn   = document.getElementById('tmConfirmModalOk');
+        if (!modalEl || !bodyEl || !okBtn || !window.bootstrap) return;
+
+        var modal = new bootstrap.Modal(modalEl);
+        var pendingForm = null;
+
+        document.addEventListener('submit', function (e) {
+            var form = e.target;
+            if (!(form instanceof HTMLFormElement)) return;
+            var msg = form.getAttribute('data-confirm');
+            if (!msg) return;
+            if (form.dataset.confirmed === '1') return;
+            e.preventDefault();
+            bodyEl.textContent = msg;
+            pendingForm = form;
+            modal.show();
+        }, true);
+
+        okBtn.addEventListener('click', function () {
+            if (!pendingForm) { modal.hide(); return; }
+            var form = pendingForm;
+            pendingForm = null;
+            form.dataset.confirmed = '1';
+            modal.hide();
+            form.submit();
+        });
+
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            if (pendingForm) {
+                delete pendingForm.dataset.confirmed;
+                pendingForm = null;
             }
         });
     })();

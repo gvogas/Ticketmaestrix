@@ -302,7 +302,7 @@ class AuthController
     public function logout(Request $request, Response $response): Response
     {
         Auth::logout();
-        return $response->withHeader('Location', $this->basePath . '/login')->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/')->withStatus(302);
     }
 
     private function render(Response $response, string $template, array $data = []): Response

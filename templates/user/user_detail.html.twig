@@ -38,10 +38,10 @@
                 <a href="{{ base_path }}/editprofile" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-pencil"></i> {{ trans('useradmin.edit') }}
                 </a>
-                <form action="{{ base_path }}/users/{{ user.id }}/delete" method="POST" class="d-inline">
+                <form action="{{ base_path }}/users/{{ user.id }}/delete" method="POST" class="d-inline"
+                      data-confirm="{{ trans('confirm.delete_user') }}">
                     {{ csrf_field() }}
-                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                            onclick="return confirm('{{ trans('confirm.delete_user')|e('js') }}')">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
                         <i class="bi bi-trash"></i> {{ trans('useradmin.delete') }}
                     </button>
                 </form>

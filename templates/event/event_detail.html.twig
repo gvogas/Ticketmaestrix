@@ -152,10 +152,10 @@
                     <a href="{{ base_path }}/events/{{ event.id }}/edit" class="btn btn-outline-primary btn-lg flex-grow-1 d-flex align-items-center justify-content-center">
                         <i class="bi bi-pencil-square me-1"></i> {{ trans('evdetails.edit_btn') }}
                     </a>
-                    <form action="{{ base_path }}/events/{{ event.id }}/delete" method="POST" class="d-inline">
+                    <form action="{{ base_path }}/events/{{ event.id }}/delete" method="POST" class="d-inline"
+                          data-confirm="{{ trans('confirm.delete_event') }}">
                         {{ csrf_field() }}
-                        <button type="submit" class="btn btn-outline-danger btn-lg"
-                                onclick="return confirm('{{ trans('confirm.delete_event')|e('js') }}')">
+                        <button type="submit" class="btn btn-outline-danger btn-lg">
                             <i class="bi bi-trash3"></i>
                         </button>
                     </form>
