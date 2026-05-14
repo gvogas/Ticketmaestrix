@@ -309,12 +309,6 @@ $app->group('', function ($group) {
     $group->get('/login',            [AuthController::class, 'showLogin']);
     $group->post('/login',           [AuthController::class, 'login']);
     $group->post('/logout',          [AuthController::class, 'logout']);
-    $group->get('/forgotpassword',   [AuthController::class, 'showForgotPassword']);
-    $group->post('/forgotpassword',  [AuthController::class, 'forgotPassword']);
-    $group->get('/verificationcode', [AuthController::class, 'showVerificationCode']);
-    $group->post('/verificationcode',[AuthController::class, 'verifyCode']);
-    $group->get('/newpassword',      [AuthController::class, 'showNewPassword']);
-    $group->post('/newpassword',     [AuthController::class, 'resetPassword']);
     $group->get('/2fa/setup',        [AuthController::class, 'show2faSetup']);
     $group->post('/2fa/setup',       [AuthController::class, 'verify2faSetup']);
     $group->get('/2fa/login',        [AuthController::class, 'show2faLogin']);

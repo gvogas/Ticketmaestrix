@@ -8,10 +8,10 @@
     #expiry-warn-close:hover, #expiry-expired-close:hover { opacity: 1 !important; }
 </style>
 
-<div style="position: sticky; top: 56px; z-index: 1039;">
+<div style="position: sticky; top: 56px; z-index: 1039; pointer-events: none;">
 
     {# 30-second warning panel #}
-    <div id="expiry-warn-wrap" style="overflow: hidden; max-height: 0; transition: max-height 0.4s cubic-bezier(.4,0,.2,1);">
+    <div id="expiry-warn-wrap" style="overflow: hidden; max-height: 0; transition: max-height 0.4s cubic-bezier(.4,0,.2,1); pointer-events: auto;">
         <div style="background: linear-gradient(to right, #FFF4E6, #FFEEDD); border-left: 4px solid #F76707; padding: 10px 20px; display: flex; align-items: center; gap: 14px;">
             <div id="expiry-warn-icon" style="width: 42px; height: 42px; min-width: 42px; background: #F76707; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                 <i class="bi bi-clock-fill" style="color: #fff; font-size: 1.15rem;"></i>
@@ -40,7 +40,7 @@
     </div>
 
     {# Expired panel #}
-    <div id="expiry-expired-wrap" style="overflow: hidden; max-height: 0; transition: max-height 0.4s cubic-bezier(.4,0,.2,1);">
+    <div id="expiry-expired-wrap" style="overflow: hidden; max-height: 0; transition: max-height 0.4s cubic-bezier(.4,0,.2,1); pointer-events: auto;">
         <div style="background: #1C1033; border-left: 4px solid #5E246E; padding: 10px 20px; display: flex; align-items: center; gap: 14px;">
             <div style="width: 42px; height: 42px; min-width: 42px; background: #5E246E; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                 <i class="bi bi-cart-x-fill" style="color: #fff; font-size: 1.15rem;"></i>
